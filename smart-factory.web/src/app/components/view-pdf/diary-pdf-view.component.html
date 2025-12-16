@@ -1,0 +1,13 @@
+<div class="grid content">
+
+  <!-- Bản xem trước PDF -->
+  <div class="col-12 md:col-12 lg:col-12">
+    <embed [src]="show" style="width: 100%; height: 75vh;">
+  </div>
+
+  <div class="grid w-full">
+    <div class="flex justify-content-end align-items-center w-full  p-t-20">
+      <p-button (onClick)="Close()" icon="pi pi-times" severity="secondary" class="m-r-5" label="Đóng" />
+    </div>
+  </div>
+</div>

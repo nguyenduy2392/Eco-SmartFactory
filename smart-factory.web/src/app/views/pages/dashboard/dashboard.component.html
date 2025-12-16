@@ -1,0 +1,108 @@
+<div class="surface-ground px-4 py-5 md:px-6 lg:px-8">
+  <div class="grid">
+  </div>
+  <div class="grid">
+    <div class="col-12 md:col-3 lg:col-12" style="font-size: 1.5rem; font-weight: bold;">
+      Tổng quan hệ thống
+    </div>
+
+
+    <div class="col-12 md:col-4 lg:col-4">
+      <div class="surface-card shadow-2 p-3 border-round thumb">
+        <div class="flex justify-content-between mb-3">
+          <div>
+            <span class="title">Số lượng phiếu xuất</span>
+
+            <div class="number">{{ data.summary.totalDiary | formatPrice }}</div>
+
+          </div>
+          <div class="icon-container" class="flex align-items-center justify-content-center">
+            <i class="icon pi pi-file-export text-xl color-primary"></i>
+          </div>
+        </div>
+        <div class="grid">
+          <div class="col-12 md:col-7 lg:col-7">
+            <span class="text-500">Đã tạo</span>
+            <span class="text-green-500 font-medium"> {{ data.summary.totalDiary | formatPrice }} phiếu xuất kho </span>
+          </div>
+          <div class="col-12 md:col-7 lg:col-5">
+            <!-- <p-button icon="pi pi-plus-circle" class="btn-full" label="Thêm phiếu xuất" size="small" /> -->
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 md:col-4 lg:col-4">
+      <div class="surface-card shadow-2 p-3 border-round thumb">
+        <div class="flex justify-content-between mb-3">
+          <div>
+            <span class="title">Tổng số lượng đã xuất</span>
+
+            <div class="number">{{ data.summary.totalQuantity | formatPrice }}</div>
+
+          </div>
+          <div class="icon-container" class="flex align-items-center justify-content-center">
+            <i class="icon pi pi-file-check text-xl color-success"></i>
+          </div>
+        </div>
+        <div class="grid">
+          <div class="col-12 md:col-7 lg:col-7">
+            <span class="text-500">Đã xuất số lượng</span>
+            <span class="text-green-500 font-medium"> {{ data.summary.totalQuantity | formatPrice }} hàng hóa </span>
+          </div>
+          <div class="col-12 md:col-5 lg:col-5">
+            <!-- <p-button icon="pi pi-plus-circle" severity="success" class="btn-full" label="Quản trị hàng hóa"
+              size="small" /> -->
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+
+    <div class="col-12 md:col-4 lg:col-4">
+      <div class="surface-card shadow-2 p-3 border-round thumb">
+        <div class="flex justify-content-between mb-3">
+          <div>
+            <span class="title">Khách hàng</span>
+
+            <div class="number">{{ data.summary.totalCustomer | formatPrice }}</div>
+
+          </div>
+          <div class="icon-container" class="flex align-items-center justify-content-center">
+            <i class="icon pi pi-users text-xl color-warning"></i>
+          </div>
+        </div>
+        <div class="grid">
+          <div class="col-12 md:col-6 lg:col-7">
+            <span class="text-500">Đã có</span>
+            <span class="text-green-500 font-medium"> {{ data.summary.totalCustomer | formatPrice }} khách hàng
+            </span>
+          </div>
+          <div class="col-12 md:col-6 lg:col-5">
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12 md:col-12 lg:col-12">
+      <div class="surface-card shadow-2 p-3 border-round chart"
+        style="height: 400px !important; min-height: 400px !important; max-height: 400px !important;">
+        <div class="w-100">
+          <span class="title">SỐ LƯỢNG PHIẾU XUẤT TRONG THÁNG</span>
+        </div>
+        <div id="line-chart" class="w-100">
+          <apx-chart [series]="chartOptions.series" [chart]="chartOptions.chart" [xaxis]="chartOptions.xaxis"
+            [stroke]="chartOptions.stroke" [dataLabels]="chartOptions.dataLabels" [yaxis]="chartOptions.yaxis"
+            [labels]="chartOptions.labels" [legend]="chartOptions.legend" [title]="chartOptions.title"
+            [subtitle]="chartOptions.subtitle"></apx-chart>
+        </div>
+
+      </div>
+    </div>
+
+
+  </div>
+</div>

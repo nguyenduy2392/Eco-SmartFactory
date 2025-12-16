@@ -1,0 +1,77 @@
+$sidebar-width: 260px;
+$topbar-height: 60px;
+$border-color: #E5E7EB;
+
+.layout-wrapper {
+  display: flex;
+  min-height: 100vh;
+  background: #F8FAFC;
+}
+
+.layout-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: #F8FAFC;
+}
+
+.layout-content {
+  flex: 1;
+  padding: 1rem 1rem;
+  margin-top: $topbar-height;
+  background: #F8FAFC;
+  overflow-y: auto;
+
+  // Content cards styling
+  ::ng-deep {
+    .p-card {
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.1);
+      border: 1px solid $border-color;
+    }
+
+    .surface-card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+  }
+}
+
+// Footer styling
+app-footer {
+  margin-top: auto;
+}
+
+// Responsive
+@media (max-width: 1199px) {
+  .layout-content {
+    padding: 1.25rem 1.5rem;
+  }
+}
+
+@media (max-width: 991px) {
+  .layout-wrapper {
+    flex-direction: column;
+  }
+
+  .layout-main {
+    margin-left: 0;
+  }
+
+  .layout-content {
+    padding: 1rem;
+    margin-top: $topbar-height;
+  }
+
+  app-side-bar {
+    display: none;
+  }
+}
+
+@media (max-width: 576px) {
+  .layout-content {
+    padding: 0.75rem;
+  }
+}

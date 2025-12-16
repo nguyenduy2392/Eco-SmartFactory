@@ -1,0 +1,39 @@
+.thumb {
+
+
+    .number {
+        margin-top: 1.5rem;
+        margin-bottom: 1.5rem;
+        font-size: 1.5rem;
+        font-weight: bold;
+    }
+
+    .icon-container {
+        width: 6rem;
+        height: 6rem;
+
+
+    }
+
+    .icon {
+        zoom: 4;
+        margin-top: 5px;
+        color: #6b7280;
+        opacity: 0.2;
+    }
+}
+
+.chart {
+    height: 55vh;
+}
+
+.title {
+    font-size: 1rem;
+    text-transform: uppercase;
+    font-weight: bold !important;
+    color: #6b7280;
+}
+
+.maps{
+    height: 70vh;
+}

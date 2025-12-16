@@ -1,0 +1,63 @@
+<div class="sidebar">
+  <!-- Logo -->
+  <div class="sidebar-logo">
+    <i class="pi pi-bolt logo-icon"></i>
+    <span class="logo-text">Smart Factory</span>
+  </div>
+
+  <!-- Main Menu -->
+  <nav class="sidebar-nav">
+    <ul class="nav-list">
+      <li *ngFor="let item of mainMenuItems" class="nav-item" [class.active]="item.active">
+        <a [routerLink]="item.route" routerLinkActive="active" class="nav-link">
+          <i [class]="'pi ' + item.icon"></i>
+          <span>{{ item.label }}</span>
+          <span *ngIf="item.badge" class="nav-badge">{{ item.badge }}</span>
+        </a>
+      </li>
+    </ul>
+
+    <!-- Projects Section -->
+    <div class="nav-section">
+      <div class="section-header" (click)="toggleSection('projects')">
+        <span class="section-title">Hệ thống</span>
+        <div class="section-actions">
+          <i class="pi pi-ellipsis-h"></i>
+          <i class="pi pi-plus"></i>
+        </div>
+      </div>
+      <ul class="nav-list">
+        <li *ngFor="let system of systemItems" class="nav-item" [class.active]="system.active">
+          <a [routerLink]="system.route" class="nav-link">
+            <span class="system-icon" [style.background]="system.color"></span>
+            <span class="system-name">{{ system.label }}</span>
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Sidebar Footer -->
+  <div class="sidebar-footer">
+    <a routerLink="/system/unit-info" class="footer-link">
+      <i class="pi pi-cog"></i>
+      <span>Settings</span>
+    </a>
+    <a href="javascript:void(0)" class="footer-link">
+      <i class="pi pi-question-circle"></i>
+      <span>Help Center</span>
+    </a>
+
+    <!-- User Profile -->
+    <div class="user-profile">
+      <div class="user-avatar">
+        <img *ngIf="userAvatar" [src]="userAvatar" alt="User" />
+        <span *ngIf="!userAvatar">{{ userInitials }}</span>
+      </div>
+      <div class="user-info">
+        <span class="user-name">{{ userName }}</span>
+        <span class="user-email">{{ userEmail }}</span>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,25 @@
+::ng-deep .p-button-sm button {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+::ng-deep p-inputnumber {
+  width: 100%;
+}
+
+::ng-deep p-calendar {
+  width: 100%;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+
+  :hover {
+    cursor: pointer;
+  }
+
+  max-height: 15rem;
+  height: 15rem;
+  overflow-y: auto;
+}

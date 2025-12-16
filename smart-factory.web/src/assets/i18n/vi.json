@@ -1,0 +1,459 @@
+{
+  "welcomeMessage": "Xin cảm ơn đã kết nối, {{ firstName }}! Thật tuyệt vời khi có bạn!",
+  "titleApp": "PMBK - Bao bì Việt Nhật",
+  "dashbroad": "Bảng điều khiển hoạt động!",
+  "msg": {
+    "addSuccess": "Thêm mới {{name}} thành công.",
+    "addError": "Thêm mới {{name}} thất bại.",
+    "saveSuccess": "Lưu {{name}} thành công.",
+    "saveError": "Lưu {{name}} thất bại.",
+    "deleteSuccess": "Xóa {{name}} thành công.",
+    "deleteError": "Xóa {{name}} thất bại.",
+    "syncSuccess": "Đồng bộ thành công",
+    "syncFail": "Đồng bộ thất bại",
+    "confirm_success": "Xác nhận thành công",
+    "login": {
+      "Success": "Đăng nhập thành công",
+      "Fail": "Tên đăng nhập hoặc mật khẩu không chính xác.",
+      "userNotFound": "Người dùng không tồn tại."
+    },
+    "validation": {
+      "required": "{{name}} là bắt buộc",
+      "pattern": "{{name}}  phải chứa {{value}}",
+      "minLength": "{{name}} phải có {{value}} ký tự trở lên",
+      "maxLength": "{{name}} không vượt quá {{value}} ký tự",
+      "invalid": "{{name}} không hợp lệ",
+      "existed": "{{name}} đã tồn tại {{value}}"
+    },
+    "textbuttons": {
+      "add": "Thêm mới",
+      "edit": "Sửa",
+      "view": "Xem",
+      "save": "Lưu",
+      "delete": "Xóa",
+      "close": "Đóng",
+      "cancel": "Hủy bỏ",
+      "search": "Tìm kiếm",
+      "history": "Lịch sử",
+      "detail": "Chi tiết",
+      "reload": "Tải lại"
+    },
+    "history": {
+      "Create": "{{datetime}}: &lt;b&gt;{{username}}&lt;/b&gt; tạo mới {{name}}. &lt;br /&gt;",
+      "Save": "{{datetime}}: &lt;b&gt;{{username}}&lt;/b&gt; lưu lại thông tin {{name}}. &lt;br /&gt;",
+      "Change": "&amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &amp;nbsp; &lt;b&gt;{{username}}&lt;/b&gt; đã thay đổi &quot;{{name}}&quot; từ &quot;{{valueOld}}&quot; thành &quot;{{valueNew}}&quot; &lt;br /&gt;"
+    }
+  },
+  "carinfoLang": {
+    "msg": {},
+    "titles": {
+      "ConfigCar": "Thêm thông tin xe"
+    },
+    "labels": {
+      "Id": {
+        "label": "Id xe",
+        "width": "50px",
+        "ord": "1",
+        "isShow": "false"
+      },
+      "Status": {
+        "label": "Trạng thái",
+        "width": "100px",
+        "ord": "2",
+        "isShow": "true"
+      },
+      "BranchId": {
+        "label": "Id Chi nhánh",
+        "width": "100px",
+        "ord": "3",
+        "isShow": "false"
+      },
+      "BranchName": {
+        "label": "Chi nhánh",
+        "width": "300px",
+        "ord": "4",
+        "isShow": "true"
+      },
+      "DeviceID": {
+        "label": "Mã thiết bị",
+        "width": "120px",
+        "ord": "5",
+        "isShow": "true"
+      },
+      "RFID": {
+        "label": "Mã RFID",
+        "width": "100px",
+        "ord": "6",
+        "isShow": "false"
+      },
+      "AccountName": {
+        "label": "Tài khoản",
+        "width": "150px",
+        "ord": "7",
+        "isShow": "true"
+      },
+      "TicketNo": {
+        "label": "Số phiếu",
+        "width": "150px",
+        "ord": "8",
+        "isShow": "true"
+      },
+      "PlateNo": {
+        "label": "Biển số xe",
+        "width": "150px",
+        "ord": "9",
+        "isShow": "true"
+      },
+      "SimNumber": {
+        "label": "Số SIM",
+        "width": "150px",
+        "ord": "10",
+        "isShow": "true"
+      },
+      "TypeDeviceId": {
+        "label": "Id Loại thiết bị",
+        "width": "100px",
+        "ord": "11",
+        "isShow": "false"
+      },
+      "TypeDeviceName": {
+        "label": "Loại thiết bị",
+        "width": "130px",
+        "ord": "12",
+        "isShow": "true"
+      },
+      "InstallDate": {
+        "label": "Ngày lắp đặt",
+        "width": "130px",
+        "ord": "13",
+        "isShow": "true"
+      },
+      "CarTypeId": {
+        "label": "Id Loại xe",
+        "width": "100px",
+        "ord": "14",
+        "isShow": "false"
+      },
+      "CarTypeName": {
+        "label": "Loại xe",
+        "width": "100px",
+        "ord": "15",
+        "isShow": "false"
+      },
+      "InstallerUserId": {
+        "label": "Id Người cài đặt",
+        "width": "100px",
+        "ord": "16",
+        "isShow": "false"
+      },
+      "InstallerUserName": {
+        "label": "Kỹ thuật",
+        "width": "150px",
+        "ord": "17",
+        "isShow": "true"
+      },
+      "InstallerUseFullName": {
+        "label": "Tên đầy đủ người cài đặt",
+        "width": "150px",
+        "ord": "18",
+        "isShow": "false"
+      },
+      "VehicleIdNo": {
+        "label": "Số Khung xe",
+        "width": "150px",
+        "ord": "19",
+        "isShow": "true"
+      },
+      "CameraNo": {
+        "label": "Số camera",
+        "width": "100px",
+        "ord": "20",
+        "isShow": "false"
+      },
+      "SensorNo": {
+        "label": "Mã cảm biến dầu",
+        "width": "150px",
+        "ord": "21",
+        "isShow": "false"
+      },
+      "WifiNo": {
+        "label": "Số wifi",
+        "width": "100px",
+        "ord": "22",
+        "isShow": "false"
+      },
+      "IsSendTCDB": {
+        "label": "Gửi tới TCDB",
+        "width": "140px",
+        "ord": "23",
+        "isShow": "true"
+      },
+      "Detail": {
+        "label": "Ghi chú",
+        "width": "200px",
+        "ord": "24",
+        "isShow": "false"
+      },
+      "History": {
+        "label": "Lịch sử",
+        "width": "200px",
+        "ord": "25",
+        "isShow": "false"
+      },
+      "CreatedAt": {
+        "label": "Ngày tạo",
+        "width": "150px",
+        "ord": "26",
+        "isShow": "false"
+      },
+      "CreatedBy": {
+        "label": "Người tạo",
+        "width": "150px",
+        "ord": "27",
+        "isShow": "false"
+      },
+      "ModifiedAt": {
+        "label": "Ngày sửa",
+        "width": "150px",
+        "ord": "28",
+        "isShow": "false"
+      },
+      "ModifiedBy": {
+        "label": "Người sửa",
+        "width": "150px",
+        "ord": "29",
+        "isShow": "false"
+      },
+      "IsDeleted": {
+        "label": "Đã xóa",
+        "width": "100px",
+        "ord": "30",
+        "isShow": "false"
+      },
+      "AccessorySetName": {
+        "label": "Bộ vật tư phụ",
+        "width": "150px",
+        "ord": "31",
+        "isShow": "true"
+      }
+    }
+  },
+  "stock": {
+    "msg": {
+      "addSuccess": "Thêm mới kho hàng thành công.",
+      "addError": "Thêm mới kho hàng thất bại.",
+      "saveSuccess": "Lưu kho hàng thành công.",
+      "saveError": "Lưu kho hàng thất bại.",
+      "deleteSuccess": "Xóa kho hàng thành công.",
+      "deleteError": "Xóa kho hàng thất bại."
+    },
+    "labels": {
+      "stocks": {
+        "title": "Quản trị kho hàng",
+        "tbl_code": "Mã kho",
+        "tbl_name": "Tên kho",
+        "tbl_description": "Mô tả",
+        "tbl_address": "Địa chỉ",
+        "tbl_action_action": "Hành động",
+        "tbl_action_update": "Cập nhật",
+        "tbl_action_delete": "Xóa kho",
+        "tbl_action_add": "Thêm mới kho",
+        "tbl_delete_confirm_content": "Hệ thống sẽ xóa hoàn toàn kho <strong>{{name}}</strong>, những vẫn giữ lại các giao dịch liên quan.",
+        "tbl_delete_confirm_title": "Xác nhận xóa.",
+        "tbl_add": "Thêm mới kho hàng",
+        "tbl_update": "Cập nhật kho hàng"
+      },
+      "detail": {
+        "code": "Mã kho",
+        "pl_code": "Nhập mã kho hàng",
+        "name": "Tên kho hàng",
+        "pl_name": "Nhập tên kho hàng",
+        "address": "Địa chỉ",
+        "pl_address": "Nhập địa chỉ kho hàng",
+        "description": "Mô tả",
+        "pl_description": "Nhập mô tả kho hàng",
+        "close": "Hủy bỏ",
+        "create": "Thêm mới kho hàng",
+        "update": "Cập nhật kho hàng",
+        "cancel": "Hủy bỏ",
+        "title": "Thêm mới kho hàng"
+      }
+    }
+  },
+  "device": {
+    "msg": {},
+    "labels": {
+      "devices": {
+        "title": "Vật tư hàng hóa",
+        "tbl_action_sync": "Đồng bộ vật tư từ công ty BK",
+        "tbl_filter_keyword": "Từ khóa tìm kiếm",
+        "tbl_filter_ph_keyword": "Nhập từ khóa để tìm kiếm",
+        "tbl_filter_stock": "Kho hàng",
+        "tbl_filter_stock_all": "Tất cả các kho",
+        "tbl_filter_group": "Nhóm vật tư",
+        "tbl_filter_group_all": "Tất cả các nhóm vật tư",
+        "tbl_filter_user": "Nhân viên",
+        "tbl_filter_user_all": "Tất cả nhân viên",
+        "tbl_action_filter": "Lọc vật tư",
+        "tbl_code": "Mã vật tư",
+        "tbl_name": "Tên vật tư",
+        "tbl_remain_quantity": "Số lượng tồn",
+        "tbl_group": "Nhóm",
+        "tbl_unit": "Đơn vị",
+        "tbl_action_detail": "Chi tiết",
+        "tbl_export": "Xuất khẩu",
+        "modal_sync_title": "Xác nhận đồng bộ",
+        "modal_sync_content": "Xác nhận đồng bộ tất cả vật tư hàng hóa từ công ty Bách Khoa",
+        "modal_sync_cancel": "Hủy bỏ",
+        "modal_sync_sync": "Đồng bộ",
+        "detail_title": "Tồn kho chi tiết"
+      },
+      "detail": {
+        "employee": "Nhân viên",
+        "employee_all": "Tất cả nhân viên",
+        "stock": "Kho nhận vật tư",
+        "stock_all": "Tất cả các kho",
+        "from_date": "Từ ngày",
+        "to_date": "Đến ngày",
+        "filter": "Lọc tồn kho vật tư",
+        "close": "Đóng",
+        "detail_tbl_code": "Mã vật tư",
+        "detail_tbl_employee": "Nhân viên",
+        "detail_tbl_quantity": "Số lượng",
+        "detail_tbl_date": "Ngày nhập",
+        "detail_tbl_stock": "Kho",
+        "detail_tbl_type": "Hình thức"
+      }
+    }
+  },
+  "stock_diary": {
+    "type": {
+      "import_internal": "Nhập kho nội bộ",
+      "propose": "Đề xuất từ ĐVBK",
+      "export_internal": "Xuất kho nội bộ",
+      "export_outter": "Xuất lắp đặt"
+    },
+    "status": {
+      "pending": "Chờ chấp nhận",
+      "approved": "Đã chấp nhận",
+      "received": "Đã nhận thiết bị",
+      "exported": "Đã xuất thiết bị",
+      "waitReceive": "Chờ nhận thiết bị"
+    },
+    "msg": {
+      "delete_complete": "Xóa phiếu đề xuất thành công.",
+      "quantity_not_error:": "Số lượng không hợp lệ.",
+      "quantityGreaterThanZero": "Số lượng xuất phải lớn hơn 0",
+      "quantityExceedsRemain": "Số lượng xuất vượt quá số lượng tồn",
+      "createInternalExportSuccess": "Tạo phiếu xuất kho nội bộ thành công",
+      "noDeviceSelected": "Chưa chọn thiết bị cần xuất",
+      "receiverRequired": "Người nhận không được trống",
+      "receiverNotSameAsExporter": "Người nhận không được trùng với người xuất",
+      "stockRequired": "Kho không được trống",
+      "companyRequired": "Công ty không được trống"
+    },
+    "labels": {
+      "diary": {
+        "title": "Nhật ký kho",
+        "btn_propose": "Phiếu đề xuất từ ĐVBK",
+        "btn_export": "Phiếu xuất kho",
+        "btn_propose_internal": "Phiếu đề xuất nội bộ",
+        "btn_export_add": "Thêm mới phiếu xuất kho",
+        "btn_export_detail": "Chi tiết phiếu xuất",
+        "filter_stock": "Kho hàng",
+        "filter_stock_all": "Tất cả các kho",
+        "filter_keyword": "Từ khóa tìm kiếm",
+        "filter_keyword_all": "Nhập từ khóa để tìm kiếm",
+        "filter_type": "Hình thức",
+        "filter_type_all": "Tất cả các hình thức",
+        "filter_status": "Trạng thái",
+        "filter_status_all": "Tất cả các trạng thái",
+        "filter_from_date": "Từ ngày",
+        "filter_to_date": "Đến ngày",
+        "btn_filter": "Lọc nhật ký kho",
+        "tbl_code": "Mã phiếu",
+        "tbl_type": "Hình thức",
+        "tbl_date": "Ngày tạo",
+        "tbl_object": "Đối tượng",
+        "tbl_quantity": "Số lượng",
+        "tbl_note": "Ghi chú",
+        "tbl_status": "Trạng thái",
+        "tbl_action_detail": "Chi tiết",
+        "tbl_action_delete": "Xóa phiếu",
+        "tbl_action_receive": "Nhận thiết bị",
+        "modal_propose_add": "Thêm mới phiếu đề xuất",
+        "modal_propose_detail": "Chi tiết phiếu đề xuất",
+        "modal_confirm_delete_propose": "Xác nhận xóa phiếu đề xuất",
+        "modal_confirm_delete_propose_content": "Hệ thống sẽ xóa hoàn toàn phiếu đề xuất, những vẫn giữ lại các giao dịch liên quan.",
+        "modal_confirm_delete_propose_title": "Xóa phiếu đề xuất.",
+        "modal_confirm_delete_propose_close": "Đóng",
+        "modal_receive_title": "Xác nhận đã nhập thiết bị",
+        "modal_receive_content": "Xác nhận đã nhận thiết bị từ phiếu đề xuất, thao tác này không thể hoàn tác.",
+        "modal_receive_close": "Hủy bỏ",
+        "modal_receive_receive": "Nhận thiết bị",
+        "msg_delete_success": "Xóa phiếu đề xuất thành công."
+      },
+      "detail": {
+        "propose": {
+          "code": "Mã phiếu đề xuất",
+          "code_placeholder": "Mã phiếu đề xuất (tự sinh nếu để trống)",
+          "date": "Ngày tạo phiếu",
+          "stock": "Kho nhận vật tư",
+          "user": "Người nhận vật tư",
+          "note": "Ghi chú",
+          "tbl_code": "Mã vật tư",
+          "tbl_code_placeholder": "Mã vật tư",
+          "tbl_name": "Tên vật tư",
+          "tbl_name_placeholder": "Chọn vật tư",
+          "tbl_unit": "ĐVT",
+          "tbl_unit_placeholder": "Đơn vị tính",
+          "tbl_quantity": "Số lượng",
+          "tbl_note": "Ghi chú",
+          "tbl_note_placeholder": "Ghi chú xuất kho",
+          "btn_cancel": "Hủy bỏ",
+          "btn_add": "Thêm mới phiếu đề xuất",
+          "btn_receive": "Nhận thiết bị",
+          "btn_close": "Đóng",
+          "msg_update_success": "Cập nhật phiếu đề xuất vật tư thành công",
+          "msg_add_success": "Thêm mới phiếu đề xuất vật tư thành công",
+          "msg_confirm_receive_success": "Xác nhận nhận thiết bị thành công"
+        }
+      },
+      "export": {
+        "header_info": "1. Thông tin phiếu xuất",
+        "header_detail": "2. Chi tiết phiếu xuất",
+        "export_internal": "Xuất nội bộ nhân viên",
+        "export_outter": "Xuất lắp đặt, bảo hành",
+        "code": "Mã phiếu xuất kho",
+        "code_placeholder": "Mã phiếu xuất kho (Tự sinh nếu để trống)",
+        "date": "Ngày tạo phiếu",
+        "date_placeholder": "Nhập ngày tạo phiếu",
+        "employee_name": "Nhân viên nhận vật tư",
+        "employee_placeholder": "Nhân viên nhận vật tư",
+        "stock_name": "Kho nhận vật tư của nhân viên",
+        "stock_placeholder": "Chọn kho nhận vật tư",
+        "company_name": "Công ty lắp đặt hoặc bảo hành",
+        "company_placeholder": "Công ty được lắp đặt",
+        "note": "Ghi chú",
+        "note_placeholder": "Ghi chú phiếu xuất kho",
+        "filter_remain_stock_placeholder": "Chọn kho",
+        "filter_remain_device_placeholder": "Chọn vật tư cần xuất kho",
+        "remain_table_headers": {
+          "device_code": "Mã vật tư",
+          "date": "Ngày nhập",
+          "remain_quantity": "SL tồn",
+          "export_quantity": "SL xuất"
+        },
+        "add_to_export": "Thêm vào phiếu xuất",
+        "export_details_headers": {
+          "device_name": "Tên vật tư",
+          "quantity": "SL",
+          "note": "Ghi chú"
+        },
+        "btn_receive": "Xác nhận đã nhận thiết bị",
+        "btn_add_new": "Thêm mới phiếu xuất kho",
+        "btn_cancel": "Hủy bỏ"
+      }
+    }
+  }
+}

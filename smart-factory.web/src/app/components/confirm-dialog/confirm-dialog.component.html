@@ -1,0 +1,12 @@
+<!-- <div [innerHTML]="content">
+
+</div> -->
+
+<p-confirmDialog [position]="'top'">
+    <ng-template pTemplate="message" let-message let-icon let-type>
+        <div class="flex flex-column align-items-center w-full gap-3 border-bottom-1 surface-border">
+            <!-- <i class="{{icon}} text-6xl text-{{type}}-500"></i> -->
+            <p [innerHTML]="message.message"></p>
+        </div>
+    </ng-template>
+</p-confirmDialog>

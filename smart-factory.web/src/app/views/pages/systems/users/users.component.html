@@ -1,0 +1,100 @@
+<div class="p-3 bg-white border-round">
+  <div class="flex align-items-center justify-content-between">
+    <h2>Danh sách người dùng</h2>
+    <ng-container>
+      <div>
+        <p-button (onClick)="AddUser()" icon="pi pi-user-plus" label="Thêm mới người dùng" />
+      </div>
+    </ng-container>
+  </div>
+  <p-accordion [activeIndex]="0" expandIcon="pi pi-search-plus" collapseIcon="pi pi-search-minus">
+    <p-accordionTab header="Lọc dữ liệu">
+      <div class="grid">
+        <div class="col-6">
+          <label class="block text-900 font-medium mb-3">Từ khóa tìm kiếm</label>
+          <div class="flex">
+            <input [(ngModel)]="filter.keyword" type="text" pInputText placeholder="Nhập từ khóa tìm kiếm"
+              class="w-full" />
+          </div>
+        </div>
+        <div class="col-2 flex">
+          <div class="mr-3">
+            <label class="block text-900 font-medium mb-3">&nbsp;</label>
+            <p-button (onClick)="GetAllUser()" icon="pi pi-search" label="Tìm kiếm" [outlined]="true"
+              severity="primary">
+            </p-button>
+          </div>
+        </div>
+
+      </div>
+    </p-accordionTab>
+  </p-accordion>
+
+  <p-table #dt [value]="users" [lazy]="true" sortMode="single" [scrollable]="true" scrollWidth="60rem"
+    scrollDirection="horizontal" [paginator]="false" [loading]="isLoading"
+    styleClass="p-datatable-gridlines p-datatable-sm" [tableStyle]="{ 'min-width': '75rem' }" [rowHover]="true"
+    dataKey="id" selectionMode="single" loadingIcon="pi pi-cog pi-spin text-white">
+    <ng-template pTemplate="header">
+      <tr class="px-2">
+        <th style="width: 4rem" class="text-center">#</th>
+        <th pSortableColumn="khmshdon" class="text-center" style="min-width: 5rem">
+          <span>Họ tên</span>
+        </th>
+        <th class="text-center" style="min-width: 5rem">
+          <span>Ảnh đại diện</span>
+        </th>
+        <th class="text-center" style="min-width: 5rem">
+          <span>Số điện thoại</span>
+        </th>
+        <th class="text-center" style="min-width: 6rem">
+          <span>Thư điện tử</span>
+        </th>
+        <th class="text-center" style="min-width: 6rem">
+          <span>Tên đăng nhập</span>
+        </th>
+        <th class="text-center" style="min-width: 22rem">
+          <span>Địa chỉ</span>
+        </th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-item>
+      <tr>
+        <td class="text-center">
+          <p-button (click)="DetailUser(item)" icon="pi pi-bars" severity="secondary" [text]="true" />
+        </td>
+
+        <td>
+          <a href="javascript:;" (click)="DetailUser(item)" *ngIf="item.role !== 2">{{ item.name }}</a>
+          <a href="javascript:;" (click)="DetailUser(item)" *ngIf="item.role == 2">{{ item.companyName }}</a>
+
+        </td>
+
+        <td class="text-center">
+          <p-avatar [image]="item.avatarUrl" styleClass="mr-2" size="xlarge" shape="circle" />
+        </td>
+
+        <td class="text-center">
+          {{ item.phone }}
+        </td>
+        <td>
+          {{ item.email }}
+        </td>
+
+        <td>
+          {{ item.userName }}
+        </td>
+        <td>
+          {{ item.address }}
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+  <div class="flex align-items-center justify-content-center sticky bottom-0 bg-white w-full z-1">
+    <div>
+      <p-button icon="pi pi-refresh" type="primary" [text]="true" />
+    </div>
+    <div class="flex-1">
+
+    </div>
+  </div>
+</div>

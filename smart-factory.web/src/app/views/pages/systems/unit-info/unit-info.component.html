@@ -1,0 +1,164 @@
+<div class="surface-ground px-4 py-5">
+  <div class="grid">
+    <div class="col-1">
+
+    </div>
+    <div class="col-8">
+      <h2>Thiết lập thông tin đơn vị</h2>
+    </div>
+    <div class="col-3">
+      <div class="h-full">
+        <div class="flex justify-content-end align-items-center h-full">
+          <p-button (onClick)="Save()" icon="pi pi-lock" label="Lưu thông tin" />
+        </div>
+      </div>
+    </div>
+    <div class="col-1">
+
+    </div>
+
+  </div>
+
+  <div class="grid">
+    <div class="col-1"></div>
+    <div class="col-8 md:col-8 lg:col-8">
+      <div class="surface-card shadow-2 p-3 border-round">
+
+        <!-- Thông tin đơn vị -->
+        <div class="flex justify-content-between mb-3">
+          <span class="block text-500 font-medium mb-3 font-bold">1. Thông tin đơn vị</span>
+        </div>
+
+        <div class="setting-template grid">
+          <div class="col-4 text-center ">
+            <div class="m-t-10 w-100 logo">
+              <input type="file" #uploadLogo hidden (change)="OnChangeLogo($event.target)" />
+              <img (click)="uploadLogo.click()" [src]="logo" width="100%" height="auto" />
+            </div>
+            <div class="w-100">
+              <span class="red">Click vào hình ảnh để cập nhật</span>
+            </div>
+          </div>
+
+          <div class="col-8 grid">
+
+            <div class="col-4">
+              Mã số thuế
+            </div>
+
+            <div class="col-8">
+              Tên đơn vị<span class="text-red-400">*</span>
+            </div>
+            <!-- Mã số thuế đơn vị -->
+            <div class="col-4">
+              <input [maxlength]="20" [(ngModel)]="info.taxCode" type="text" pInputText class="w-full"
+                placeholder="Nhập mã số thuế đơn vị" />
+            </div>
+
+            <!-- Tên đơn vị -->
+            <div class="col-8">
+              <input [maxlength]="1023" [(ngModel)]="info.companyName" type="text" pInputText class="w-full"
+                placeholder="Nhập tên đơn vị" />
+            </div>
+
+            <div class="col-12">
+              Địa chỉ đơn vị
+            </div>
+
+            <!-- Địa chỉ đơn vị -->
+            <div class="col-12">
+              <input [maxLength]="4000" [(ngModel)]="info.address" type="text" pInputText class="w-full"
+                placeholder="Nhập địa chỉ đơn vị" />
+            </div>
+
+            <div class="col-4">
+              Số điện thoại
+            </div>
+            <div class="col-4">
+              Thư điện tử
+            </div>
+            <div class="col-4">
+              Website
+            </div>
+            <div class="col-4">
+              <!-- Số điện thoại -->
+              <input [maxlength]="20" [(ngModel)]="info.phone" type="text" pInputText class="w-full"
+                placeholder="Nhập số điện thoại" />
+            </div>
+            <div class="col-4">
+              <!-- Thư điện tử -->
+              <input [maxlength]="500" [(ngModel)]="info.email" type="text" pInputText class="w-full"
+                placeholder="Thư điện tử" />
+            </div>
+            <div class="col-4">
+              <!-- Website -->
+              <input [(ngModel)]="info.website" type="text" pInputText class="w-full" placeholder="Website" />
+            </div>
+
+          </div>
+        </div>
+
+
+        <!-- Người đại diện pháp luật -->
+        <div class="flex justify-content-between mb-3 mr-1">
+          <span class="block text-500 font-medium mb-3 font-bold">2. Người ký và chức danh</span>
+        </div>
+
+        <div class="setting-template">
+          <div class="grid">
+
+            <div class="col-12">
+              Thủ trưởng đơn vị
+            </div>
+            <div class="col-12">
+              <input [(ngModel)]="info.chief" type="text" pInputText class="w-full"
+                placeholder="Tên thủ trưởng đơn vị" />
+            </div>
+
+            <div class="col-6">
+              Người lập phiếu
+            </div>
+            <div class="col-6">
+              Người nhận
+            </div>
+            <div class="col-6">
+              <input [(ngModel)]="info.creator" type="text" pInputText class="w-full" placeholder="Người lập phiếu" />
+            </div>
+            <div class="col-6">
+              <input [(ngModel)]="info.recipient" type="text" pInputText class="w-full" placeholder="Người nhận" />
+            </div>
+            <div class="col-6">
+              Thủ kho
+            </div>
+            <div class="col-6">
+              Kế toán
+            </div>
+            <div class="col-6">
+              <input [(ngModel)]="info.warehouseKeeper" type="text" pInputText class="w-full"
+                placeholder="Người lập phiếu" />
+            </div>
+            <div class="col-6">
+              <input [(ngModel)]="info.accountant" type="text" pInputText class="w-full" placeholder="Người nhận" />
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="col-3">
+      <div class="surface-card shadow-2 p-3 border-round">
+        <div class="qr-code-preview">
+          <img style="width: 100%;" [src]="info.qrCode" />
+        </div>
+        <div class="reload-button text-center m-t-10">
+          <p-button icon="pi pi-refresh" severity="help" label="Làm mới QR Code" />
+        </div>
+      </div>
+
+
+    </div>
+    <div class="col-1"></div>
+  </div>
+
+</div>
