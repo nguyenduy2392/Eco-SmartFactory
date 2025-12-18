@@ -1,22 +1,11 @@
 <div class="surface-ground page">
-  <!-- Tiều đề trang và các nút chức năng -->
-  <div class="grid header">
-    <!-- Tiêu đề trang -->
-    <div class="col-12 md:col-3 lg:col-6" style="font-size: 1.5rem; font-weight: bold; padding-left: 10px !important;">
-      Danh sách vai trò
-    </div>
-    <div class="col-12 md:col-9 lg:col-6">
-      <div class="filter">
-        <!-- Thêm mới vai trò -->
-        <p-button (onClick)="CreateRole()" icon="pi pi-user-plus" label="Thêm mới vai trò" />
-
-        <!-- Xuất khẩu danh sách tệp excel -->
-        <p-button severity="success" label="Xuất Excel" icon="pi pi-file-excel" class="mx-2" />
-      </div>
-    </div>
+  <!-- Thanh công cụ -->
+  <div class="flex justify-content-end gap-2 mb-3">
+    <p-button (onClick)="CreateRole()" icon="pi pi-plus" label="Thêm mới vai trò" />
+    <p-button severity="success" label="Xuất Excel" icon="pi pi-file-excel" />
   </div>
 
-  <div class="card shadow-2 bg-white border-round ">
+  <div class="card shadow-2 bg-white border-round">
     <p-accordion [activeIndex]="0" expandIcon="pi pi-search-plus" collapseIcon="pi pi-search-minus">
       <p-accordionTab header="Lọc dữ liệu">
         <div class="grid">

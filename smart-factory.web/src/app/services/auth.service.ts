@@ -28,8 +28,7 @@ export class AuthService {
 
   /// Login
   login(data: any) {
-    console.log(this.apiURL);
-    return this.master.post(`${this.apiURL}api/auth/auth`, data);
+    return this.master.post(`${this.apiURL}api/auth/login`, data);
   }
 
   IsLoggedIn() {

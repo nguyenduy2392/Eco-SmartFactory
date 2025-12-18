@@ -7,35 +7,20 @@
         <i class="pi pi-bars"></i>
     </button>
 
-    <div>
-        <div>
-            <span style="text-transform: uppercase;
-            font-weight: bold;
-            font-size: 1.2rem;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;">Chi cục Tiêu chuẩn Đo lường Chất lượng Hải Phòng</span>
-        </div>
-        <div style="padding-top: 3px;">
-            <span style="font-size: 0.9rem;
-    color: #1877f2;">Số 240 Đường Văn Cao, Quận Ngô Quyền, Hải Phòng</span>
-        </div>
-
+    <div class="flex flex-column ml-3">
+        <span class="text-900 font-bold text-sm white-space-nowrap">TÊN DOANH NGHIỆP</span>
+        <span class="text-primary text-xs">Địa chỉ doanh nghiệp</span>
     </div>
-    <!-- <button #topbarmenubutton class="p-link layout-topbar-menu-button layout-topbar-button"
-        (click)="layoutService.showProfileSidebar()">
-        <i class="pi pi-ellipsis-v"></i>
-    </button> -->
 
     <div #topbarmenu class="layout-topbar-menu">
         <button class="p-link layout-topbar-button" (click)="userMenu.toggle($event)">
-            <i class="pi pi-user" style="font-size: 1.5rem;"></i>
+            <i class="pi pi-user"></i>
         </button>
 
         <p-menu #userMenu [model]="userMenus" [popup]="true" />
 
         <button class="p-link layout-topbar-button">
-            <i class="pi pi-bell" style="font-size: 1.5rem;"></i>
+            <i class="pi pi-bell"></i>
         </button>
     </div>
 </div>

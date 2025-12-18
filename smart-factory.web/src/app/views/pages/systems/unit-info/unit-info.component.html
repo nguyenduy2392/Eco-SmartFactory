@@ -1,17 +1,9 @@
 <div class="surface-ground page">
-  <!-- Tiều đề trang và các nút chức năng -->
-  <div class="grid header">
-    <!-- Tiêu đề trang -->
-    <div class="col-12 md:col-3 lg:col-6" style="font-size: 1.5rem; font-weight: bold; padding-left: 10px !important;">
-      Thiết lập thông tin đơn vị
-    </div>
-    <div class="col-12 md:col-9 lg:col-6">
-      <div class="filter">
-        <!-- Lưu thông tin -->
-        <p-button (onClick)="Save()" icon="pi pi-lock" label="Lưu thông tin" />
-      </div>
-    </div>
+  <!-- Thanh công cụ -->
+  <div class="flex justify-content-end mb-3">
+    <p-button (onClick)="Save()" icon="pi pi-save" label="Lưu thông tin" />
   </div>
+  
   <div class="grid">
     <div class="col-12 md:col-12 lg:col-12">
       <div class="surface-card shadow-2 p-3 border-round content">

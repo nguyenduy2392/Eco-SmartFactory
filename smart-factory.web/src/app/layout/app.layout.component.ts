@@ -1,5 +1,5 @@
-import { Component, OnDestroy, Renderer2, ViewChild } from '@angular/core';
-import { NavigationEnd, Router } from '@angular/router';
+import { Component, OnDestroy, OnInit, Renderer2, ViewChild } from '@angular/core';
+import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { filter, Subscription } from 'rxjs';
 import { LayoutService } from "./service/app.layout.service";
 import { AppSidebarComponent } from "./app.sidebar.component";
@@ -7,14 +7,16 @@ import { AppTopBarComponent } from './app.topbar.component';
 import { PrimengModule } from '../primeng.module';
 import { AppFooterComponent } from './app.footer.component';
 import { SharedModule } from '../shared.module';
+import { BreadcrumbItem, BreadcrumbService } from '../services/shared/breadcrumb.service';
+import { CommonModule } from '@angular/common';
 
 @Component({
     standalone: true,
-    imports: [AppTopBarComponent,AppSidebarComponent, AppFooterComponent, SharedModule,PrimengModule],
+    imports: [AppTopBarComponent, AppSidebarComponent, AppFooterComponent, SharedModule, PrimengModule, CommonModule, RouterLink],
     selector: 'app-layout',
     templateUrl: './app.layout.component.html'
 })
-export class AppLayoutComponent implements OnDestroy {
+export class AppLayoutComponent implements OnDestroy, OnInit {
 
     overlayMenuOpenSubscription: Subscription;
 
@@ -22,11 +24,19 @@ export class AppLayoutComponent implements OnDestroy {
 
     profileMenuOutsideClickListener: any;
 
+    breadcrumbs: BreadcrumbItem[] = [];
+    pageTitle: string = '';
+
     @ViewChild(AppSidebarComponent) appSidebar!: AppSidebarComponent;
 
     @ViewChild(AppTopBarComponent) appTopbar!: AppTopBarComponent;
 
-    constructor(public layoutService: LayoutService, public renderer: Renderer2, public router: Router) {
+    constructor(
+        public layoutService: LayoutService, 
+        public renderer: Renderer2, 
+        public router: Router,
+        private breadcrumbService: BreadcrumbService
+    ) {
         this.overlayMenuOpenSubscription = this.layoutService.overlayOpen$.subscribe(() => {
             if (!this.menuOutsideClickListener) {
                 this.menuOutsideClickListener = this.renderer.listen('document', 'click', event => {
@@ -60,6 +70,16 @@ export class AppLayoutComponent implements OnDestroy {
                 this.hideMenu();
                 this.hideProfileMenu();
             });
+    }
+
+    ngOnInit() {
+        this.breadcrumbService.breadcrumbs$.subscribe(breadcrumbs => {
+            this.breadcrumbs = breadcrumbs;
+        });
+        
+        this.breadcrumbService.pageTitle$.subscribe(title => {
+            this.pageTitle = title;
+        });
     }
 
     hideMenu() {

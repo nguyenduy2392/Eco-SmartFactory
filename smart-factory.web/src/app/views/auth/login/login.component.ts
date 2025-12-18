@@ -17,8 +17,7 @@ import { SharedModule } from 'src/app/shared.module';
 })
 export class LoginComponent {
   loginForm: any = {
-    databaseName: null,
-    userName: null,
+    email: null,
     password: null
   }
 
@@ -47,12 +46,8 @@ export class LoginComponent {
 
   /// login
   login() {
-    if (IsNull(this.loginForm.databaseName)) {
-      this.toastService.warning("Mã số thuế không được trống.");
-      return;
-    }
-    if (IsNull(this.loginForm.userName)) {
-      this.toastService.warning("Tên đăng nhập không được trống.");
+    if (IsNull(this.loginForm.email)) {
+      this.toastService.warning("Email không được trống.");
       return;
     }
     if (IsNull(this.loginForm.password)) {
@@ -60,16 +55,13 @@ export class LoginComponent {
       return;
     }
 
-    this.authService.login(this.loginForm).subscribe((res: any) => {
-      if (res.isSuccess) {
+    this.authService.login(this.loginForm).subscribe({
+      next: (res: any) => {
         /// Lưu thông tin người dùng
-        localStorage.setItem('user', JSON.stringify(res.data.user));
+        localStorage.setItem('user', JSON.stringify(res.user));
 
         /// Lưu token
-        localStorage.setItem('token', res.data.token);
-
-        /// Lưu cơ sở dữ liệu
-        localStorage.setItem('database', res.data.database);
+        localStorage.setItem('token', res.token);
 
         /// Di chuyển đến trang tìm kiếm nếu người dùng quét
         if (this.returnUrl.includes('tim-kiem')) {
@@ -85,9 +77,9 @@ export class LoginComponent {
           this.router.navigate([this.returnUrl]);
         }
         this.toastService.success("Đăng nhập thành công");
-
-      } else {
-        this.toastService.error(res.message);
+      },
+      error: (err: any) => {
+        this.toastService.error(err.error?.message || "Email hoặc mật khẩu không đúng");
       }
     });
   }

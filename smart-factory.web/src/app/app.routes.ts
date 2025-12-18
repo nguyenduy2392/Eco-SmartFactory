@@ -15,13 +15,24 @@ export const routes: Routes = [
     component: AppLayoutComponent,
     canActivate: [AuthGuard],
     canActivateChild: [AuthGuard],
-    data: {
-      title: 'Home'
-    },
     children: [
-      { path: 'dashboard', component: DashboardComponent, pathMatch: 'full' },
+      { 
+        path: 'dashboard', 
+        component: DashboardComponent, 
+        pathMatch: 'full',
+        data: {
+          title: 'Tổng quan',
+          breadcrumb: 'Tổng quan',
+          icon: 'pi pi-home'
+        }
+      },
       {
         path: 'system',
+        data: {
+          title: 'Hệ thống',
+          breadcrumb: 'Hệ thống',
+          icon: 'pi pi-cog'
+        },
         loadChildren: () => import('./views/pages/systems/system-route').then((m) => m.routes)
       },
     ]
@@ -44,14 +55,14 @@ export const routes: Routes = [
     path: 'login',
     loadComponent: () => import('./views/auth/login/login.component').then(m => m.LoginComponent),
     data: {
-      title: 'Login page'
+      title: 'Đăng nhập'
     }
   },
   {
     path: 'auth',
     loadComponent: () => import('./views/auth/login/login.component').then(m => m.LoginComponent),
     data: {
-      title: 'Login page'
+      title: 'Đăng nhập'
     }
   },
 

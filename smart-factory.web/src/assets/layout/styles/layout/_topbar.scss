@@ -1,11 +1,11 @@
 .layout-topbar {
     position: fixed;
-    height: 5rem;
+    height: 3.5rem;
     z-index: 997;
     left: 0;
     top: 0;
     width: 100%;
-    padding: 0 2rem;
+    padding: 0 1.5rem;
     background-color: var(--surface-card);
     transition: left $transitionDuration;
     display: flex;
@@ -16,13 +16,13 @@
         display: flex;
         align-items: center;
         color: var(--surface-900);
-        font-size: 1.5rem;
+        font-size: 1.25rem;
         font-weight: 500;
-        width: 210px;
+        width: 180px;
         border-radius: 12px;
 
         img {
-            height: 4rem;
+            height: 2.5rem;
             margin-right: .5rem;
         }
 
@@ -38,8 +38,8 @@
         position: relative;
         color: var(--text-color-secondary);
         border-radius: 50%;
-        width: 3rem;
-        height: 3rem;
+        width: 2.5rem;
+        height: 2.5rem;
         cursor: pointer;
         transition: background-color $transitionDuration;
 
@@ -114,7 +114,7 @@
             border-radius: 12px;
             padding: 1rem;
             right: 2rem;
-            top: 5rem;
+            top: 3.5rem;
             min-width: 15rem;
             display: none;
             -webkit-animation: scalein 0.15s linear;

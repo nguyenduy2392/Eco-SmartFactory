@@ -81,7 +81,7 @@ a {
 
 .layout-topbar {
   position: fixed;
-  height: 5rem;
+  height: 3.5rem;
   z-index: 997;
   left: 0;
   top: 0;
@@ -99,11 +99,11 @@ a {
   color: var(--surface-900);
   font-size: 1.5rem;
   font-weight: 500;
-  width: 300px;
+  width: 220px;
   border-radius: 12px;
 }
 .layout-topbar .layout-topbar-logo img {
-  height: 2.5rem;
+  height: 2rem;
   margin-right: 0.5rem;
 }
 .layout-topbar .layout-topbar-logo:focus {
@@ -119,8 +119,8 @@ a {
   position: relative;
   color: var(--text-color-secondary);
   border-radius: 50%;
-  width: 3rem;
-  height: 3rem;
+  width: 2.5rem;
+  height: 2.5rem;
   cursor: pointer;
   transition: background-color 0.2s;
 }
@@ -186,7 +186,7 @@ a {
     border-radius: 12px;
     padding: 1rem;
     right: 2rem;
-    top: 5rem;
+    top: 3.5rem;
     min-width: 15rem;
     display: none;
     -webkit-animation: scalein 0.15s linear;
@@ -355,7 +355,7 @@ a {
   flex-direction: column;
   min-height: 100vh;
   justify-content: space-between;
-  padding: 7rem 2rem 2rem 4rem;
+  padding: 4.5rem 1.3rem 1rem 1.3rem;
   transition: margin-left 0.2s;
 }
 

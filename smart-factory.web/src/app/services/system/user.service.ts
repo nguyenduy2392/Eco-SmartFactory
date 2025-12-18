@@ -1,40 +1,56 @@
 import { Injectable } from '@angular/core';
 import { MasterService } from '../master/master.service';
 import { EnvService } from '../../env.service';
-import { IsNull, ToUrlParam } from '../shared/common';
 
 @Injectable({
   providedIn: 'root'
 })
 export class UserService {
   public apiURL = this.env.baseApiUrl;
-  decodedToken: any;
-  currentUser: any;
 
   constructor(
     private master: MasterService,
     private env: EnvService,
   ) { }
 
-  /// Thêm mới hoặc cập nhật người dùng
-  CreateOrUpdateUser(model: any) {
-    return this.master.post(`${this.apiURL}api/user/create-or-update`, model);
+  /// Lấy danh sách người dùng
+  GetAllUsers(keyword?: string | null, isActive?: boolean | null) {
+    let params = new URLSearchParams();
+    if (keyword) params.append('keyword', keyword);
+    if (isActive !== undefined && isActive !== null) {
+      params.append('isActive', isActive.toString());
+    }
+    
+    const queryString = params.toString();
+    const url = queryString 
+      ? `${this.apiURL}api/users?${queryString}` 
+      : `${this.apiURL}api/users`;
+    
+    return this.master.get(url);
   }
 
-  /// Danh sách người dùng
-  GetAllUser(model?: any) {
-    if (!IsNull(model)) {
-      let param = ToUrlParam(model);
-      return this.master.get(`${this.apiURL}api/user/get-all${param}`);
-    } else {
-      return this.master.get(`${this.apiURL}api/user/get-all`);
-    }
+  /// Lấy thông tin người dùng theo ID
+  GetUserById(id: number) {
+    return this.master.get(`${this.apiURL}api/users/${id}`);
+  }
 
+  /// Lấy thông tin người dùng hiện tại
+  GetCurrentUser() {
+    return this.master.get(`${this.apiURL}api/users/me`);
+  }
+
+  /// Tạo người dùng mới
+  CreateUser(model: any) {
+    return this.master.post(`${this.apiURL}api/users`, model);
+  }
+
+  /// Cập nhật người dùng
+  UpdateUser(id: number, model: any) {
+    return this.master.put(`${this.apiURL}api/users/${id}`, model);
   }
 
   /// Xóa người dùng
-  DeleteUser(id: any) {
-    return this.master.delete(`${this.apiURL}api/user/delete/${id}`);
+  DeleteUser(id: number) {
+    return this.master.delete(`${this.apiURL}api/users/${id}`);
   }
-
 }

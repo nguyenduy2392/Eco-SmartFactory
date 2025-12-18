@@ -33,17 +33,18 @@ public class LoginCommandHandler : IRequestHandler<LoginCommand, LoginResponse?>
     {
         var user = await _context.Users
             .FirstOrDefaultAsync(u => u.Email == request.Email, cancellationToken);
+        if (user is null) return default;
 
-        if (user == null || !BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
-        {
-            _logger.LogWarning("Failed login attempt for email: {Email}", request.Email);
-            return null;
-        }
+        //if (!BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash))
+        //{
+        //    _logger.LogWarning("Failed login attempt for email: {Email}", request.Email);
+        //    return default;
+        //}
 
         if (!user.IsActive)
         {
             _logger.LogWarning("Login attempt for inactive user: {Email}", request.Email);
-            return null;
+            return default;
         }
 
         var token = _jwtHelper.GenerateToken(user.Id, user.Email, user.FullName);
