@@ -15,7 +15,7 @@ public class JwtHelper
         _configuration = configuration;
     }
 
-    public string GenerateToken(int userId, string email, string fullName)
+    public string GenerateToken(Guid userId, string email, string fullName)
     {
         var jwtKey = _configuration["Jwt:Key"] ?? throw new InvalidOperationException("JWT Key not configured");
         var jwtIssuer = _configuration["Jwt:Issuer"] ?? "SmartFactory";
@@ -44,7 +44,7 @@ public class JwtHelper
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
-    public int? GetUserIdFromToken(string token)
+    public Guid? GetUserIdFromToken(string token)
     {
         try
         {
@@ -52,7 +52,7 @@ public class JwtHelper
             var jwtToken = tokenHandler.ReadJwtToken(token);
             var userIdClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == JwtRegisteredClaimNames.Sub);
             
-            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+            if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out Guid userId))
             {
                 return userId;
             }

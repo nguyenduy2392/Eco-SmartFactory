@@ -12,8 +12,8 @@ using SmartFactory.Application.Data;
 namespace SmartFactory.Application.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251216081818_AddProducts")]
-    partial class AddProducts
+    [Migration("20251219103441_InitialCreate")]
+    partial class InitialCreate
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -26,11 +26,9 @@ namespace SmartFactory.Application.Migrations
 
             modelBuilder.Entity("SmartFactory.Application.Entities.Product", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -65,11 +63,9 @@ namespace SmartFactory.Application.Migrations
 
             modelBuilder.Entity("SmartFactory.Application.Entities.User", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()

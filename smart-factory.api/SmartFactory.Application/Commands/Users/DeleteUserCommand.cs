@@ -6,7 +6,7 @@ namespace SmartFactory.Application.Commands.Users;
 
 public class DeleteUserCommand : IRequest<bool>
 {
-    public int UserId { get; set; }
+    public Guid UserId { get; set; }
 }
 
 public class DeleteUserCommandHandler : IRequestHandler<DeleteUserCommand, bool>

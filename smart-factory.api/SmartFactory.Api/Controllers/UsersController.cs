@@ -47,7 +47,7 @@ public class UsersController : BaseApiController
     /// Lấy thông tin người dùng theo ID
     /// </summary>
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetUserById(int id)
+    public async Task<IActionResult> GetUserById(Guid id)
     {
         var query = new GetUserByIdQuery { UserId = id };
         var result = await Mediator.Send(query);
@@ -83,7 +83,7 @@ public class UsersController : BaseApiController
     /// Cập nhật thông tin người dùng
     /// </summary>
     [HttpPut("{id}")]
-    public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserRequest request)
+    public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserRequest request)
     {
         var command = new UpdateUserCommand
         {
@@ -108,7 +108,7 @@ public class UsersController : BaseApiController
     /// Xóa người dùng
     /// </summary>
     [HttpDelete("{id}")]
-    public async Task<IActionResult> DeleteUser(int id)
+    public async Task<IActionResult> DeleteUser(Guid id)
     {
         var command = new DeleteUserCommand { UserId = id };
         var result = await Mediator.Send(command);

@@ -7,7 +7,7 @@ namespace SmartFactory.Application.Queries.Users;
 
 public class GetUserByIdQuery : IRequest<UserDto?>
 {
-    public int UserId { get; set; }
+    public Guid UserId { get; set; }
 }
 
 public class GetUserByIdQueryHandler : IRequestHandler<GetUserByIdQuery, UserDto?>

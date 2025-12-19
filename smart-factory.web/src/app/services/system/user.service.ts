@@ -30,7 +30,7 @@ export class UserService {
   }
 
   /// Lấy thông tin người dùng theo ID
-  GetUserById(id: number) {
+  GetUserById(id: string) {
     return this.master.get(`${this.apiURL}api/users/${id}`);
   }
 
@@ -45,12 +45,12 @@ export class UserService {
   }
 
   /// Cập nhật người dùng
-  UpdateUser(id: number, model: any) {
+  UpdateUser(id: string, model: any) {
     return this.master.put(`${this.apiURL}api/users/${id}`, model);
   }
 
   /// Xóa người dùng
-  DeleteUser(id: number) {
+  DeleteUser(id: string) {
     return this.master.delete(`${this.apiURL}api/users/${id}`);
   }
 }

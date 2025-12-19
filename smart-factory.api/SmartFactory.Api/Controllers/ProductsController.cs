@@ -18,7 +18,7 @@ public class ProductsController : BaseApiController
     }
 
     [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(int id)
+    public async Task<IActionResult> GetById(Guid id)
     {
         var query = new GetProductByIdQuery { ProductId = id };
         var result = await Mediator.Send(query);

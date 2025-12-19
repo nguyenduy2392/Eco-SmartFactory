@@ -7,7 +7,7 @@ namespace SmartFactory.Application.Queries.Products;
 
 public class GetProductByIdQuery : IRequest<ProductDto?>
 {
-    public int ProductId { get; set; }
+    public Guid ProductId { get; set; }
 }
 
 public class GetProductByIdQueryHandler : IRequestHandler<GetProductByIdQuery, ProductDto?>

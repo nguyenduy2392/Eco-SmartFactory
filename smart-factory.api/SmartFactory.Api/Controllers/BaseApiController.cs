@@ -10,10 +10,10 @@ public abstract class BaseApiController : ControllerBase
     private IMediator? _mediator;
     protected IMediator Mediator => _mediator ??= HttpContext.RequestServices.GetRequiredService<IMediator>();
 
-    protected int? GetCurrentUserId()
+    protected Guid? GetCurrentUserId()
     {
         var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == "sub");
-        if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+        if (userIdClaim != null && Guid.TryParse(userIdClaim.Value, out Guid userId))
         {
             return userId;
         }

@@ -7,7 +7,7 @@ namespace SmartFactory.Application.Commands.Users;
 
 public class UpdateUserCommand : IRequest<UserDto?>
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
     public string FullName { get; set; } = string.Empty;
     public string? PhoneNumber { get; set; }
     public string? Password { get; set; } // Nếu null thì không cập nhật mật khẩu
