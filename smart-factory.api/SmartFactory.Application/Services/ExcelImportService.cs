@@ -9,6 +9,7 @@ namespace SmartFactory.Application.Services;
 /// - ÉP NHỰA (ep_nhua): có trọng lượng, chu kỳ ép
 /// - LẮP RÁP (lap_rap): có nội dung lắp ráp
 /// - PHUN IN (phun_in): có vị trí phun, nội dung in
+/// Hỗ trợ cột tiếng Việt và tiếng Trung
 /// </summary>
 public class ExcelImportService
 {
@@ -24,20 +25,30 @@ public class ExcelImportService
     /// <summary>
     /// Import PO từ file Excel
     /// </summary>
-    public async Task<ExcelImportResult> ImportPOFromExcel(Stream fileStream, string templateType)
+    public async Task<ExcelImportResult> ImportPOFromExcel(Stream fileStream, string templateType, string? customerName = null, string? customerCode = null)
     {
         try
         {
             using var package = new ExcelPackage(fileStream);
             var worksheet = package.Workbook.Worksheets[0]; // First sheet
 
-            return templateType.ToUpper() switch
+            var result = templateType.ToUpper() switch
             {
                 "EP_NHUA" => await ParseEpNhuaTemplate(worksheet),
                 "LAP_RAP" => await ParseLapRapTemplate(worksheet),
                 "PHUN_IN" => await ParsePhunInTemplate(worksheet),
                 _ => throw new ArgumentException($"Unknown template type: {templateType}")
             };
+
+            // Thêm thông tin khách hàng
+            if (!string.IsNullOrWhiteSpace(customerName))
+            {
+                result.CustomerName = customerName;
+                result.CustomerCode = customerCode ?? GenerateCustomerCode();
+                result.ShouldCreateCustomer = true;
+            }
+
+            return result;
         }
         catch (Exception ex)
         {
@@ -53,13 +64,18 @@ public class ExcelImportService
     /// <summary>
     /// Parse template ÉP NHỰA
     /// Cột: STT, Mã linh kiện, Tên linh kiện, Vật liệu, Màu, Trọng lượng (g), Chu kỳ (s), Số lượng, Đơn giá, Thành tiền
+    /// Hỗ trợ cột tiếng Trung: 序号, 零件代码, 零件名称, 材料, 颜色, 重量(g), 周期(s), 数量, 单价, 总金额
     /// </summary>
     private async Task<ExcelImportResult> ParseEpNhuaTemplate(ExcelWorksheet worksheet)
     {
         var result = new ExcelImportResult { TemplateType = "EP_NHUA" };
 
-        // Start from row 2 (row 1 is header)
+        // Detect language from header
         int startRow = 2;
+        var headerRow = 1;
+        var firstHeader = GetStringValue(worksheet, headerRow, 1).ToLower();
+        bool isChineseHeader = firstHeader.Contains("序") || firstHeader.Contains("号");
+
         int currentRow = startRow;
 
         while (!IsEmptyRow(worksheet, currentRow))
@@ -68,16 +84,16 @@ public class ExcelImportService
             {
                 var operation = new POOperationData
                 {
-                    SequenceOrder = GetIntValue(worksheet, currentRow, 1), // STT
-                    PartCode = GetStringValue(worksheet, currentRow, 2), // Mã linh kiện
-                    PartName = GetStringValue(worksheet, currentRow, 3), // Tên linh kiện
-                    Material = GetStringValue(worksheet, currentRow, 4), // Vật liệu
-                    Color = GetStringValue(worksheet, currentRow, 5), // Màu
-                    Weight = GetDecimalValue(worksheet, currentRow, 6), // Trọng lượng
-                    CycleTime = GetDecimalValue(worksheet, currentRow, 7), // Chu kỳ
-                    Quantity = GetIntValue(worksheet, currentRow, 8), // Số lượng
-                    UnitPrice = GetDecimalValue(worksheet, currentRow, 9), // Đơn giá
-                    TotalAmount = GetDecimalValue(worksheet, currentRow, 10), // Thành tiền
+                    SequenceOrder = GetIntValue(worksheet, currentRow, 1), // STT / 序号
+                    PartCode = GetStringValue(worksheet, currentRow, 2), // Mã linh kiện / 零件代码
+                    PartName = GetStringValue(worksheet, currentRow, 3), // Tên linh kiện / 零件名称
+                    Material = GetStringValue(worksheet, currentRow, 4), // Vật liệu / 材料
+                    Color = GetStringValue(worksheet, currentRow, 5), // Màu / 颜色
+                    Weight = GetDecimalValue(worksheet, currentRow, 6), // Trọng lượng / 重量
+                    CycleTime = GetDecimalValue(worksheet, currentRow, 7), // Chu kỳ / 周期
+                    Quantity = GetIntValue(worksheet, currentRow, 8), // Số lượng / 数量
+                    UnitPrice = GetDecimalValue(worksheet, currentRow, 9), // Đơn giá / 单价
+                    TotalAmount = GetDecimalValue(worksheet, currentRow, 10), // Thành tiền / 总金额
                     ProcessingTypeName = "ÉP NHỰA"
                 };
 
@@ -104,6 +120,7 @@ public class ExcelImportService
     /// <summary>
     /// Parse template LẮP RÁP
     /// Cột: STT, Mã linh kiện, Tên linh kiện, Nội dung lắp ráp, Số lượng, Đơn giá, Thành tiền
+    /// Hỗ trợ cột tiếng Trung: 序号, 零件代码, 零件名称, 装配内容, 数量, 单价, 总金额
     /// </summary>
     private async Task<ExcelImportResult> ParseLapRapTemplate(ExcelWorksheet worksheet)
     {
@@ -118,13 +135,13 @@ public class ExcelImportService
             {
                 var operation = new POOperationData
                 {
-                    SequenceOrder = GetIntValue(worksheet, currentRow, 1), // STT
-                    PartCode = GetStringValue(worksheet, currentRow, 2), // Mã linh kiện
-                    PartName = GetStringValue(worksheet, currentRow, 3), // Tên linh kiện
-                    AssemblyContent = GetStringValue(worksheet, currentRow, 4), // Nội dung lắp ráp
-                    Quantity = GetIntValue(worksheet, currentRow, 5), // Số lượng
-                    UnitPrice = GetDecimalValue(worksheet, currentRow, 6), // Đơn giá
-                    TotalAmount = GetDecimalValue(worksheet, currentRow, 7), // Thành tiền
+                    SequenceOrder = GetIntValue(worksheet, currentRow, 1), // STT / 序号
+                    PartCode = GetStringValue(worksheet, currentRow, 2), // Mã linh kiện / 零件代码
+                    PartName = GetStringValue(worksheet, currentRow, 3), // Tên linh kiện / 零件名称
+                    AssemblyContent = GetStringValue(worksheet, currentRow, 4), // Nội dung lắp ráp / 装配内容
+                    Quantity = GetIntValue(worksheet, currentRow, 5), // Số lượng / 数量
+                    UnitPrice = GetDecimalValue(worksheet, currentRow, 6), // Đơn giá / 单价
+                    TotalAmount = GetDecimalValue(worksheet, currentRow, 7), // Thành tiền / 总金额
                     ProcessingTypeName = "LẮP RÁP"
                 };
 
@@ -151,6 +168,7 @@ public class ExcelImportService
     /// <summary>
     /// Parse template PHUN IN
     /// Cột: STT, Mã linh kiện, Tên linh kiện, Vị trí phun, Nội dung in, Màu sơn, Số lượng, Đơn giá, Thành tiền
+    /// Hỗ trợ cột tiếng Trung: 序号, 零件代码, 零件名称, 喷涂位置, 印刷内容, 油漆颜色, 数量, 单价, 总金额
     /// </summary>
     private async Task<ExcelImportResult> ParsePhunInTemplate(ExcelWorksheet worksheet)
     {
@@ -165,15 +183,15 @@ public class ExcelImportService
             {
                 var operation = new POOperationData
                 {
-                    SequenceOrder = GetIntValue(worksheet, currentRow, 1), // STT
-                    PartCode = GetStringValue(worksheet, currentRow, 2), // Mã linh kiện
-                    PartName = GetStringValue(worksheet, currentRow, 3), // Tên linh kiện
-                    SprayPosition = GetStringValue(worksheet, currentRow, 4), // Vị trí phun
-                    PrintContent = GetStringValue(worksheet, currentRow, 5), // Nội dung in
-                    Color = GetStringValue(worksheet, currentRow, 6), // Màu sơn
-                    Quantity = GetIntValue(worksheet, currentRow, 7), // Số lượng
-                    UnitPrice = GetDecimalValue(worksheet, currentRow, 8), // Đơn giá
-                    TotalAmount = GetDecimalValue(worksheet, currentRow, 9), // Thành tiền
+                    SequenceOrder = GetIntValue(worksheet, currentRow, 1), // STT / 序号
+                    PartCode = GetStringValue(worksheet, currentRow, 2), // Mã linh kiện / 零件代码
+                    PartName = GetStringValue(worksheet, currentRow, 3), // Tên linh kiện / 零件名称
+                    SprayPosition = GetStringValue(worksheet, currentRow, 4), // Vị trí phun / 喷涂位置
+                    PrintContent = GetStringValue(worksheet, currentRow, 5), // Nội dung in / 印刷内容
+                    Color = GetStringValue(worksheet, currentRow, 6), // Màu sơn / 油漆颜色
+                    Quantity = GetIntValue(worksheet, currentRow, 7), // Số lượng / 数量
+                    UnitPrice = GetDecimalValue(worksheet, currentRow, 8), // Đơn giá / 单价
+                    TotalAmount = GetDecimalValue(worksheet, currentRow, 9), // Thành tiền / 总金额
                     ProcessingTypeName = "PHUN IN"
                 };
 
@@ -247,6 +265,11 @@ public class ExcelImportService
         return 0;
     }
 
+    private string GenerateCustomerCode()
+    {
+        return $"C-{DateTime.Now:yyyyMMddHHmmss}";
+    }
+
     #endregion
 }
 
@@ -260,6 +283,11 @@ public class ExcelImportResult
     public string TemplateType { get; set; } = string.Empty;
     public List<POOperationData> Operations { get; set; } = new();
     public List<string> Errors { get; set; } = new();
+    
+    // Customer info
+    public string? CustomerName { get; set; }
+    public string? CustomerCode { get; set; }
+    public bool ShouldCreateCustomer { get; set; }
 }
 
 /// <summary>

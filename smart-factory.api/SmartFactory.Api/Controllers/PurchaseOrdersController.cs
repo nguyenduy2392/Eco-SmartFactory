@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using SmartFactory.Application.Commands.Customers;
 using SmartFactory.Application.Commands.PurchaseOrders;
 using SmartFactory.Application.DTOs;
 using SmartFactory.Application.Queries.PurchaseOrders;
@@ -81,8 +82,9 @@ public class PurchaseOrdersController : BaseApiController
 
     [HttpPost("import-excel")]
     public async Task<IActionResult> ImportFromExcel([FromForm] IFormFile file, [FromForm] string poNumber, 
-        [FromForm] Guid customerId, [FromForm] string templateType, [FromForm] DateTime poDate, 
-        [FromForm] DateTime? expectedDeliveryDate, [FromForm] string? notes)
+        [FromForm] Guid? customerId, [FromForm] string templateType, [FromForm] DateTime poDate, 
+        [FromForm] DateTime? expectedDeliveryDate, [FromForm] string? notes,
+        [FromForm] string? customerName, [FromForm] string? customerCode)
     {
         if (file == null || file.Length == 0)
         {
@@ -104,7 +106,9 @@ public class PurchaseOrdersController : BaseApiController
             TemplateType = templateType,
             PODate = poDate,
             ExpectedDeliveryDate = expectedDeliveryDate,
-            Notes = notes
+            Notes = notes,
+            CustomerName = customerName,
+            CustomerCode = customerCode
         };
 
         try

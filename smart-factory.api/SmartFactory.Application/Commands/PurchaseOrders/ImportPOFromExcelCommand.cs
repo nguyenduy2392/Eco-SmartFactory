@@ -15,11 +15,15 @@ public class ImportPOFromExcelCommand : IRequest<PurchaseOrderDto>
 {
     public Stream FileStream { get; set; } = null!;
     public string PONumber { get; set; } = string.Empty;
-    public Guid CustomerId { get; set; }
+    public Guid? CustomerId { get; set; }
     public string TemplateType { get; set; } = string.Empty;
     public DateTime PODate { get; set; }
     public DateTime? ExpectedDeliveryDate { get; set; }
     public string? Notes { get; set; }
+    
+    // Customer creation
+    public string? CustomerName { get; set; }
+    public string? CustomerCode { get; set; }
 }
 
 public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcelCommand, PurchaseOrderDto>
@@ -40,15 +44,42 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
 
     public async Task<PurchaseOrderDto> Handle(ImportPOFromExcelCommand request, CancellationToken cancellationToken)
     {
-        // Validate customer
-        var customer = await _context.Customers.FindAsync(new object[] { request.CustomerId }, cancellationToken);
-        if (customer == null)
+        // Get or create customer
+        Guid customerId = request.CustomerId ?? Guid.Empty;
+        Customer? customer = null;
+
+        if (customerId != Guid.Empty)
         {
-            throw new Exception($"Customer with ID {request.CustomerId} not found");
+            customer = await _context.Customers.FindAsync(new object[] { customerId }, cancellationToken);
+            if (customer == null)
+            {
+                throw new Exception($"Customer with ID {customerId} not found");
+            }
+        }
+        else if (!string.IsNullOrWhiteSpace(request.CustomerName))
+        {
+            // Create new customer
+            customer = new Customer
+            {
+                Code = request.CustomerCode ?? GenerateCustomerCode(),
+                Name = request.CustomerName,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.Customers.Add(customer);
+            await _context.SaveChangesAsync(cancellationToken);
+            customerId = customer.Id;
+            _logger.LogInformation("Created new customer: {CustomerName} with code {CustomerCode}", 
+                customer.Name, customer.Code);
+        }
+        else
+        {
+            throw new Exception("Either CustomerId or CustomerName must be provided");
         }
 
         // Parse Excel file
-        var importResult = await _excelImportService.ImportPOFromExcel(request.FileStream, request.TemplateType);
+        var importResult = await _excelImportService.ImportPOFromExcel(request.FileStream, request.TemplateType, 
+            request.CustomerName, request.CustomerCode);
 
         if (!importResult.Success)
         {
@@ -64,7 +95,7 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
         var po = new PurchaseOrder
         {
             PONumber = request.PONumber,
-            CustomerId = request.CustomerId,
+            CustomerId = customerId,
             TemplateType = request.TemplateType,
             PODate = request.PODate,
             ExpectedDeliveryDate = request.ExpectedDeliveryDate,
@@ -93,21 +124,15 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
                 CreatedAt = DateTime.UtcNow
             };
             _context.ProcessingTypes.Add(processingType);
-            await _context.SaveChangesAsync(cancellationToken); // Save to get ID
+            await _context.SaveChangesAsync(cancellationToken);
         }
-
-        // Collect unique products from operations
-        var uniqueProductCodes = importResult.Operations
-            .Select(op => op.PartCode.Split('-')[0]) // Assuming format: PRODUCT-PART
-            .Distinct()
-            .ToList();
 
         // Process operations and create Parts, Products if needed
         decimal totalAmount = 0;
 
         foreach (var operationData in importResult.Operations)
         {
-            // Get or create Product (from part code prefix)
+            // Get or create Product
             var productCode = operationData.PartCode.Contains('-') 
                 ? operationData.PartCode.Split('-')[0] 
                 : operationData.PartCode;
@@ -156,7 +181,7 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
                 PartId = part.Id,
                 ProcessingTypeId = processingType.Id,
                 OperationName = $"{processingType.Name} - {operationData.PartName}",
-                ChargeCount = 1, // Default
+                ChargeCount = 1,
                 UnitPrice = operationData.UnitPrice,
                 Quantity = operationData.Quantity,
                 TotalAmount = operationData.TotalAmount,
@@ -172,9 +197,7 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
             totalAmount += operationData.TotalAmount;
         }
 
-        // Update PO total amount
         po.TotalAmount = totalAmount;
-
         await _context.SaveChangesAsync(cancellationToken);
 
         _logger.LogInformation("Imported PO from Excel: {PONumber} with {OperationCount} operations", 
@@ -197,6 +220,11 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
             IsActive = po.IsActive,
             CreatedAt = po.CreatedAt
         };
+    }
+
+    private string GenerateCustomerCode()
+    {
+        return $"C-{DateTime.Now:yyyyMMddHHmmss}";
     }
 }
 
