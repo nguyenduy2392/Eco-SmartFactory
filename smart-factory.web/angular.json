@@ -17,7 +17,7 @@
                 "build": {
                     "builder": "@angular-devkit/build-angular:browser",
                     "options": {
-                        "outputPath": "dist/inspection-label",
+                        "outputPath": "C:\\inetpub\\wwwroot\\SmartFactoryWeb",
                         "index": "src/index.html",
                         "main": "src/main.ts",
                         "polyfills": [
