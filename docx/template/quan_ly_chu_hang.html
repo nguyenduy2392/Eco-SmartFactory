@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Trang Quản lý Chủ hàng</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem", 
+                        "lg": "0.5rem", 
+                        "xl": "0.75rem", 
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-[#111418] dark:text-white">
+<div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e5e7eb] dark:border-b-[#2a3845] bg-white dark:bg-[#1A2633] px-10 py-3 sticky top-0 z-50">
+<div class="flex items-center gap-4 text-[#111418] dark:text-white">
+<div class="size-8 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined !text-3xl">table_view</span>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">Data Manager</h2>
+</div>
+<div class="flex flex-1 justify-end gap-8 items-center">
+<label class="hidden md:flex flex-col min-w-40 !h-10 max-w-64">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full">
+<div class="text-[#617589] flex border-none bg-[#f0f2f4] dark:bg-[#2a3845] items-center justify-center pl-4 rounded-l-lg border-r-0">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111418] dark:text-white focus:outline-0 focus:ring-0 border-none bg-[#f0f2f4] dark:bg-[#2a3845] focus:border-none h-full placeholder:text-[#617589] px-4 rounded-l-none border-l-0 pl-2 text-sm font-normal leading-normal" placeholder="Search..." value=""/>
+</div>
+</label>
+<div class="flex items-center gap-2">
+<button class="flex items-center justify-center size-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-[#111418] dark:text-white transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 ring-2 ring-white dark:ring-[#1A2633] cursor-pointer" data-alt="User profile avatar image" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBWcHgTmymNAXFpazmgI2gdxuf9z7SpptaRs39DvW5ky6_lh2RDq0MR-VmL1NVfQREloVY6U5ewhMqZoPM5I2fA7Fxe-66DauR0MYfgQD6y5DUD5-Rif2cJ23rCC-tDeapIdebdDLSEpqpxVpRHG7yM-nHIi25nk1MBGz0cjOGmz_ifaWne_q4PHH1MwnckVER-iEGrJsfcq6JINp7rAA7EI6wFkM5Om_jo-qCdtkxwHbZZjhM23TfevQjF3fup3I11-eTd9yuOI-o");'></div>
+</div>
+</div>
+</header>
+<div class="flex flex-1 justify-center py-8 px-4 md:px-8 lg:px-20">
+<div class="flex flex-col max-w-7xl flex-1 w-full gap-8">
+<div class="flex flex-wrap gap-2 px-2">
+<a class="text-[#617589] hover:text-primary transition-colors text-sm font-medium leading-normal flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-[18px]">home</span>
+                    Home
+                </a>
+<span class="text-[#617589] text-sm font-medium leading-normal">/</span>
+<a class="text-[#617589] hover:text-primary transition-colors text-sm font-medium leading-normal" href="#">Data Management</a>
+<span class="text-[#617589] text-sm font-medium leading-normal">/</span>
+<span class="text-[#111418] dark:text-white text-sm font-medium leading-normal">Clients</span>
+</div>
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 px-2">
+<div class="flex flex-col gap-2">
+<h1 class="text-[#111418] dark:text-white text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">Quản lý Chủ hàng</h1>
+<p class="text-[#617589] dark:text-[#94a3b8] text-base font-normal leading-normal max-w-2xl">
+                        Manage your client list, update contact details, and oversee all associated purchase orders in one place.
+                    </p>
+</div>
+</div>
+<div class="flex flex-col md:flex-row items-center justify-between gap-4 bg-white dark:bg-[#1A2633] p-4 rounded-xl border border-[#e5e7eb] dark:border-[#2a3845] shadow-sm">
+<div class="flex flex-col sm:flex-row gap-4 w-full md:w-auto flex-1">
+<div class="relative flex-1 max-w-md">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-[#9ca3af]">search</span>
+<input class="w-full pl-10 pr-4 py-2.5 rounded-lg border border-[#d1d5db] dark:border-[#475569] bg-gray-50 dark:bg-[#23303e] text-[#111418] dark:text-white focus:ring-2 focus:ring-primary focus:border-primary outline-none text-sm transition-all shadow-sm" placeholder="Search by client name, phone..." type="text"/>
+</div>
+<button class="flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-[#617589] dark:text-[#94a3b8] bg-white dark:bg-[#1A2633] border border-[#d1d5db] dark:border-[#475569] rounded-lg hover:bg-gray-50 dark:hover:bg-[#23303e] transition-colors shadow-sm w-full sm:w-auto">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+<span>Filters</span>
+</button>
+</div>
+<div class="flex items-center gap-3 w-full md:w-auto">
+<button class="flex items-center justify-center gap-2 w-full md:w-auto cursor-pointer overflow-hidden rounded-lg h-10 px-5 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] shadow-md hover:bg-blue-600 transition-colors">
+<span class="material-symbols-outlined text-[20px]">person_add</span>
+<span class="truncate">Add New Client</span>
+</button>
+</div>
+</div>
+<div class="rounded-xl border border-[#e5e7eb] dark:border-[#2a3845] bg-white dark:bg-[#1A2633] shadow-sm overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left text-sm text-[#617589] dark:text-[#94a3b8]">
+<thead class="bg-[#f9fafb] dark:bg-[#23303e] text-[#111418] dark:text-white font-semibold uppercase tracking-wider text-xs border-b border-[#e5e7eb] dark:border-[#2a3845]">
+<tr>
+<th class="px-6 py-4" scope="col">Client Name</th>
+<th class="px-6 py-4" scope="col">Contact Person</th>
+<th class="px-6 py-4" scope="col">Phone Number</th>
+<th class="px-6 py-4" scope="col">Address</th>
+<th class="px-6 py-4 text-right" scope="col">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#e5e7eb] dark:divide-[#2a3845]">
+<tr class="hover:bg-gray-50 dark:hover:bg-[#1e293b] transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-blue-100 dark:bg-blue-900/40 text-primary flex items-center justify-center font-bold text-sm ring-2 ring-white dark:ring-[#1A2633]">
+                                            ML
+                                        </div>
+<div>
+<p class="font-bold text-[#111418] dark:text-white text-base">Minh Long Co., Ltd</p>
+<p class="text-xs">ID: C-001</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex flex-col">
+<span class="text-[#111418] dark:text-white font-medium">Nguyen Van A</span>
+<span class="text-xs">Purchase Manager</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap font-medium font-mono text-[#111418] dark:text-white">0901 234 567</td>
+<td class="px-6 py-4 max-w-xs truncate" title="123 Le Loi Street, Ben Nghe Ward, District 1, HCMC">
+                                    123 Le Loi Street, Dist 1, HCMC
+                                </td>
+<td class="px-6 py-4 whitespace-nowrap text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-primary bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 font-medium text-xs transition-colors" title="View Purchase Orders">
+<span class="material-symbols-outlined text-[16px]">receipt_long</span>
+                                            View POs
+                                        </button>
+<button class="p-2 text-[#617589] hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title="Edit Details">
+<span class="material-symbols-outlined text-[20px]">edit_square</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-[#1e293b] transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 flex items-center justify-center font-bold text-sm ring-2 ring-white dark:ring-[#1A2633]">
+                                            GT
+                                        </div>
+<div>
+<p class="font-bold text-[#111418] dark:text-white text-base">Global Trading Corp</p>
+<p class="text-xs">ID: C-002</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex flex-col">
+<span class="text-[#111418] dark:text-white font-medium">Sarah Tran</span>
+<span class="text-xs">Director</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap font-medium font-mono text-[#111418] dark:text-white">0912 345 678</td>
+<td class="px-6 py-4 max-w-xs truncate" title="456 Nguyen Van Linh, Da Nang City">
+                                    456 Nguyen Van Linh, Da Nang
+                                </td>
+<td class="px-6 py-4 whitespace-nowrap text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-primary bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 font-medium text-xs transition-colors" title="View Purchase Orders">
+<span class="material-symbols-outlined text-[16px]">receipt_long</span>
+                                            View POs
+                                        </button>
+<button class="p-2 text-[#617589] hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title="Edit Details">
+<span class="material-symbols-outlined text-[20px]">edit_square</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-[#1e293b] transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400 flex items-center justify-center font-bold text-sm ring-2 ring-white dark:ring-[#1A2633]">
+                                            HH
+                                        </div>
+<div>
+<p class="font-bold text-[#111418] dark:text-white text-base">Hoang Ha Logistics</p>
+<p class="text-xs">ID: C-003</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex flex-col">
+<span class="text-[#111418] dark:text-white font-medium">Tran Thi B</span>
+<span class="text-xs">Operations Lead</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap font-medium font-mono text-[#111418] dark:text-white">0987 654 321</td>
+<td class="px-6 py-4 max-w-xs truncate" title="789 Cau Giay, Hanoi">
+                                    789 Cau Giay, Hanoi
+                                </td>
+<td class="px-6 py-4 whitespace-nowrap text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-primary bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 font-medium text-xs transition-colors" title="View Purchase Orders">
+<span class="material-symbols-outlined text-[16px]">receipt_long</span>
+                                            View POs
+                                        </button>
+<button class="p-2 text-[#617589] hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title="Edit Details">
+<span class="material-symbols-outlined text-[20px]">edit_square</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-[#1e293b] transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400 flex items-center justify-center font-bold text-sm ring-2 ring-white dark:ring-[#1A2633]">
+                                            VE
+                                        </div>
+<div>
+<p class="font-bold text-[#111418] dark:text-white text-base">Viet Export JSC</p>
+<p class="text-xs">ID: C-004</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex flex-col">
+<span class="text-[#111418] dark:text-white font-medium">Le Van C</span>
+<span class="text-xs">Sales Manager</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap font-medium font-mono text-[#111418] dark:text-white">0933 445 566</td>
+<td class="px-6 py-4 max-w-xs truncate" title="VSIP Industrial Park, Binh Duong">
+                                    VSIP Industrial Park, Binh Duong
+                                </td>
+<td class="px-6 py-4 whitespace-nowrap text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-primary bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 font-medium text-xs transition-colors" title="View Purchase Orders">
+<span class="material-symbols-outlined text-[16px]">receipt_long</span>
+                                            View POs
+                                        </button>
+<button class="p-2 text-[#617589] hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title="Edit Details">
+<span class="material-symbols-outlined text-[20px]">edit_square</span>
+</button>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-[#1e293b] transition-colors group">
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex items-center gap-3">
+<div class="size-10 rounded-full bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 flex items-center justify-center font-bold text-sm ring-2 ring-white dark:ring-[#1A2633]">
+                                            TF
+                                        </div>
+<div>
+<p class="font-bold text-[#111418] dark:text-white text-base">Tech Fusion Labs</p>
+<p class="text-xs">ID: C-005</p>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap">
+<div class="flex flex-col">
+<span class="text-[#111418] dark:text-white font-medium">Pham Minh D</span>
+<span class="text-xs">CTO</span>
+</div>
+</td>
+<td class="px-6 py-4 whitespace-nowrap font-medium font-mono text-[#111418] dark:text-white">0999 888 777</td>
+<td class="px-6 py-4 max-w-xs truncate" title="Hi-Tech Park, District 9, HCMC">
+                                    Hi-Tech Park, District 9, HCMC
+                                </td>
+<td class="px-6 py-4 whitespace-nowrap text-right">
+<div class="flex items-center justify-end gap-2">
+<button class="flex items-center gap-1 px-3 py-1.5 rounded-lg text-primary bg-blue-50 dark:bg-blue-900/20 hover:bg-blue-100 dark:hover:bg-blue-900/40 font-medium text-xs transition-colors" title="View Purchase Orders">
+<span class="material-symbols-outlined text-[16px]">receipt_long</span>
+                                            View POs
+                                        </button>
+<button class="p-2 text-[#617589] hover:text-primary hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors" title="Edit Details">
+<span class="material-symbols-outlined text-[20px]">edit_square</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="flex items-center justify-between px-6 py-4 border-t border-[#e5e7eb] dark:border-[#2a3845] bg-[#f9fafb] dark:bg-[#1A2633]">
+<div class="text-sm text-[#617589] dark:text-[#94a3b8]">
+                        Showing <span class="font-medium text-[#111418] dark:text-white">1</span> to <span class="font-medium text-[#111418] dark:text-white">5</span> of <span class="font-medium text-[#111418] dark:text-white">42</span> clients
+                    </div>
+<div class="flex gap-2">
+<button class="flex items-center justify-center px-3 py-1 text-sm font-medium rounded-lg border border-[#d1d5db] dark:border-[#475569] bg-white dark:bg-[#23303e] text-[#617589] dark:text-[#94a3b8] hover:bg-gray-50 dark:hover:bg-[#2a3845] disabled:opacity-50">
+                            Previous
+                        </button>
+<button class="flex items-center justify-center px-3 py-1 text-sm font-medium rounded-lg border border-[#d1d5db] dark:border-[#475569] bg-white dark:bg-[#23303e] text-[#617589] dark:text-[#94a3b8] hover:bg-gray-50 dark:hover:bg-[#2a3845]">
+                            Next
+                        </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</body></html>

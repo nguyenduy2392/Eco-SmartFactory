@@ -8,10 +8,11 @@ namespace SmartFactory.Application.Commands.Products;
 
 public class CreateProductCommand : IRequest<ProductDto>
 {
+    public string Code { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
-    public decimal Price { get; set; }
-    public int StockQuantity { get; set; }
+    public string? ImageUrl { get; set; }
+    public string? Category { get; set; }
 }
 
 public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand, ProductDto>
@@ -31,10 +32,11 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
     {
         var product = new Product
         {
+            Code = request.Code,
             Name = request.Name,
             Description = request.Description,
-            Price = request.Price,
-            StockQuantity = request.StockQuantity,
+            ImageUrl = request.ImageUrl,
+            Category = request.Category,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -47,10 +49,11 @@ public class CreateProductCommandHandler : IRequestHandler<CreateProductCommand,
         return new ProductDto
         {
             Id = product.Id,
+            Code = product.Code,
             Name = product.Name,
             Description = product.Description,
-            Price = product.Price,
-            StockQuantity = product.StockQuantity,
+            ImageUrl = product.ImageUrl,
+            Category = product.Category,
             IsActive = product.IsActive,
             CreatedAt = product.CreatedAt
         };

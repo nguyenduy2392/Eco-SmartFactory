@@ -32,10 +32,11 @@ public class GetProductByIdQueryHandler : IRequestHandler<GetProductByIdQuery, P
         return new ProductDto
         {
             Id = product.Id,
+            Code = product.Code,
             Name = product.Name,
             Description = product.Description,
-            Price = product.Price,
-            StockQuantity = product.StockQuantity,
+            ImageUrl = product.ImageUrl,
+            Category = product.Category,
             IsActive = product.IsActive,
             CreatedAt = product.CreatedAt
         };

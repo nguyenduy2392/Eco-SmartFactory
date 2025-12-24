@@ -10,6 +10,7 @@ import { ConfirmationService, MessageService } from 'primeng/api';
 import { registerLocaleData } from '@angular/common';
 import vi from '@angular/common/locales/vi';
 import { pendingRequestsInterceptor$ } from 'ng-http-loader';
+import { jwtInterceptor } from './interceptors/jwt.interceptor';
 
 registerLocaleData(vi);
 
@@ -27,7 +28,7 @@ export const appConfig: ApplicationConfig = {
       withViewTransitions(),
       withHashLocation()
     ),
-    provideHttpClient(withInterceptors([pendingRequestsInterceptor$])),
+    provideHttpClient(withInterceptors([jwtInterceptor, pendingRequestsInterceptor$])),
     provideAnimationsAsync(),
     provideHttpClient(),
     importProvidersFrom(FormsModule),

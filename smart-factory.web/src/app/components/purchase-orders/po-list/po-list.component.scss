@@ -1,0 +1,27 @@
+// Custom styles for PO List component
+.p-datatable {
+  .p-datatable-thead > tr > th {
+    background-color: #f8fafc;
+    font-weight: 600;
+    color: #374151;
+    border-bottom: 2px solid #e5e7eb;
+  }
+
+  .p-datatable-tbody > tr {
+    transition: background-color 0.2s;
+
+    &:hover {
+      background-color: #f9fafb;
+    }
+  }
+}
+
+// Custom badge styles
+::ng-deep {
+  .p-tag {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.75rem;
+    font-weight: 500;
+  }
+}
+

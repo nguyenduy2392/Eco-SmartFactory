@@ -130,6 +130,9 @@ try
     // Register JwtHelper
     builder.Services.AddScoped<JwtHelper>();
 
+    // Register ExcelImportService
+    builder.Services.AddScoped<SmartFactory.Application.Services.ExcelImportService>();
+
     // Add MediatR
     builder.Services.AddMediatR(cfg =>
     {
@@ -143,6 +146,23 @@ try
     });
 
     var app = builder.Build();
+
+    // Seed Database
+    using (var scope = app.Services.CreateScope())
+    {
+        var services = scope.ServiceProvider;
+        try
+        {
+            var context = services.GetRequiredService<ApplicationDbContext>();
+            var seeder = new SmartFactory.Application.Data.DbSeeder(context);
+            await seeder.SeedAsync();
+            Log.Information("Database seeding completed successfully");
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "An error occurred while seeding the database");
+        }
+    }
 
     // Configure the HTTP request pipeline
     app.UseSwagger();

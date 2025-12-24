@@ -26,10 +26,11 @@ public class GetAllProductsQueryHandler : IRequestHandler<GetAllProductsQuery, L
             .Select(p => new ProductDto
             {
                 Id = p.Id,
+                Code = p.Code,
                 Name = p.Name,
                 Description = p.Description,
-                Price = p.Price,
-                StockQuantity = p.StockQuantity,
+                ImageUrl = p.ImageUrl,
+                Category = p.Category,
                 IsActive = p.IsActive,
                 CreatedAt = p.CreatedAt
             })

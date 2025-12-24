@@ -1,0 +1,61 @@
+// Custom styles for PO Detail component
+
+.p-tabview {
+  ::ng-deep {
+    .p-tabview-nav {
+      background: white;
+      border-bottom: 2px solid #e5e7eb;
+    }
+
+    .p-tabview-nav li .p-tabview-nav-link {
+      padding: 1rem 1.5rem;
+      font-weight: 500;
+      color: #6b7280;
+
+      &:hover {
+        background: #f9fafb;
+      }
+    }
+
+    .p-tabview-nav li.p-highlight .p-tabview-nav-link {
+      color: #2563eb;
+      border-color: #2563eb;
+    }
+
+    .p-tabview-panels {
+      padding: 0;
+      background: transparent;
+    }
+  }
+}
+
+.p-accordion {
+  ::ng-deep {
+    .p-accordion-header-link {
+      background: #f8fafc;
+      font-weight: 600;
+      
+      &:hover {
+        background: #f1f5f9;
+      }
+    }
+
+    .p-accordion-content {
+      padding: 0;
+    }
+  }
+}
+
+.p-timeline {
+  ::ng-deep {
+    .p-timeline-event-marker {
+      background: #2563eb;
+      border-color: #2563eb;
+    }
+
+    .p-timeline-event-connector {
+      background: #e5e7eb;
+    }
+  }
+}
+

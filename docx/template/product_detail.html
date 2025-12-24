@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Trang Chi tiết Sản phẩm trong Đơn hàng</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#137fec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101922",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem", 
+                        "lg": "0.5rem", 
+                        "xl": "0.75rem", 
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings:
+            'FILL' 0,
+            'wght' 400,
+            'GRAD' 0,
+            'opsz' 24
+        }
+    </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark text-[#111418] dark:text-white">
+<div class="relative flex h-auto min-h-screen w-full flex-col overflow-x-hidden">
+<header class="flex items-center justify-between whitespace-nowrap border-b border-solid border-b-[#e5e7eb] dark:border-b-[#2a3845] bg-white dark:bg-[#1A2633] px-10 py-3 sticky top-0 z-50">
+<div class="flex items-center gap-4 text-[#111418] dark:text-white">
+<div class="size-8 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined !text-3xl">shopping_cart</span>
+</div>
+<h2 class="text-lg font-bold leading-tight tracking-[-0.015em]">PO Manager</h2>
+</div>
+<div class="flex flex-1 justify-end gap-8 items-center">
+<label class="hidden md:flex flex-col min-w-40 !h-10 max-w-64">
+<div class="flex w-full flex-1 items-stretch rounded-lg h-full">
+<div class="text-[#617589] flex border-none bg-[#f0f2f4] dark:bg-[#2a3845] items-center justify-center pl-4 rounded-l-lg border-r-0">
+<span class="material-symbols-outlined text-[20px]">search</span>
+</div>
+<input class="form-input flex w-full min-w-0 flex-1 resize-none overflow-hidden rounded-lg text-[#111418] dark:text-white focus:outline-0 focus:ring-0 border-none bg-[#f0f2f4] dark:bg-[#2a3845] focus:border-none h-full placeholder:text-[#617589] px-4 rounded-l-none border-l-0 pl-2 text-sm font-normal leading-normal" placeholder="Search POs..." value=""/>
+</div>
+</label>
+<div class="flex items-center gap-2">
+<button class="flex items-center justify-center size-10 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 text-[#111418] dark:text-white transition-colors">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full size-10 ring-2 ring-white dark:ring-[#1A2633] cursor-pointer" data-alt="User profile avatar image" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBWcHgTmymNAXFpazmgI2gdxuf9z7SpptaRs39DvW5ky6_lh2RDq0MR-VmL1NVfQREloVY6U5ewhMqZoPM5I2fA7Fxe-66DauR0MYfgQD6y5DUD5-Rif2cJ23rCC-tDeapIdebdDLSEpqpxVpRHG7yM-nHIi25nk1MBGz0cjOGmz_ifaWne_q4PHH1MwnckVER-iEGrJsfcq6JINp7rAA7EI6wFkM5Om_jo-qCdtkxwHbZZjhM23TfevQjF3fup3I11-eTd9yuOI-o");'></div>
+</div>
+</div>
+</header>
+<div class="flex flex-1 justify-center py-8 px-4 md:px-8 lg:px-20">
+<div class="flex flex-col max-w-7xl flex-1 w-full gap-8">
+<div class="flex flex-wrap gap-2 px-2">
+<a class="text-[#617589] hover:text-primary transition-colors text-sm font-medium leading-normal flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-[18px]">home</span>
+                    Dashboard
+                </a>
+<span class="text-[#617589] text-sm font-medium leading-normal">/</span>
+<a class="text-[#617589] hover:text-primary transition-colors text-sm font-medium leading-normal" href="#">Purchase Orders</a>
+<span class="text-[#617589] text-sm font-medium leading-normal">/</span>
+<a class="text-[#617589] hover:text-primary transition-colors text-sm font-medium leading-normal" href="#">PO-2023-089</a>
+<span class="text-[#617589] text-sm font-medium leading-normal">/</span>
+<span class="text-[#111418] dark:text-white text-sm font-medium leading-normal">Product Details</span>
+</div>
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 px-2">
+<div class="flex flex-col gap-2">
+<h1 class="text-[#111418] dark:text-white text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">Chi tiết Sản phẩm</h1>
+<p class="text-[#617589] dark:text-[#94a3b8] text-base font-normal leading-normal max-w-2xl">
+                        Manage specifications and components for this product within Purchase Order #PO-2023-089.
+                    </p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center justify-center gap-2 cursor-pointer overflow-hidden rounded-lg h-10 px-4 bg-white dark:bg-[#1A2633] border border-[#e5e7eb] dark:border-[#2a3845] text-[#111418] dark:text-white text-sm font-bold leading-normal tracking-[0.015em] shadow-sm hover:bg-gray-50 dark:hover:bg-[#23303e] transition-colors">
+<span class="material-symbols-outlined text-[20px]">print</span>
+<span class="truncate">Print Label</span>
+</button>
+<button class="flex items-center justify-center gap-2 cursor-pointer overflow-hidden rounded-lg h-10 px-4 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] shadow-md hover:bg-blue-600 transition-colors">
+<span class="material-symbols-outlined text-[20px]">save</span>
+<span class="truncate">Save Changes</span>
+</button>
+</div>
+</div>
+<div class="bg-white dark:bg-[#1A2633] rounded-xl border border-[#e5e7eb] dark:border-[#2a3845] shadow-sm overflow-hidden">
+<div class="px-6 py-4 border-b border-[#e5e7eb] dark:border-[#2a3845] flex justify-between items-center">
+<h3 class="text-lg font-bold text-[#111418] dark:text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">inventory_2</span>
+                        Product Information
+                    </h3>
+<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                        In Production
+                    </span>
+</div>
+<div class="p-6">
+<div class="flex flex-col lg:flex-row gap-8">
+<div class="w-full lg:w-1/3 flex flex-col gap-4">
+<div class="aspect-square w-full rounded-lg bg-gray-100 dark:bg-[#2a3845] flex items-center justify-center overflow-hidden border border-[#e5e7eb] dark:border-[#2a3845]">
+<img alt="Product Image" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD_H7KmO2s_wArscM_1XsQO3PjJF3TyxRqeak7wi33Ew48k9nGByICbwLd5B77jamAm34ul_SYD5ctW2D6XEZilke1osB1fV3azcWuEeE1cjn2oewfxMTeV-kC4bzaNJnwNCDxfyT78yZDZxGLe6O5rbi1Wlb_hwrgnBaJXrzgYXmXymjxzN5MSf9Bx49QQ5CtEqr45nxJvv9Dg11gZ7zFvAG38SaRR7d6FPLyTLSYBPURj5S45PU7_nvIpo_k6vingoWEaWGvM5zg"/>
+</div>
+<button class="w-full py-2 px-4 border border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-500 hover:text-primary hover:border-primary transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg">add_a_photo</span>
+                                Update Image
+                            </button>
+</div>
+<div class="w-full lg:w-2/3 grid grid-cols-1 md:grid-cols-2 gap-6">
+<div class="col-span-1 md:col-span-2">
+<label class="block text-sm font-medium text-[#617589] dark:text-[#94a3b8] mb-1">Product Name</label>
+<input class="w-full rounded-lg border-[#d1d5db] dark:border-[#475569] bg-[#f9fafb] dark:bg-[#101922] text-[#111418] dark:text-white focus:border-primary focus:ring-primary text-lg font-semibold px-4 py-2.5" type="text" value="Executive Office Chair - Ergonomic Series"/>
+</div>
+<div>
+<label class="block text-sm font-medium text-[#617589] dark:text-[#94a3b8] mb-1">Unique ID (SKU)</label>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-outlined text-[20px]">fingerprint</span>
+<input class="w-full pl-10 rounded-lg border-[#d1d5db] dark:border-[#475569] bg-[#f9fafb] dark:bg-[#101922] text-[#111418] dark:text-white focus:border-primary focus:ring-primary px-4 py-2" type="text" value="SKU-CHAIR-0089-BLK"/>
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium text-[#617589] dark:text-[#94a3b8] mb-1">Quantity</label>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 material-symbols-outlined text-[20px]">numbers</span>
+<input class="w-full pl-10 rounded-lg border-[#d1d5db] dark:border-[#475569] bg-[#f9fafb] dark:bg-[#101922] text-[#111418] dark:text-white focus:border-primary focus:ring-primary px-4 py-2" type="number" value="500"/>
+</div>
+</div>
+<div>
+<label class="block text-sm font-medium text-[#617589] dark:text-[#94a3b8] mb-1">Material</label>
+<select class="w-full rounded-lg border-[#d1d5db] dark:border-[#475569] bg-[#f9fafb] dark:bg-[#101922] text-[#111418] dark:text-white focus:border-primary focus:ring-primary px-4 py-2">
+<option>Leather</option>
+<option selected="">Mesh Fabric</option>
+<option>Synthetic Leather</option>
+<option>Wool</option>
+</select>
+</div>
+<div>
+<label class="block text-sm font-medium text-[#617589] dark:text-[#94a3b8] mb-1">Color</label>
+<div class="flex gap-2 items-center">
+<input class="h-10 w-10 p-1 rounded border border-gray-300 cursor-pointer bg-white" type="color" value="#000000"/>
+<input class="flex-1 rounded-lg border-[#d1d5db] dark:border-[#475569] bg-[#f9fafb] dark:bg-[#101922] text-[#111418] dark:text-white focus:border-primary focus:ring-primary px-4 py-2" type="text" value="Midnight Black"/>
+</div>
+</div>
+<div class="col-span-1 md:col-span-2">
+<label class="block text-sm font-medium text-[#617589] dark:text-[#94a3b8] mb-1">Description / Notes</label>
+<textarea class="w-full rounded-lg border-[#d1d5db] dark:border-[#475569] bg-[#f9fafb] dark:bg-[#101922] text-[#111418] dark:text-white focus:border-primary focus:ring-primary px-4 py-2 resize-none" rows="3">Standard ergonomic model with lumbar support and adjustable armrests.</textarea>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-4">
+<div class="flex items-center justify-between">
+<h2 class="text-[#111418] dark:text-white text-xl md:text-2xl font-bold leading-tight">Danh sách Linh kiện</h2>
+<button class="flex items-center justify-center gap-2 cursor-pointer overflow-hidden rounded-lg h-9 px-4 bg-white dark:bg-[#1A2633] border border-[#e5e7eb] dark:border-[#2a3845] text-primary text-sm font-bold shadow-sm hover:bg-blue-50 dark:hover:bg-[#23303e] transition-colors">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                        Add New Component
+                    </button>
+</div>
+<div class="bg-white dark:bg-[#1A2633] rounded-xl border border-[#e5e7eb] dark:border-[#2a3845] shadow-sm overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left text-sm text-[#111418] dark:text-white">
+<thead class="bg-[#f9fafb] dark:bg-[#23303e] text-[#617589] dark:text-[#94a3b8] font-medium border-b border-[#e5e7eb] dark:border-[#2a3845]">
+<tr>
+<th class="px-6 py-4">Component Name</th>
+<th class="px-6 py-4">Part ID</th>
+<th class="px-6 py-4">Material</th>
+<th class="px-6 py-4">Quantity Required</th>
+<th class="px-6 py-4">Status</th>
+<th class="px-6 py-4 text-right">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-[#e5e7eb] dark:divide-[#2a3845]">
+<tr class="hover:bg-gray-50 dark:hover:bg-[#1f2d3d] transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded bg-gray-200 dark:bg-gray-700 flex-shrink-0 bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDkJ9Fw8eRYqf5eVANdCB03ldqRNE9RF72dAdm0kMxrNZzMQi0NmkmGZ7_cH2qiLYNRfrSE77QEm1ahkSuM-YMFyOZfST65dBueXKHGIowwLYhfZ3r9gaVhlPRf1z_77JkYNZ40B58u91etSKNYIPaFdNDD9DgEqPyhBPPU_Y3J_1IJk2-HAD9kOcONd2YqgDe4vweTC5ioP5Esu1Be9gZQCKHb_b1S8hEDXI2lrydoFPt3PN2f7t5uh0VYnWWDRtkAUr8emlKWg0Q');"></div>
+<div>
+<div class="font-bold">Wheel Base Assembly</div>
+<div class="text-xs text-[#617589]">Main structural support</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 font-mono text-xs">CPT-WHL-001</td>
+<td class="px-6 py-4">Reinforced Nylon</td>
+<td class="px-6 py-4">1 pc</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-200">
+                                            Ready
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<a class="text-primary hover:text-blue-700 dark:hover:text-blue-400 font-medium inline-flex items-center gap-1" href="#">
+                                            View Process
+                                            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-[#1f2d3d] transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded bg-gray-200 dark:bg-gray-700 flex-shrink-0 bg-cover bg-center" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCXMbZ7k3BV_wyrfU-qK6ITrfjLqBYLTJTrOzd3_Tr2E80hoL_LlKpNHbrFwZjmMyGXdyvHel6yfub0KS_WWQsdoM3SHJnYv5VUGtF7iySFwq6p8ekBbkyYSKOQ6-1QJwhvMmJzpZ7yQ05gLuVdIv9lLen6ZTHwbgdJzsx7sdYzEcgMfCuI7PJZnEf9SYiyfto9U7STxlIwRWkC13bUmi2tCuUXbQaJrB6ickpHFE5c3zMV3ANlpi1wZFS6YtVDvJeMy5xEmm4qYJI');"></div>
+<div>
+<div class="font-bold">Gas Lift Mechanism</div>
+<div class="text-xs text-[#617589]">Height adjustment unit</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 font-mono text-xs">CPT-GAS-024</td>
+<td class="px-6 py-4">Steel</td>
+<td class="px-6 py-4">1 pc</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-200">
+                                            Processing
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<a class="text-primary hover:text-blue-700 dark:hover:text-blue-400 font-medium inline-flex items-center gap-1" href="#">
+                                            View Process
+                                            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+<tr class="hover:bg-gray-50 dark:hover:bg-[#1f2d3d] transition-colors">
+<td class="px-6 py-4">
+<div class="flex items-center gap-3">
+<div class="h-10 w-10 rounded bg-gray-200 dark:bg-gray-700 flex-shrink-0 flex items-center justify-center">
+<span class="material-symbols-outlined text-gray-400 text-xl">hardware</span>
+</div>
+<div>
+<div class="font-bold">Armrest Set (L/R)</div>
+<div class="text-xs text-[#617589]">Adjustable padded arms</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-4 font-mono text-xs">CPT-ARM-112</td>
+<td class="px-6 py-4">PU + Plastic</td>
+<td class="px-6 py-4">1 set</td>
+<td class="px-6 py-4">
+<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200">
+                                            Pending
+                                        </span>
+</td>
+<td class="px-6 py-4 text-right">
+<a class="text-primary hover:text-blue-700 dark:hover:text-blue-400 font-medium inline-flex items-center gap-1" href="#">
+                                            View Process
+                                            <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="bg-gray-50 dark:bg-[#1f2d3d] px-6 py-3 border-t border-[#e5e7eb] dark:border-[#2a3845] flex items-center justify-between">
+<span class="text-sm text-[#617589] dark:text-[#94a3b8]">Showing 3 of 12 components</span>
+<div class="flex gap-2">
+<button class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 disabled:opacity-50 text-[#617589]" disabled="">
+<span class="material-symbols-outlined text-[20px]">chevron_left</span>
+</button>
+<button class="p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-600 text-[#617589]">
+<span class="material-symbols-outlined text-[20px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-4 flex flex-col md:flex-row items-center justify-between rounded-xl bg-[#eef4ff] dark:bg-[#1e293b] p-6 border border-blue-100 dark:border-blue-900/50">
+<div class="flex gap-4 items-center mb-4 md:mb-0">
+<div class="size-12 rounded-full bg-white dark:bg-[#0f172a] flex items-center justify-center text-primary shadow-sm">
+<span class="material-symbols-outlined text-[24px]">engineering</span>
+</div>
+<div>
+<h4 class="text-[#111418] dark:text-white font-bold text-lg">Production Requirements</h4>
+<p class="text-[#617589] dark:text-[#94a3b8] text-sm">Review technical drawings and assembly instructions for this specific SKU.</p>
+</div>
+</div>
+<button class="text-primary hover:text-blue-700 dark:hover:text-blue-400 font-bold text-sm flex items-center gap-1">
+                    Download Specs
+                    <span class="material-symbols-outlined text-[18px]">download</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+
+</body></html>

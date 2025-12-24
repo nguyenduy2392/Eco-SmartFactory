@@ -35,6 +35,68 @@ export const routes: Routes = [
         },
         loadChildren: () => import('./views/pages/systems/system-route').then((m) => m.routes)
       },
+      {
+        path: 'purchase-orders',
+        data: {
+          title: 'Quản lý PO',
+          breadcrumb: 'Quản lý PO',
+          icon: 'pi pi-shopping-cart'
+        },
+        children: [
+          {
+            path: '',
+            loadComponent: () => import('./components/purchase-orders/po-list/po-list.component').then(m => m.POListComponent),
+            data: {
+              title: 'Danh sách PO',
+              breadcrumb: 'Danh sách'
+            }
+          },
+          {
+            path: ':id',
+            loadComponent: () => import('./components/purchase-orders/po-detail/po-detail.component').then(m => m.PODetailComponent),
+            data: {
+              title: 'Chi tiết PO',
+              breadcrumb: 'Chi tiết'
+            }
+          }
+        ]
+      },
+      {
+        path: 'customers',
+        loadComponent: () => import('./views/pages/customers/customers.component').then(m => m.CustomersComponent),
+        data: {
+          title: 'Quản lý chủ hàng',
+          breadcrumb: 'Chủ hàng',
+          icon: 'pi pi-building'
+        }
+      },
+      {
+        path: 'materials',
+        loadComponent: () => import('./views/pages/materials/materials.component').then(m => m.MaterialsComponent),
+        data: {
+          title: 'Quản lý vật tư',
+          breadcrumb: 'Vật tư',
+          icon: 'pi pi-box'
+        }
+      },
+      {
+        path: 'tools',
+        loadComponent: () => import('./views/pages/tools/tools.component').then(m => m.ToolsComponent),
+        data: {
+          title: 'Quản lý Tool & Khuôn',
+          breadcrumb: 'Tool & Khuôn',
+          icon: 'pi pi-wrench'
+        }
+      },
+      {
+        path: 'products',
+        loadComponent: () => import('./views/pages/products/products.component').then(m => m.ProductsComponent),
+        data: {
+          title: 'Quản lý sản phẩm',
+          breadcrumb: 'Sản phẩm',
+          icon: 'pi pi-box'
+        }
+      },
     ]
   },
   {

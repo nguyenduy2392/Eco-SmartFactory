@@ -1,0 +1,60 @@
+<div class="grid">
+  <div class="col-12">
+    <div class="card">
+      <div class="flex justify-content-between align-items-center mb-4">
+        <h5 class="m-0">Quản lý vật tư</h5>
+        <button pButton type="button" label="Thêm vật tư" icon="pi pi-plus" 
+                class="p-button-primary" (click)="openCreateDialog()"></button>
+      </div>
+
+      <p-table 
+        [value]="materials"
+        [loading]="loading"
+        [paginator]="true"
+        [rows]="20"
+        styleClass="p-datatable-striped">
+        
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Mã VT</th>
+            <th>Tên vật tư</th>
+            <th>Loại</th>
+            <th>Tồn kho</th>
+            <th>Đơn vị</th>
+            <th>Trạng thái</th>
+            <th style="width: 150px">Hành động</th>
+          </tr>
+        </ng-template>
+
+        <ng-template pTemplate="body" let-material>
+          <tr>
+            <td>{{ material.code }}</td>
+            <td>{{ material.name }}</td>
+            <td>{{ material.type }}</td>
+            <td>
+              <p-tag 
+                [value]="material.currentStock + ' / ' + material.minStock" 
+                [severity]="getStockSeverity(material.currentStock, material.minStock)">
+              </p-tag>
+            </td>
+            <td>{{ material.unit }}</td>
+            <td>
+              <p-tag 
+                [value]="material.isActive ? 'Hoạt động' : 'Ngừng'" 
+                [severity]="getStatusSeverity(material.isActive)">
+              </p-tag>
+            </td>
+            <td>
+              <button pButton type="button" icon="pi pi-pencil" 
+                      class="p-button-rounded p-button-text"
+                      (click)="openEditDialog(material)"></button>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+</div>
+
+<p-toast></p-toast>
+

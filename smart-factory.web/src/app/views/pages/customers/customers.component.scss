@@ -1,0 +1,8 @@
+:host ::ng-deep {
+  .p-datatable {
+    .p-datatable-tbody > tr > td {
+      vertical-align: top;
+    }
+  }
+}
+

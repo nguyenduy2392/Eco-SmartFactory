@@ -1,0 +1,289 @@
+<div class="p-6 bg-gray-50 min-h-screen" *ngIf="purchaseOrder">
+  <!-- Header -->
+  <div class="mb-6">
+    <div class="flex justify-between items-start">
+      <div class="flex items-center gap-4">
+        <button
+          pButton
+          icon="pi pi-arrow-left"
+          class="p-button-text p-button-lg"
+          (click)="goBack()">
+        </button>
+        <div>
+          <h1 class="text-3xl font-bold text-gray-800">{{ purchaseOrder.poNumber }}</h1>
+          <p class="text-gray-600 mt-1">Chi tiết Purchase Order</p>
+        </div>
+      </div>
+      <div class="flex gap-2">
+        <button
+          *ngIf="purchaseOrder.versionType !== 'PRODUCTION'"
+          pButton
+          label="Clone Version"
+          icon="pi pi-copy"
+          class="p-button-outlined"
+          (click)="cloneVersion()">
+        </button>
+        <button
+          pButton
+          label="Xuất Excel"
+          icon="pi pi-file-excel"
+          class="p-button-success p-button-outlined"
+          (click)="exportToExcel()">
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PO Info Card -->
+  <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <!-- Chủ hàng -->
+      <div>
+        <label class="block text-sm font-medium text-gray-500 mb-1">Chủ hàng</label>
+        <div class="flex items-center">
+          <i class="pi pi-building text-gray-400 mr-2"></i>
+          <span class="text-lg font-semibold">{{ purchaseOrder.customerName }}</span>
+        </div>
+      </div>
+
+      <!-- Phiên bản -->
+      <div>
+        <label class="block text-sm font-medium text-gray-500 mb-1">Phiên bản</label>
+        <p-tag
+          [value]="getVersionTypeText(purchaseOrder.versionType)"
+          [severity]="getVersionTypeSeverity(purchaseOrder.versionType)"
+          styleClass="text-base">
+        </p-tag>
+      </div>
+
+      <!-- Trạng thái -->
+      <div>
+        <label class="block text-sm font-medium text-gray-500 mb-1">Trạng thái</label>
+        <p-tag
+          [value]="purchaseOrder.status"
+          [severity]="getStatusSeverity(purchaseOrder.status)"
+          styleClass="text-base">
+        </p-tag>
+      </div>
+
+      <!-- Ngày PO -->
+      <div>
+        <label class="block text-sm font-medium text-gray-500 mb-1">Ngày PO</label>
+        <div class="flex items-center">
+          <i class="pi pi-calendar text-gray-400 mr-2"></i>
+          <span class="text-lg">{{ purchaseOrder.poDate | date: 'dd/MM/yyyy' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Additional Info -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+      <!-- Ngày giao hàng -->
+      <div *ngIf="purchaseOrder.expectedDeliveryDate">
+        <label class="block text-sm font-medium text-gray-500 mb-1">Ngày giao hàng dự kiến</label>
+        <div class="flex items-center">
+          <i class="pi pi-clock text-gray-400 mr-2"></i>
+          <span class="text-base">{{ purchaseOrder.expectedDeliveryDate | date: 'dd/MM/yyyy' }}</span>
+        </div>
+      </div>
+
+      <!-- Template Type -->
+      <div *ngIf="purchaseOrder.templateType">
+        <label class="block text-sm font-medium text-gray-500 mb-1">Loại template</label>
+        <p-tag [value]="purchaseOrder.templateType" severity="secondary"></p-tag>
+      </div>
+
+      <!-- Tổng tiền -->
+      <div>
+        <label class="block text-sm font-medium text-gray-500 mb-1">Tổng giá trị</label>
+        <span class="text-2xl font-bold text-green-600">
+          {{ purchaseOrder.totalAmount | currency: 'VND': 'symbol': '1.0-0' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Notes -->
+    <div *ngIf="purchaseOrder.notes" class="mt-6 pt-6 border-t">
+      <label class="block text-sm font-medium text-gray-500 mb-2">Ghi chú</label>
+      <p class="text-gray-700">{{ purchaseOrder.notes }}</p>
+    </div>
+  </div>
+
+  <!-- Tabs -->
+  <p-tabView [(activeIndex)]="activeTab">
+    <!-- Tab Sản phẩm -->
+    <p-tabPanel header="Sản phẩm" leftIcon="pi pi-box">
+      <div class="bg-white rounded-lg p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-semibold">Danh sách sản phẩm</h3>
+          <span class="text-gray-600">Tổng: {{ purchaseOrder.products?.length || 0 }} sản phẩm</span>
+        </div>
+
+        <p-table
+          [value]="purchaseOrder.products || []"
+          styleClass="p-datatable-striped">
+          
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Mã SP</th>
+              <th>Tên sản phẩm</th>
+              <th class="text-right">Số lượng</th>
+              <th class="text-right">Đơn giá</th>
+              <th class="text-right">Thành tiền</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-product>
+            <tr>
+              <td>
+                <span class="font-semibold text-blue-600">{{ product.productCode }}</span>
+              </td>
+              <td>{{ product.productName }}</td>
+              <td class="text-right">{{ product.quantity | number }}</td>
+              <td class="text-right">
+                <span *ngIf="product.unitPrice">
+                  {{ product.unitPrice | currency: 'VND': 'symbol': '1.0-0' }}
+                </span>
+                <span *ngIf="!product.unitPrice" class="text-gray-400">-</span>
+              </td>
+              <td class="text-right font-semibold">
+                {{ product.totalAmount | currency: 'VND': 'symbol': '1.0-0' }}
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="5" class="text-center py-8 text-gray-500">
+                Chưa có sản phẩm nào
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </p-tabPanel>
+
+    <!-- Tab Công đoạn -->
+    <p-tabPanel header="Công đoạn gia công" leftIcon="pi pi-wrench">
+      <div class="bg-white rounded-lg p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-semibold">Chi tiết công đoạn</h3>
+          <div class="text-right">
+            <div class="text-sm text-gray-600">Tổng công đoạn: {{ purchaseOrder.operations?.length || 0 }}</div>
+            <div class="text-xl font-bold text-green-600">
+              {{ getTotalOperationsAmount() | currency: 'VND': 'symbol': '1.0-0' }}
+            </div>
+          </div>
+        </div>
+
+        <!-- Nhóm công đoạn theo Processing Type -->
+        <p-accordion *ngIf="purchaseOrder.operations && purchaseOrder.operations.length > 0">
+          <p-accordionTab
+            *ngFor="let processingType of getProcessingTypeNames()"
+            [header]="processingType">
+            
+            <p-table
+              [value]="getOperationsByProcessingType()[processingType]"
+              styleClass="p-datatable-sm">
+              
+              <ng-template pTemplate="header">
+                <tr>
+                  <th style="width: 50px">#</th>
+                  <th>Linh kiện</th>
+                  <th>Tên công đoạn</th>
+                  <th>Phương pháp</th>
+                  <th class="text-center">Charge</th>
+                  <th class="text-center">SL</th>
+                  <th class="text-right">Đơn giá</th>
+                  <th class="text-right">Thành tiền</th>
+                </tr>
+              </ng-template>
+
+              <ng-template pTemplate="body" let-operation let-rowIndex="rowIndex">
+                <tr>
+                  <td>{{ operation.sequenceOrder }}</td>
+                  <td>
+                    <div class="font-semibold text-blue-600">{{ operation.partCode }}</div>
+                    <div class="text-sm text-gray-600">{{ operation.partName }}</div>
+                  </td>
+                  <td>
+                    <div>{{ operation.operationName }}</div>
+                    <div class="text-xs text-gray-500 mt-1">
+                      <span *ngIf="operation.sprayPosition">Vị trí: {{ operation.sprayPosition }}</span>
+                      <span *ngIf="operation.printContent">Nội dung: {{ operation.printContent }}</span>
+                      <span *ngIf="operation.assemblyContent">{{ operation.assemblyContent }}</span>
+                      <span *ngIf="operation.cycleTime">Chu kỳ: {{ operation.cycleTime }}s</span>
+                    </div>
+                  </td>
+                  <td>
+                    <span *ngIf="operation.processMethodName" class="text-sm">
+                      {{ operation.processMethodName }}
+                    </span>
+                  </td>
+                  <td class="text-center">{{ operation.chargeCount }}</td>
+                  <td class="text-center">{{ operation.quantity | number }}</td>
+                  <td class="text-right">
+                    {{ operation.unitPrice | currency: 'VND': 'symbol': '1.0-0' }}
+                  </td>
+                  <td class="text-right font-semibold">
+                    {{ operation.totalAmount | currency: 'VND': 'symbol': '1.0-0' }}
+                  </td>
+                </tr>
+              </ng-template>
+            </p-table>
+          </p-accordionTab>
+        </p-accordion>
+
+        <!-- Empty state -->
+        <div *ngIf="!purchaseOrder.operations || purchaseOrder.operations.length === 0"
+             class="text-center py-12 text-gray-500">
+          <i class="pi pi-inbox text-5xl mb-4"></i>
+          <p>Chưa có công đoạn nào</p>
+        </div>
+      </div>
+    </p-tabPanel>
+
+    <!-- Tab Vật tư & Tool -->
+    <p-tabPanel header="Vật tư & Tool" leftIcon="pi pi-cog">
+      <div class="bg-white rounded-lg p-6">
+        <div class="text-center py-12 text-gray-500">
+          <i class="pi pi-inbox text-5xl mb-4"></i>
+          <p>Chức năng đang được phát triển</p>
+          <p class="text-sm mt-2">Sẽ hiển thị danh sách vật tư và tool cần thiết cho PO này</p>
+        </div>
+      </div>
+    </p-tabPanel>
+
+    <!-- Tab Lịch sử -->
+    <p-tabPanel header="Lịch sử" leftIcon="pi pi-history">
+      <div class="bg-white rounded-lg p-6">
+        <p-timeline [value]="[]" align="left">
+          <ng-template pTemplate="content" let-event>
+            <div class="p-4">
+              <h4 class="font-semibold">{{ event.title }}</h4>
+              <p class="text-sm text-gray-600">{{ event.description }}</p>
+              <small class="text-gray-400">{{ event.date | date: 'dd/MM/yyyy HH:mm' }}</small>
+            </div>
+          </ng-template>
+        </p-timeline>
+        
+        <div class="text-center py-12 text-gray-500">
+          <i class="pi pi-clock text-5xl mb-4"></i>
+          <p>Chưa có lịch sử thay đổi</p>
+        </div>
+      </div>
+    </p-tabPanel>
+  </p-tabView>
+</div>
+
+<!-- Loading state -->
+<div *ngIf="loading" class="flex justify-center items-center h-screen">
+  <p-progressSpinner></p-progressSpinner>
+</div>
+
+<!-- Toast for notifications -->
+<p-toast></p-toast>
+
+<!-- Confirmation dialog -->
+<p-confirmDialog></p-confirmDialog>
+

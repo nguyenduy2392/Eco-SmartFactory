@@ -30,10 +30,11 @@ public class ProductsController : BaseApiController
     {
         var command = new CreateProductCommand
         {
+            Code = request.Code,
             Name = request.Name,
             Description = request.Description,
-            Price = request.Price,
-            StockQuantity = request.StockQuantity
+            ImageUrl = request.ImageUrl,
+            Category = request.Category
         };
 
         var result = await Mediator.Send(command);
