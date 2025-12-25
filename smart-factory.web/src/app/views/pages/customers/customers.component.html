@@ -1,68 +1,231 @@
-<div class="grid">
-  <div class="col-12">
-    <div class="card">
-      <div class="flex justify-content-between align-items-center mb-4">
-        <h5 class="m-0">Quản lý chủ hàng</h5>
-        <button pButton type="button" label="Thêm chủ hàng" icon="pi pi-plus" 
-                class="p-button-primary" (click)="openCreateDialog()"></button>
+<div class="customers-container">
+  <!-- Header Section -->
+  <div class="flex flex-column md:flex-row md:align-items-end justify-content-between gap-4 mb-6">
+    <div class="flex flex-column gap-2">
+      <h1 class="page-title m-0">Quản lý Chủ hàng</h1>
+      <p class="page-subtitle m-0 max-w-full">
+        Quản lý danh sách khách hàng, cập nhật thông tin liên hệ và theo dõi tất cả các đơn hàng liên quan tại một nơi.
+      </p>
+    </div>
+  </div>
+
+  <!-- Search and Filter Bar -->
+  <div class="search-filter-card mb-6">
+    <div class="flex flex-column md:flex-row gap-4 align-items-center justify-content-between">
+      <div class="flex flex-column sm:flex-row gap-4 w-full md:w-auto flex-1">
+        <div class="relative flex-1 max-w-md">
+          <i class="pi pi-search search-icon"></i>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="searchText"
+            (input)="onSearch()"
+            placeholder="Tìm kiếm theo tên, số điện thoại..."
+            class="w-full search-input">
+        </div>
+        <button
+          pButton
+          label="Bộ lọc"
+          icon="pi pi-filter"
+          class="p-button-outlined w-full sm:w-auto"
+          (click)="showFilters = !showFilters">
+        </button>
       </div>
+      <div class="w-full md:w-auto">
+        <button
+          pButton
+          label="Thêm Chủ hàng"
+          icon="pi pi-user-plus"
+          class="p-button-primary w-full md:w-auto"
+          (click)="openCreateDialog()">
+        </button>
+      </div>
+    </div>
+  </div>
 
-      <p-table 
-        [value]="customers"
-        [loading]="loading"
-        [paginator]="true"
-        [rows]="20"
-        [showCurrentPageReport]="true"
-        currentPageReportTemplate="Hiển thị {first} - {last} / {totalRecords} chủ hàng"
-        [globalFilterFields]="['code', 'name', 'contactPerson', 'email', 'phone']"
-        styleClass="p-datatable-striped">
-        
-        <ng-template pTemplate="header">
+  <!-- Customers Table -->
+  <div class="table-card">
+    <div class="table-wrapper">
+      <table class="customers-table">
+        <thead>
           <tr>
-            <th style="width: 100px">Mã</th>
-            <th>Tên chủ hàng</th>
+            <th>Tên Chủ hàng</th>
             <th>Người liên hệ</th>
-            <th>Email</th>
             <th>Số điện thoại</th>
-            <th style="width: 120px">Trạng thái</th>
-            <th style="width: 150px">Hành động</th>
+            <th>Địa chỉ</th>
+            <th class="text-right">Thao tác</th>
           </tr>
-        </ng-template>
-
-        <ng-template pTemplate="body" let-customer>
+        </thead>
+        <tbody *ngIf="filteredCustomers.length > 0">
+          <tr *ngFor="let customer of filteredCustomers" class="table-row">
+            <td>
+              <div class="flex align-items-center gap-3">
+                <div class="customer-avatar" [style.background-color]="getAvatarColor(customer.name)">
+                  {{ getInitials(customer.name) }}
+                </div>
+                <div>
+                  <p class="customer-name m-0">{{ customer.name }}</p>
+                  <p class="customer-id m-0">ID: {{ customer.code }}</p>
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="flex flex-column">
+                <span class="contact-name">{{ customer.contactPerson || '-' }}</span>
+                <span class="contact-role" *ngIf="customer.contactPerson">Người liên hệ</span>
+              </div>
+            </td>
+            <td>
+              <span class="phone-number">{{ customer.phone || '-' }}</span>
+            </td>
+            <td class="address-cell" [title]="customer.address || ''">
+              {{ truncateAddress(customer.address) }}
+            </td>
+            <td class="text-right">
+              <div class="flex align-items-center justify-content-end gap-2">
+                <button
+                  pButton
+                  label="Xem PO"
+                  icon="pi pi-receipt"
+                  class="p-button-link p-button-sm view-po-btn"
+                  pTooltip="Xem đơn hàng"
+                  (click)="viewPurchaseOrders(customer)">
+                </button>
+                <button
+                  pButton
+                  icon="pi pi-pencil"
+                  class="p-button-text p-button-sm edit-btn"
+                  pTooltip="Chỉnh sửa"
+                  (click)="openEditDialog(customer)">
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+        <tbody *ngIf="filteredCustomers.length === 0 && !loading">
           <tr>
-            <td>{{ customer.code }}</td>
-            <td>
-              <div class="font-bold">{{ customer.name }}</div>
-              <div class="text-sm text-600">{{ customer.address }}</div>
-            </td>
-            <td>{{ customer.contactPerson }}</td>
-            <td>{{ customer.email }}</td>
-            <td>{{ customer.phone }}</td>
-            <td>
-              <p-tag 
-                [value]="getStatusText(customer.isActive)" 
-                [severity]="getStatusSeverity(customer.isActive)">
-              </p-tag>
-            </td>
-            <td>
-              <button pButton type="button" icon="pi pi-pencil" 
-                      class="p-button-rounded p-button-text p-button-warning"
-                      pTooltip="Chỉnh sửa"
-                      (click)="openEditDialog(customer)"></button>
+            <td colspan="5" class="text-center py-8">
+              <i class="pi pi-inbox text-6xl mb-3 block text-gray-300"></i>
+              <p class="text-lg font-medium text-gray-500">Không có dữ liệu</p>
             </td>
           </tr>
-        </ng-template>
+        </tbody>
+      </table>
+    </div>
 
-        <ng-template pTemplate="emptymessage">
-          <tr>
-            <td colspan="7" class="text-center">Không có dữ liệu</td>
-          </tr>
-        </ng-template>
-      </p-table>
+    <!-- Pagination -->
+    <div class="table-footer" *ngIf="filteredCustomers.length > 0">
+      <div class="pagination-info">
+        Hiển thị <span class="font-bold">{{ getFirstRecord() }}</span> đến 
+        <span class="font-bold">{{ getLastRecord() }}</span> trong tổng số 
+        <span class="font-bold">{{ filteredCustomers.length }}</span> chủ hàng
+      </div>
+      <div class="flex gap-2">
+        <button
+          pButton
+          label="Trước"
+          icon="pi pi-chevron-left"
+          class="p-button-outlined p-button-sm"
+          [disabled]="currentPage === 1"
+          (click)="previousPage()">
+        </button>
+        <button
+          pButton
+          label="Sau"
+          icon="pi pi-chevron-right"
+          iconPos="right"
+          class="p-button-outlined p-button-sm"
+          [disabled]="currentPage >= getTotalPages()"
+          (click)="nextPage()">
+        </button>
+      </div>
     </div>
   </div>
 </div>
+
+<!-- Dialog tạo/sửa chủ hàng -->
+<p-dialog 
+  [(visible)]="showDialog" 
+  [header]="isEdit ? 'Chỉnh sửa chủ hàng' : 'Thêm chủ hàng mới'"
+  [modal]="true"
+  [style]="{width: '600px'}"
+  [draggable]="false"
+  [resizable]="false">
+  
+  <div class="p-fluid">
+    <div class="field grid">
+      <label class="col-12 mb-2 md:col-3 md:mb-0">Mã chủ hàng <span class="text-red-500">*</span></label>
+      <div class="col-12 md:col-9">
+        <input pInputText type="text" [(ngModel)]="customerForm.code" placeholder="Nhập mã chủ hàng" />
+      </div>
+    </div>
+
+    <div class="field grid">
+      <label class="col-12 mb-2 md:col-3 md:mb-0">Tên chủ hàng <span class="text-red-500">*</span></label>
+      <div class="col-12 md:col-9">
+        <input pInputText type="text" [(ngModel)]="customerForm.name" placeholder="Nhập tên chủ hàng" />
+      </div>
+    </div>
+
+    <div class="field grid">
+      <label class="col-12 mb-2 md:col-3 md:mb-0">Địa chỉ</label>
+      <div class="col-12 md:col-9">
+        <textarea pInputTextarea [(ngModel)]="customerForm.address" rows="2" placeholder="Nhập địa chỉ"></textarea>
+      </div>
+    </div>
+
+    <div class="field grid">
+      <label class="col-12 mb-2 md:col-3 md:mb-0">Người liên hệ</label>
+      <div class="col-12 md:col-9">
+        <input pInputText type="text" [(ngModel)]="customerForm.contactPerson" placeholder="Nhập tên người liên hệ" />
+      </div>
+    </div>
+
+    <div class="field grid">
+      <label class="col-12 mb-2 md:col-3 md:mb-0">Email</label>
+      <div class="col-12 md:col-9">
+        <input pInputText type="email" [(ngModel)]="customerForm.email" placeholder="Nhập email" />
+      </div>
+    </div>
+
+    <div class="field grid">
+      <label class="col-12 mb-2 md:col-3 md:mb-0">Số điện thoại</label>
+      <div class="col-12 md:col-9">
+        <input pInputText type="text" [(ngModel)]="customerForm.phone" placeholder="Nhập số điện thoại" />
+      </div>
+    </div>
+
+    <div class="field grid">
+      <label class="col-12 mb-2 md:col-3 md:mb-0">Điều khoản thanh toán</label>
+      <div class="col-12 md:col-9">
+        <input pInputText type="text" [(ngModel)]="customerForm.paymentTerms" placeholder="VD: 30 ngày" />
+      </div>
+    </div>
+
+    <div class="field grid">
+      <label class="col-12 mb-2 md:col-3 md:mb-0">Ghi chú</label>
+      <div class="col-12 md:col-9">
+        <textarea pInputTextarea [(ngModel)]="customerForm.notes" rows="3" placeholder="Nhập ghi chú"></textarea>
+      </div>
+    </div>
+
+    <div class="field grid" *ngIf="isEdit">
+      <label class="col-12 mb-2 md:col-3 md:mb-0">Trạng thái</label>
+      <div class="col-12 md:col-9">
+        <p-checkbox [(ngModel)]="customerForm.isActive" [binary]="true" label="Hoạt động"></p-checkbox>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Hủy" icon="pi pi-times" 
+            class="p-button-text" (click)="showDialog = false"></button>
+    <button pButton type="button" label="Lưu" icon="pi pi-check" 
+            class="p-button-primary" (click)="saveCustomer()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-toast></p-toast>
 
 <!-- Dialog tạo/sửa chủ hàng -->
 <p-dialog 

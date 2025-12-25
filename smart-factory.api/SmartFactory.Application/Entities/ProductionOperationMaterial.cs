@@ -33,3 +33,4 @@ public class ProductionOperationMaterial
     public virtual Material Material { get; set; } = null!;
 }
 
+

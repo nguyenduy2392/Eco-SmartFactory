@@ -74,3 +74,4 @@ public class Tool
     public virtual ICollection<ProductionOperation> ProductionOperations { get; set; } = new List<ProductionOperation>();
 }
 
+

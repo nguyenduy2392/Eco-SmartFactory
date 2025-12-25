@@ -69,3 +69,4 @@ public class Material
     public virtual ICollection<ProductionOperationMaterial> ProductionOperationMaterials { get; set; } = new List<ProductionOperationMaterial>();
 }
 
+

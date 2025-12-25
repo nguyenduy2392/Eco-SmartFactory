@@ -171,6 +171,19 @@ export class PODetailComponent implements OnInit {
   }
 
   /**
+   * Get status display text
+   */
+  getStatusText(status: string): string {
+    switch (status) {
+      case 'New': return 'Mới';
+      case 'InProgress': return 'Đang xử lý';
+      case 'Completed': return 'Hoàn thành';
+      case 'Cancelled': return 'Hủy';
+      default: return status;
+    }
+  }
+
+  /**
    * Group operations by processing type
    */
   getOperationsByProcessingType(): { [key: string]: POOperation[] } {
@@ -192,6 +205,15 @@ export class PODetailComponent implements OnInit {
    */
   getProcessingTypeNames(): string[] {
     return Object.keys(this.getOperationsByProcessingType());
+  }
+
+  /**
+   * Navigate to product detail
+   */
+  viewProductDetail(productId: string): void {
+    if (this.poId) {
+      this.router.navigate(['/purchase-orders', this.poId, 'products', productId]);
+    }
   }
 }
 

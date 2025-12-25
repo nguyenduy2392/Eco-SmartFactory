@@ -76,3 +76,4 @@ public class Machine
     public virtual ICollection<ProductionOperation> ProductionOperations { get; set; } = new List<ProductionOperation>();
 }
 
+

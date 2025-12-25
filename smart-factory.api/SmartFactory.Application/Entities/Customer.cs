@@ -58,3 +58,4 @@ public class Customer
     public virtual ICollection<PurchaseOrder> PurchaseOrders { get; set; } = new List<PurchaseOrder>();
 }
 
+

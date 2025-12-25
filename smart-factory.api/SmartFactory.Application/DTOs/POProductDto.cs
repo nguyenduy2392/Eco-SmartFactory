@@ -19,3 +19,4 @@ public class CreatePOProductRequest
     public decimal? UnitPrice { get; set; }
 }
 
+

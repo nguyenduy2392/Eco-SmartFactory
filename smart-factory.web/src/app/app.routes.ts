@@ -58,6 +58,22 @@ export const routes: Routes = [
               title: 'Chi tiết PO',
               breadcrumb: 'Chi tiết'
             }
+          },
+          {
+            path: ':poId/products/:productId',
+            loadComponent: () => import('./components/purchase-orders/product-detail/product-detail.component').then(m => m.ProductDetailComponent),
+            data: {
+              title: 'Chi tiết Sản phẩm',
+              breadcrumb: 'Chi tiết Sản phẩm'
+            }
+          },
+          {
+            path: ':poId/products/:productId/components/:componentId',
+            loadComponent: () => import('./components/purchase-orders/part-detail/part-detail.component').then(m => m.PartDetailComponent),
+            data: {
+              title: 'Chi tiết Linh kiện',
+              breadcrumb: 'Chi tiết Linh kiện'
+            }
           }
         ]
       },

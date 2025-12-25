@@ -35,3 +35,4 @@ public class ProcessingType
     public virtual ICollection<ProcessMethod> ProcessMethods { get; set; } = new List<ProcessMethod>();
 }
 
+

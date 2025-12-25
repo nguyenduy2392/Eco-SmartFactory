@@ -58,3 +58,4 @@ public class Part
     public virtual ICollection<POOperation> POOperations { get; set; } = new List<POOperation>();
 }
 
+

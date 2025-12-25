@@ -96,3 +96,4 @@ public class POOperation
     public virtual ICollection<MappingPOProduction> MappingPOProductions { get; set; } = new List<MappingPOProduction>();
 }
 
+

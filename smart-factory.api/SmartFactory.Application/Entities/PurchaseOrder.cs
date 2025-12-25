@@ -78,3 +78,4 @@ public class PurchaseOrder
     public virtual ICollection<POOperation> POOperations { get; set; } = new List<POOperation>();
 }
 
+

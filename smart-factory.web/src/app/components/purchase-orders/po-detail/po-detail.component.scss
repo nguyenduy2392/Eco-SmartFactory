@@ -1,61 +1,391 @@
-// Custom styles for PO Detail component
+// Template-inspired styling for PO Detail
+$primary-color: #137fec;
+$text-primary: #111418;
+$text-secondary: #617589;
+$border-color: #e5e7eb;
+$bg-gray-50: #f9fafb;
+$bg-blue-50: #eff6ff;
 
-.p-tabview {
-  ::ng-deep {
-    .p-tabview-nav {
-      background: white;
-      border-bottom: 2px solid #e5e7eb;
+// Card container
+.card {
+  background: white;
+  border-radius: 0.75rem;
+  padding: 2rem;
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  max-width: 1200px;
+  margin: 2rem auto;
+}
+
+// Breadcrumb
+.breadcrumb-link {
+  color: $text-secondary;
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  transition: color 0.15s;
+
+  &:hover {
+    color: $primary-color;
+  }
+
+  i {
+    font-size: 1.125rem;
+  }
+}
+
+.breadcrumb-separator {
+  color: $text-secondary;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.breadcrumb-current {
+  color: $text-primary;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+// Page Title
+.page-title {
+  font-size: 2rem;
+  font-weight: 900;
+  color: $text-primary;
+  line-height: 1.2;
+  letter-spacing: -0.033em;
+
+  @media (min-width: 768px) {
+    font-size: 2.25rem;
+  }
+}
+
+.page-subtitle {
+  color: $text-secondary;
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+// Status Badge
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  border: 1px solid transparent;
+
+  &.status-new {
+    background-color: #dbeafe;
+    color: #1e40af;
+    border-color: #93c5fd;
+  }
+
+  &.status-inprogress {
+    background-color: #fef3c7;
+    color: #92400e;
+    border-color: #fcd34d;
+  }
+
+  &.status-completed {
+    background-color: #d1fae5;
+    color: #065f46;
+    border-color: #6ee7b7;
+  }
+
+  &.status-cancelled {
+    background-color: #fee2e2;
+    color: #991b1b;
+    border-color: #fca5a5;
+  }
+}
+
+// Info Card
+.info-card {
+  background: white;
+  border: 1px solid $border-color;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: $text-primary;
+}
+
+// Form Fields
+.field-label {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: $text-primary;
+  margin-bottom: 0.375rem;
+}
+
+.field-disabled {
+  background-color: #f3f4f6 !important;
+  color: #6b7280 !important;
+  cursor: not-allowed;
+}
+
+// Product Table
+.product-table-container {
+  overflow: hidden;
+  border-radius: 0.75rem;
+  border: 1px solid $border-color;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  background: white;
+}
+
+.product-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+
+  thead {
+    tr {
+      background-color: $bg-gray-50;
+      border-bottom: 1px solid $border-color;
     }
 
-    .p-tabview-nav li .p-tabview-nav-link {
-      padding: 1rem 1.5rem;
-      font-weight: 500;
-      color: #6b7280;
+    th {
+      padding: 0.75rem 1rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: $text-secondary;
+    }
+  }
+
+  tbody {
+    .product-row {
+      border-bottom: 1px solid $border-color;
+      transition: background-color 0.15s;
 
       &:hover {
-        background: #f9fafb;
+        background-color: $bg-gray-50;
+      }
+
+      td {
+        padding: 1rem;
+        font-size: 0.875rem;
       }
     }
+  }
 
-    .p-tabview-nav li.p-highlight .p-tabview-nav-link {
-      color: #2563eb;
-      border-color: #2563eb;
-    }
+  tfoot {
+    .total-row {
+      background-color: $bg-gray-50;
+      border-top: 1px solid $border-color;
 
-    .p-tabview-panels {
-      padding: 0;
-      background: transparent;
+      td {
+        padding: 1rem;
+        font-size: 0.875rem;
+      }
     }
   }
 }
 
-.p-accordion {
-  ::ng-deep {
-    .p-accordion-header-link {
-      background: #f8fafc;
-      font-weight: 600;
+.product-image-placeholder {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid $border-color;
+  background-color: $bg-gray-50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $text-secondary;
+  flex-shrink: 0;
+}
+
+.quantity-input {
+  width: 5rem;
+  text-align: center;
+  border-radius: 0.375rem;
+  border: 1px solid #d1d5db;
+  background-color: white;
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+
+  &:focus {
+    outline: 0 none;
+    box-shadow: 0 0 0 0.2rem lighten($primary-color, 40%);
+    border-color: $primary-color;
+  }
+}
+
+.action-btn {
+  color: $text-secondary !important;
+
+  &:hover {
+    color: $primary-color !important;
+  }
+
+  &.p-button-danger:hover {
+    color: #dc2626 !important;
+  }
+}
+
+// Help Section
+.help-section {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-between;
+  background-color: $bg-blue-50;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  border: 1px solid #bfdbfe;
+  gap: 1rem;
+
+  @media (min-width: 768px) {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+.help-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 9999px;
+  background-color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: $primary-color;
+  box-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  flex-shrink: 0;
+}
+
+// PrimeNG overrides
+:host ::ng-deep {
+  // Button styles
+  .p-button {
+    font-weight: 600;
+    border-radius: 0.5rem;
+    transition: all 0.15s ease;
+
+    &.p-button-primary {
+      background-color: $primary-color;
+      border-color: $primary-color;
       
       &:hover {
-        background: #f1f5f9;
+        background-color: darken($primary-color, 8%);
+        border-color: darken($primary-color, 8%);
+      }
+    }
+
+    &.p-button-outlined {
+      &:hover {
+        background-color: $bg-gray-50;
+      }
+    }
+  }
+
+  // Tag styles
+  .p-tag {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.75rem;
+    font-weight: 500;
+    border-radius: 9999px;
+  }
+
+  // Dropdown
+  .p-dropdown {
+    &:not(.p-disabled):hover {
+      border-color: $primary-color;
+    }
+
+    &:not(.p-disabled).p-focus {
+      box-shadow: 0 0 0 0.2rem lighten($primary-color, 40%);
+      border-color: $primary-color;
+    }
+  }
+
+  // Input text
+  .p-inputtext {
+    &:enabled:hover {
+      border-color: $primary-color;
+    }
+
+    &:enabled:focus {
+      box-shadow: 0 0 0 0.2rem lighten($primary-color, 40%);
+      border-color: $primary-color;
+    }
+  }
+
+  // Calendar
+  .p-calendar {
+    .p-inputtext {
+      &:enabled:hover {
+        border-color: $primary-color;
+      }
+
+      &:enabled:focus {
+        box-shadow: 0 0 0 0.2rem lighten($primary-color, 40%);
+        border-color: $primary-color;
+      }
+    }
+  }
+
+  // Accordion
+  .p-accordion {
+    .p-accordion-header {
+      .p-accordion-header-link {
+        border-radius: 0.5rem;
+        font-weight: 600;
+        
+        &:not(.p-disabled):focus {
+          box-shadow: 0 0 0 0.2rem lighten($primary-color, 40%);
+        }
       }
     }
 
     .p-accordion-content {
-      padding: 0;
+      border-radius: 0 0 0.5rem 0.5rem;
+    }
+  }
+
+  // Table in accordion
+  .p-datatable {
+    .p-datatable-thead > tr > th {
+      background-color: $bg-gray-50;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: $text-secondary;
+      padding: 0.75rem 1rem;
+    }
+
+    .p-datatable-tbody > tr {
+      > td {
+        padding: 0.75rem 1rem;
+        font-size: 0.875rem;
+      }
     }
   }
 }
 
-.p-timeline {
-  ::ng-deep {
-    .p-timeline-event-marker {
-      background: #2563eb;
-      border-color: #2563eb;
-    }
-
-    .p-timeline-event-connector {
-      background: #e5e7eb;
-    }
-  }
+// Utility classes
+.text-primary {
+  color: $primary-color !important;
 }
 
+.text-gray-500 {
+  color: #6b7280;
+}
+
+.text-gray-600 {
+  color: #4b5563;
+}
+
+.font-mono {
+  font-family: 'Courier New', Courier, monospace;
+}

@@ -115,3 +115,4 @@ public class ProductionOperation
     public virtual ICollection<ProductionOperationMaterial> ProductionOperationMaterials { get; set; } = new List<ProductionOperationMaterial>();
 }
 
+

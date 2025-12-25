@@ -40,3 +40,4 @@ public class UpdateCustomerRequest
     public bool IsActive { get; set; }
 }
 
+

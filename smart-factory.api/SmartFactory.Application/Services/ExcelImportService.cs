@@ -319,3 +319,4 @@ public class POOperationData
     public decimal TotalAmount { get; set; }
 }
 
+

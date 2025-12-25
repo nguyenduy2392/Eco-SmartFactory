@@ -15,10 +15,15 @@ import { PrimengModule } from '../../../primeng.module';
 })
 export class CustomersComponent implements OnInit {
   customers: Customer[] = [];
+  filteredCustomers: Customer[] = [];
   loading = false;
   showDialog = false;
+  showFilters = false;
   isEdit = false;
   selectedCustomer: Customer | null = null;
+  searchText = '';
+  currentPage = 1;
+  pageSize = 10;
 
   // Form data
   customerForm: any = {
@@ -32,6 +37,15 @@ export class CustomersComponent implements OnInit {
     notes: '',
     isActive: true
   };
+
+  // Avatar colors
+  private avatarColors = [
+    '#3B82F6', // blue
+    '#10B981', // green
+    '#F97316', // orange
+    '#A855F7', // purple
+    '#EF4444'  // red
+  ];
 
   constructor(
     private customerService: CustomerService,
@@ -51,6 +65,7 @@ export class CustomersComponent implements OnInit {
     this.customerService.getAll().subscribe({
       next: (customers) => {
         this.customers = customers;
+        this.applyFilters();
         this.loading = false;
       },
       error: (error) => {
@@ -63,6 +78,34 @@ export class CustomersComponent implements OnInit {
         });
       }
     });
+  }
+
+  /**
+   * Apply search and filters
+   */
+  applyFilters(): void {
+    let result = [...this.customers];
+
+    // Search filter
+    if (this.searchText) {
+      const searchLower = this.searchText.toLowerCase();
+      result = result.filter(c => 
+        c.name.toLowerCase().includes(searchLower) ||
+        c.phone?.toLowerCase().includes(searchLower) ||
+        c.contactPerson?.toLowerCase().includes(searchLower) ||
+        c.code.toLowerCase().includes(searchLower)
+      );
+    }
+
+    this.filteredCustomers = result;
+    this.currentPage = 1;
+  }
+
+  /**
+   * On search input
+   */
+  onSearch(): void {
+    this.applyFilters();
   }
 
   /**
@@ -174,6 +217,72 @@ export class CustomersComponent implements OnInit {
    */
   getStatusText(isActive: boolean): string {
     return isActive ? 'Hoạt động' : 'Ngừng hoạt động';
+  }
+
+  /**
+   * Get customer initials for avatar
+   */
+  getInitials(name: string): string {
+    if (!name) return '??';
+    const words = name.trim().split(/\s+/);
+    if (words.length >= 2) {
+      return (words[0][0] + words[words.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  }
+
+  /**
+   * Get avatar color based on customer name
+   */
+  getAvatarColor(name: string): string {
+    if (!name) return this.avatarColors[0];
+    const index = name.charCodeAt(0) % this.avatarColors.length;
+    return this.avatarColors[index];
+  }
+
+  /**
+   * Truncate address for display
+   */
+  truncateAddress(address?: string): string {
+    if (!address) return '-';
+    return address.length > 40 ? address.substring(0, 40) + '...' : address;
+  }
+
+  /**
+   * View purchase orders for customer
+   */
+  viewPurchaseOrders(customer: Customer): void {
+    // TODO: Navigate to PO list filtered by customer
+    this.router.navigate(['/purchase-orders'], { 
+      queryParams: { customerId: customer.id } 
+    });
+  }
+
+  /**
+   * Pagination helpers
+   */
+  getFirstRecord(): number {
+    return (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  getLastRecord(): number {
+    return Math.min(this.currentPage * this.pageSize, this.filteredCustomers.length);
+  }
+
+  getTotalPages(): number {
+    return Math.ceil(this.filteredCustomers.length / this.pageSize);
+  }
+
+  previousPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.getTotalPages()) {
+      this.currentPage++;
+    }
   }
 }
 

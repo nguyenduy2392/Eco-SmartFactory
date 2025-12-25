@@ -1,0 +1,264 @@
+<div class="tools-container">
+  <!-- Header Section -->
+  <div class="flex flex-column md:flex-row md:align-items-end justify-content-between gap-4 mb-6">
+    <div class="flex flex-column gap-2">
+      <h1 class="page-title m-0">Quản lý Vật tư & Công cụ</h1>
+      <p class="page-subtitle m-0 max-w-full">
+        Danh sách tổng hợp tất cả nguyên vật liệu, linh kiện, công cụ và khuôn. Quản lý mức tồn kho, thông số kỹ thuật và xem lịch sử sử dụng.
+      </p>
+    </div>
+    <div class="flex gap-2">
+      <button
+        pButton
+        label="Xuất báo cáo"
+        icon="pi pi-download"
+        class="p-button-outlined"
+        (click)="exportReport()">
+      </button>
+      <button
+        pButton
+        label="Thêm mới"
+        icon="pi pi-plus"
+        class="p-button-primary"
+        (click)="openCreateDialog()">
+      </button>
+    </div>
+  </div>
+
+  <!-- Search and Filter Bar -->
+  <div class="search-filter-card mb-6">
+    <div class="flex flex-column md:flex-row gap-4 align-items-center justify-content-between">
+      <div class="flex flex-1 gap-4 w-full md:w-auto">
+        <div class="relative flex-1 md:max-w-xs">
+          <i class="pi pi-search search-icon"></i>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="searchText"
+            (input)="onSearch()"
+            placeholder="Tìm kiếm theo tên, mã..."
+            class="w-full search-input">
+        </div>
+        <div class="w-10rem hidden md:block">
+          <p-dropdown
+            [(ngModel)]="selectedType"
+            [options]="typeOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Tất cả loại"
+            [style]="{'width': '100%'}"
+            (onChange)="onSearch()">
+          </p-dropdown>
+        </div>
+        <div class="w-10rem hidden md:block">
+          <p-dropdown
+            [(ngModel)]="selectedStockStatus"
+            [options]="stockStatusOptions"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Trạng thái tồn kho"
+            [style]="{'width': '100%'}"
+            (onChange)="onSearch()">
+          </p-dropdown>
+        </div>
+      </div>
+      <div class="flex align-items-center gap-2">
+        <button
+          pButton
+          icon="pi pi-filter"
+          class="p-button-text p-button-sm"
+          (click)="showFilters = !showFilters">
+        </button>
+        <span class="text-sm text-color-secondary">
+          Hiển thị {{ getFirstRecord() }}-{{ getLastRecord() }} trong tổng số {{ filteredItems.length }} mục
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Items Table -->
+  <div class="table-card">
+    <div class="table-wrapper">
+      <table class="items-table">
+        <thead>
+          <tr>
+            <th class="w-35">Tên Vật tư / Mục</th>
+            <th class="w-15">Loại</th>
+            <th class="w-10">Đơn vị</th>
+            <th class="w-15 text-right">Số lượng / Tồn kho</th>
+            <th class="w-15">Trạng thái</th>
+            <th class="w-10 text-right">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody *ngIf="filteredItems.length > 0">
+          <tr *ngFor="let item of filteredItems" class="table-row">
+            <td>
+              <div class="flex align-items-center gap-3">
+                <div class="item-icon" [ngClass]="getItemIconClass(item.type)">
+                  <i [class]="getItemIcon(item.type)"></i>
+                </div>
+                <div>
+                  <p class="item-name m-0">{{ item.name }}</p>
+                  <p class="item-code m-0">ID: {{ item.code }}<span *ngIf="item.supplier"> • Nhà cung cấp: {{ item.supplier }}</span></p>
+                </div>
+              </div>
+            </td>
+            <td>
+              <p-tag [value]="item.type" [severity]="getTypeSeverity(item.type)"></p-tag>
+            </td>
+            <td>
+              <span class="unit-text">{{ item.unit }}</span>
+            </td>
+            <td class="text-right">
+              <span class="quantity-text" [ngClass]="getQuantityClass(item)">
+                {{ formatQuantity(item.currentStock) }}
+              </span>
+              <span class="min-stock-text" *ngIf="item.minStock !== undefined">
+                Min: {{ formatQuantity(item.minStock) }}
+              </span>
+            </td>
+            <td>
+              <div class="flex align-items-center gap-2">
+                <div class="status-dot" [ngClass]="getStockStatusClass(item)"></div>
+                <span class="status-text">{{ getStockStatusText(item) }}</span>
+              </div>
+            </td>
+            <td class="text-right">
+              <div class="flex align-items-center justify-content-end gap-2">
+                <button
+                  pButton
+                  icon="pi pi-history"
+                  class="p-button-text p-button-sm"
+                  pTooltip="Xem lịch sử"
+                  (click)="viewHistory(item)">
+                </button>
+                <button
+                  pButton
+                  icon="pi pi-pencil"
+                  class="p-button-text p-button-sm"
+                  pTooltip="Chỉnh sửa"
+                  (click)="openEditDialog(item)">
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+        <tbody *ngIf="filteredItems.length === 0 && !loading">
+          <tr>
+            <td colspan="6" class="text-center py-8">
+              <i class="pi pi-inbox text-6xl mb-3 block text-gray-300"></i>
+              <p class="text-lg font-medium text-gray-500">Không có dữ liệu</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="table-footer" *ngIf="filteredItems.length > 0">
+      <button
+        pButton
+        label="Trước"
+        icon="pi pi-chevron-left"
+        class="p-button-outlined p-button-sm"
+        [disabled]="currentPage === 1"
+        (click)="previousPage()">
+      </button>
+      <div class="pagination-info">
+        Trang <span class="font-bold">{{ currentPage }}</span> / <span class="font-bold">{{ getTotalPages() }}</span>
+      </div>
+      <button
+        pButton
+        label="Sau"
+        icon="pi pi-chevron-right"
+        iconPos="right"
+        class="p-button-outlined p-button-sm"
+        [disabled]="currentPage >= getTotalPages()"
+        (click)="nextPage()">
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Dialog tạo/sửa vật tư/công cụ -->
+<p-dialog 
+  [(visible)]="showDialog" 
+  [header]="isEdit ? 'Chỉnh sửa' : 'Thêm mới'"
+  [modal]="true"
+  [style]="{width: '600px'}"
+  [draggable]="false"
+  [resizable]="false">
+  
+  <div class="p-fluid">
+    <div class="field">
+      <label>Mã <span class="text-red-500">*</span></label>
+      <input pInputText type="text" [(ngModel)]="itemForm.code" placeholder="Nhập mã" />
+    </div>
+
+    <div class="field">
+      <label>Tên <span class="text-red-500">*</span></label>
+      <input pInputText type="text" [(ngModel)]="itemForm.name" placeholder="Nhập tên" />
+    </div>
+
+    <div class="field">
+      <label>Loại <span class="text-red-500">*</span></label>
+      <p-dropdown
+        [(ngModel)]="itemForm.type"
+        [options]="typeOptions"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Chọn loại"
+        [style]="{'width': '100%'}">
+      </p-dropdown>
+    </div>
+
+    <div class="field">
+      <label>Đơn vị <span class="text-red-500">*</span></label>
+      <input pInputText type="text" [(ngModel)]="itemForm.unit" placeholder="VD: kg, L, pcs" />
+    </div>
+
+    <div class="grid">
+      <div class="col-12 md:col-6 field">
+        <label>Số lượng hiện tại</label>
+        <p-inputNumber
+          [(ngModel)]="itemForm.currentStock"
+          [min]="0"
+          [style]="{'width': '100%'}">
+        </p-inputNumber>
+      </div>
+      <div class="col-12 md:col-6 field">
+        <label>Số lượng tối thiểu</label>
+        <p-inputNumber
+          [(ngModel)]="itemForm.minStock"
+          [min]="0"
+          [style]="{'width': '100%'}">
+        </p-inputNumber>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Nhà cung cấp</label>
+      <input pInputText type="text" [(ngModel)]="itemForm.supplier" placeholder="Nhập tên nhà cung cấp" />
+    </div>
+
+    <div class="field">
+      <label>Mô tả</label>
+      <textarea pInputTextarea [(ngModel)]="itemForm.description" rows="3" placeholder="Nhập mô tả"></textarea>
+    </div>
+
+    <div class="field" *ngIf="isEdit">
+      <label>Trạng thái</label>
+      <p-checkbox [(ngModel)]="itemForm.isActive" [binary]="true" label="Hoạt động"></p-checkbox>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Hủy" icon="pi pi-times" 
+            class="p-button-text" (click)="showDialog = false"></button>
+    <button pButton type="button" label="Lưu" icon="pi pi-check" 
+            class="p-button-primary" (click)="saveItem()"></button>
+  </ng-template>
+</p-dialog>
+
+<p-toast></p-toast>
+

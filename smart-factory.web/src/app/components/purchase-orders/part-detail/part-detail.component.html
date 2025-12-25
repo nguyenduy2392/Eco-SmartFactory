@@ -1,0 +1,279 @@
+<div class="card" *ngIf="part">
+  <!-- Breadcrumb -->
+  <div class="flex flex-wrap gap-2 mb-6">
+    <a class="breadcrumb-link cursor-pointer" routerLink="/dashboard">
+      <i class="pi pi-home"></i>
+      Trang chủ
+    </a>
+    <span class="breadcrumb-separator">/</span>
+    <a class="breadcrumb-link cursor-pointer" routerLink="/purchase-orders">Đơn hàng</a>
+    <span class="breadcrumb-separator">/</span>
+    <a class="breadcrumb-link cursor-pointer" (click)="goToProduct()">Chi tiết sản phẩm</a>
+    <span class="breadcrumb-separator">/</span>
+    <span class="breadcrumb-current">Chi tiết Linh kiện</span>
+  </div>
+
+  <!-- Header -->
+  <div class="flex flex-column md:flex-row md:align-items-end justify-content-between gap-4 mb-6">
+    <div class="flex flex-column gap-2">
+      <h1 class="page-title m-0">Chi tiết Linh kiện & Gia công</h1>
+      <p class="page-subtitle m-0 max-w-full">
+        Quản lý công đoạn gia công, vật tư và công cụ cho linh kiện cụ thể.
+      </p>
+    </div>
+    <div class="flex gap-2">
+      <button
+        pButton
+        label="Hủy"
+        icon="pi pi-times"
+        class="p-button-outlined p-button-secondary"
+        (click)="discardChanges()">
+      </button>
+      <button
+        pButton
+        label="Lưu thay đổi"
+        icon="pi pi-save"
+        class="p-button-primary"
+        (click)="saveChanges()">
+      </button>
+    </div>
+  </div>
+
+  <!-- Component Info Summary -->
+  <div class="component-summary-card mb-6">
+    <div class="flex gap-4 align-items-center">
+      <div class="component-image-placeholder">
+        <i class="pi pi-image text-4xl text-gray-400"></i>
+      </div>
+      <div class="grid flex-1">
+        <div class="col-12 md:col-6 lg:col-3">
+          <label class="field-label-sm">Tên Linh kiện</label>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="part.componentName"
+            class="w-full font-medium field-input-borderless">
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <label class="field-label-sm">Part Number</label>
+          <input
+            type="text"
+            pInputText
+            [(ngModel)]="part.partNumber"
+            class="w-full font-medium field-input-borderless">
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <label class="field-label-sm">Revision</label>
+          <div class="flex align-items-center gap-2">
+            <p-tag [value]="part.revision" severity="success"></p-tag>
+            <span class="text-xs text-gray-400">Latest</span>
+          </div>
+        </div>
+        <div class="col-12 md:col-6 lg:col-3">
+          <label class="field-label-sm">Trạng thái</label>
+          <p-dropdown
+            [(ngModel)]="part.status"
+            [options]="statusOptions"
+            optionLabel="label"
+            optionValue="value"
+            [style]="{'width': '100%'}"
+            styleClass="field-input-borderless">
+          </p-dropdown>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Process Types -->
+  <div class="flex flex-column gap-4">
+    <div *ngFor="let process of part.processes" class="process-card">
+      <!-- Process Header -->
+      <div class="process-header" [style.background-color]="getProcessColor(process.color) + '10'">
+        <div class="flex align-items-center gap-3">
+          <div class="process-icon" [style.background-color]="getProcessColor(process.color) + '20'">
+            <i [class]="'pi ' + process.icon" [style.color]="getProcessColor(process.color)"></i>
+          </div>
+          <div>
+            <h3 class="process-title m-0">{{ process.name }}</h3>
+            <p class="process-subtitle m-0">{{ process.description }}</p>
+          </div>
+        </div>
+        <button
+          pButton
+          [icon]="process.isExpanded ? 'pi pi-chevron-up' : 'pi pi-chevron-down'"
+          class="p-button-text p-button-rounded"
+          (click)="toggleProcess(process)">
+        </button>
+      </div>
+
+      <!-- Process Stages -->
+      <div *ngIf="process.isExpanded" class="process-content">
+        <div *ngFor="let stage of process.stages; let last = last" class="work-stage" [class.last-stage]="last">
+          <div class="stage-timeline-dot" [style.background-color]="getProcessColor(process.color)"></div>
+          <div class="stage-timeline-line" [style.border-color]="last ? '#d1d5db' : getProcessColor(process.color)"></div>
+          
+          <div class="stage-content">
+            <!-- Stage Header -->
+            <div class="flex flex-column md:flex-row md:align-items-center justify-content-between gap-3 mb-4">
+              <div class="flex-1">
+                <label class="field-label-sm">Tên Công đoạn</label>
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="stage.name"
+                  class="w-full font-medium">
+              </div>
+              <div class="w-full md:w-auto md:min-w-12rem" *ngIf="stage.machineId">
+                <label class="field-label-sm">Machine ID</label>
+                <input
+                  type="text"
+                  pInputText
+                  [(ngModel)]="stage.machineId"
+                  class="w-full">
+              </div>
+              <div class="w-full md:w-auto md:min-w-12rem" *ngIf="stage.cycleTime">
+                <label class="field-label-sm">Cycle Time (s)</label>
+                <p-inputNumber
+                  [(ngModel)]="stage.cycleTime"
+                  [min]="0"
+                  class="w-full">
+                </p-inputNumber>
+              </div>
+              <button
+                pButton
+                icon="pi pi-trash"
+                class="p-button-danger p-button-text p-button-sm"
+                pTooltip="Xóa công đoạn"
+                (click)="deleteStage(process.id, stage.id)">
+              </button>
+            </div>
+
+            <!-- Materials and Tools Grid -->
+            <div class="grid" *ngIf="stage.materials.length > 0 || stage.tools.length > 0">
+              <!-- Materials Section -->
+              <div class="col-12 lg:col-6" *ngIf="stage.materials.length > 0">
+                <div class="resource-box">
+                  <div class="flex align-items-center justify-content-between mb-3">
+                    <h4 class="resource-title m-0">
+                      <i class="pi pi-box text-sm"></i>
+                      Vật tư / Nguyên liệu
+                    </h4>
+                    <button
+                      pButton
+                      label="Thêm"
+                      icon="pi pi-plus"
+                      class="p-button-text p-button-sm p-button-primary"
+                      (click)="addMaterial(stage)">
+                    </button>
+                  </div>
+                  <div class="flex flex-column gap-2">
+                    <div *ngFor="let material of stage.materials" class="flex align-items-center gap-2">
+                      <input
+                        type="text"
+                        pInputText
+                        [(ngModel)]="material.name"
+                        placeholder="Tên vật tư"
+                        class="flex-1 p-inputtext-sm">
+                      <p-inputNumber
+                        [(ngModel)]="material.quantity"
+                        placeholder="SL"
+                        [min]="0"
+                        [maxFractionDigits]="2"
+                        class="w-5rem"
+                        inputStyleClass="p-inputtext-sm">
+                      </p-inputNumber>
+                      <p-dropdown
+                        [(ngModel)]="material.unit"
+                        [options]="unitOptions"
+                        optionLabel="label"
+                        optionValue="value"
+                        class="w-5rem"
+                        styleClass="p-inputtext-sm">
+                      </p-dropdown>
+                      <button
+                        pButton
+                        icon="pi pi-times"
+                        class="p-button-text p-button-sm p-button-danger"
+                        (click)="removeMaterial(stage, material.id)">
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tools Section -->
+              <div class="col-12 lg:col-6" *ngIf="stage.tools.length > 0">
+                <div class="resource-box">
+                  <div class="flex align-items-center justify-content-between mb-3">
+                    <h4 class="resource-title m-0">
+                      <i class="pi pi-wrench text-sm"></i>
+                      Tool / Công cụ
+                    </h4>
+                    <button
+                      pButton
+                      label="Thêm"
+                      icon="pi pi-plus"
+                      class="p-button-text p-button-sm p-button-primary"
+                      (click)="addTool(stage)">
+                    </button>
+                  </div>
+                  <div class="flex flex-column gap-2">
+                    <div *ngFor="let tool of stage.tools" class="flex align-items-center gap-2">
+                      <input
+                        type="text"
+                        pInputText
+                        [(ngModel)]="tool.name"
+                        placeholder="Tên công cụ"
+                        class="flex-1 p-inputtext-sm">
+                      <input
+                        type="text"
+                        pInputText
+                        [(ngModel)]="tool.toolId"
+                        placeholder="Mã tool"
+                        class="w-8rem p-inputtext-sm">
+                      <button
+                        pButton
+                        icon="pi pi-times"
+                        class="p-button-text p-button-sm p-button-danger"
+                        (click)="removeTool(stage, tool.id)">
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Work Stage Button -->
+        <div class="pl-6 pt-4">
+          <button
+            pButton
+            label="Thêm Công đoạn"
+            icon="pi pi-plus-circle"
+            class="p-button-outlined p-button-sm"
+            [style.color]="getProcessColor(process.color)"
+            [style.border-color]="getProcessColor(process.color)"
+            (click)="addWorkStage(process)">
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Add New Process Type -->
+    <button
+      pButton
+      label="Thêm Quy trình mới"
+      icon="pi pi-plus"
+      class="p-button-outlined p-button-lg w-full"
+      style="border-style: dashed;"
+      (click)="addNewProcessType()">
+    </button>
+  </div>
+</div>
+
+<!-- Loading state -->
+<div *ngIf="loading" class="flex justify-content-center align-items-center" style="min-height: 60vh;">
+  <p-progressSpinner></p-progressSpinner>
+</div>
+
