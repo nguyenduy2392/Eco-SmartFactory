@@ -62,10 +62,11 @@
   tbody {
     tr.product-row {
       border-bottom: 1px solid var(--surface-border);
-      transition: background-color 0.15s;
+      transition: all 0.15s ease;
 
       &:hover {
         background-color: var(--surface-50);
+        transform: translateX(2px);
       }
 
       &:last-child {

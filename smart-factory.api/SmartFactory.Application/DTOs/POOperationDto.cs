@@ -20,6 +20,7 @@ public class POOperationDto
     public string? PrintContent { get; set; }
     public decimal? CycleTime { get; set; }
     public string? AssemblyContent { get; set; }
+    public string? Notes { get; set; }
     public int SequenceOrder { get; set; }
 }
 
@@ -38,5 +39,6 @@ public class CreatePOOperationRequest
     public string? AssemblyContent { get; set; }
     public int SequenceOrder { get; set; }
 }
+
 
 

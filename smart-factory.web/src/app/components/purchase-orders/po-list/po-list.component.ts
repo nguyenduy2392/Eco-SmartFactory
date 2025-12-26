@@ -4,7 +4,7 @@ import { PurchaseOrderService } from '../../../services/purchase-order.service';
 import { CustomerService } from '../../../services/customer.service';
 import { PurchaseOrderList } from '../../../models/purchase-order.interface';
 import { Customer } from '../../../models/customer.interface';
-import { MessageService } from 'primeng/api';
+import { MessageService, ConfirmationService } from 'primeng/api';
 import { SharedModule } from '../../../shared.module';
 import { PrimengModule } from '../../../primeng.module';
 
@@ -65,7 +65,8 @@ export class POListComponent implements OnInit {
     private poService: PurchaseOrderService,
     private customerService: CustomerService,
     private router: Router,
-    private messageService: MessageService
+    private messageService: MessageService,
+    private confirmationService: ConfirmationService
   ) { }
 
   ngOnInit(): void {
@@ -275,43 +276,125 @@ export class POListComponent implements OnInit {
 
     const template = templates[templateType as keyof typeof templates];
     if (template) {
-      const blob = new Blob([template], { type: 'text/csv;charset=utf-8;' });
+      // Thêm BOM UTF-8 để Excel nhận diện đúng encoding
+      const BOM = '\uFEFF';
+      const blob = new Blob([BOM + template], { 
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8;' 
+      });
       const link = document.createElement('a');
       const url = URL.createObjectURL(blob);
       link.setAttribute('href', url);
-      link.setAttribute('download', `Template_${templateType}.csv`);
+      link.setAttribute('download', `Template_${templateType}.xlsx`);
       link.style.visibility = 'hidden';
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
+      
+      // Hiển thị thông báo thành công
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Thành công',
+        detail: `Đã tải xuống template ${templateType}`
+      });
     }
   }
 
   /**
-   * Tạo template ÉP NHỰA
+   * Tạo template ÉP NHỰA với đầy đủ các cột và dữ liệu mẫu
    */
   private createEpNhuaTemplate(): string {
-    const header = 'STT,Mã linh kiện,Tên linh kiện,Vật liệu,Màu,Trọng lượng (g),Chu kỳ (s),Số lượng,Đơn giá,Thành tiền\n';
-    const sample = '1,LK001,Linh kiện mẫu 1,ABS,Đen,50,30,1000,5000,5000000\n';
-    return header + sample;
+    const header = 'Mã sản phẩm,Tên sản phẩm,Mã khuôn / Model,Mã linh kiện,Tên linh kiện,Vật liệu,Mã màu,Màu sắc,Số lòng khuôn,Chu kỳ (s),Trọng lượng (g),Số lượng (PCS),Đơn giá (VND),Thành tiền (VND)\n';
+    
+    // Dữ liệu mẫu từ template thực tế (theo đúng giá trị trong ảnh)
+    // Thành tiền = Số lượng × Đơn giá
+    const samples = [
+      'PKW4180,VM-TMTR-00002,JAZ-PKW4180-T01-01,H02-0PKW4180-001,Nửa đầu trái,ABS 15A1-H,3-25962,PMS 340C,2,33,3.15,35000,1080,37800000',
+      'PKW4180,VM-TMTR-00002,JAZ-PKW4180-T01-01,H02-0PKW4180-002,Nửa đầu phải,ABS 15A1-H,3-25962,PMS 340C,2,33,3.1,35000,1080,37800000',
+      'PKW4180,VM-TMTR-00002,JAZ-PKW4180-T02-01,H02-0PKW4180-006,Thân dưới sau,ABS 15A1-H,3-25963,PMS 7541C,2,33,3.85,35000,1080,37800000',
+      'PKW4180,VM-TMTR-00002,JAZ-PKW4180-T03-01,H02-0PKW4180-009,Vảy đầu,PVC 95°,3-25964,PMS 7458C,4,35,3.65,35000,1155,40425000',
+      'PKW4180,VM-TMTR-00002,JAZ-PKW4180-T03-01,H02-0PKW4180-010,Vảy ngực,PVC 95°,3-25965,PMS 198C,4,35,0.6,35000,1155,40425000'
+    ];
+    
+    return header + samples.join('\n');
   }
 
   /**
-   * Tạo template LẮP RÁP
+   * Tạo template LẮP RÁP với đầy đủ các cột và dữ liệu mẫu
    */
   private createLapRapTemplate(): string {
-    const header = 'STT,Mã linh kiện,Tên linh kiện,Nội dung lắp ráp,Số lượng,Đơn giá,Thành tiền\n';
-    const sample = '1,LK001,Linh kiện mẫu 1,Lắp ráp chi tiết A với B,1000,3000,3000000\n';
-    return header + sample;
+    const header = 'Mã sản phẩm,Nội dung gia công,Số lần gia công,Đơn giá (VND),Thành tiền (VND),Số lượng hợp đồng (PCS),Tổng tiền (VND),Ngày hoàn thành,Ghi chú\n';
+    
+    // Dữ liệu mẫu từ template thực tế
+    const samples = [
+      'PKW4180-0002,Lắp ráp,,31,150,4650,35000,162750000,2025-01-15'
+    ];
+    
+    // Thêm dòng tổng (có thể để trống)
+    const totalRow = ',,,162750000,,,,"Dòng tổng – để trống nếu không dùng"\n';
+    
+    return header + samples.join('\n') + totalRow;
   }
 
   /**
-   * Tạo template PHUN IN
+   * Tạo template PHUN IN với đầy đủ các cột và dữ liệu mẫu
    */
   private createPhunInTemplate(): string {
-    const header = 'STT,Mã linh kiện,Tên linh kiện,Vị trí phun,Nội dung in,Màu sơn,Số lượng,Đơn giá,Thành tiền\n';
-    const sample = '1,LK001,Linh kiện mẫu 1,Mặt trước,Logo công ty,Đỏ,1000,4000,4000000\n';
-    return header + sample;
+    const header = 'Tên sản phẩm,Mã sản phẩm,Mã linh kiện,Mô tả linh kiện,Vị trí gia công,Công đoạn,Số lần gia công,Đơn giá (VND),Đơn giá chuẩn (VND),Số lượng,Đơn giá hợp đồng (PCS),Thành tiền (VND),Ngày hoàn thành,Ghi chú\n';
+    
+    // Dữ liệu mẫu từ template thực tế (5 dòng như trong ảnh)
+    const samples = [
+      'Gallade,PKW4180-0002,H02-OPKW4180-003,Thân trên trước,Thân trên trước,Sơn,1,217,217,35000,217,7595000,',
+      'Gallade,PKW4180-0002,H02-OPKW4180-003,Thân trên trước,Thân trên trước,Ép khuôn,1,217,217,35000,217,7595000,',
+      'Gallade,PKW4180-0002,H02-OPKW4180-003,Thân trên trước,Thân trên trước,Cắt biên,0,217,217,35000,217,7595000,',
+      'Gallade,PKW4180-0002,H02-OPKW4180-003,Thân trên trước,Thân trên trước,In chuyển,0,122,122,35000,217,7595000,',
+      'Gallade,PKW4180-0002,H02-OPKW4180-003,Thân trên trước,Thân trên trước,Thủ công,0,238,238,35000,217,7595000,'
+    ];
+    
+    return header + samples.join('\n');
+  }
+
+  /**
+   * Xác nhận xóa PO
+   */
+  confirmDelete(po: PurchaseOrderList): void {
+    this.confirmationService.confirm({
+      message: `Bạn có chắc chắn muốn xóa PO "${po.poNumber}"? Hành động này không thể hoàn tác.`,
+      header: 'Xác nhận xóa PO',
+      icon: 'pi pi-exclamation-triangle',
+      acceptButtonStyleClass: 'p-button-danger',
+      acceptLabel: 'Xóa',
+      rejectLabel: 'Hủy',
+      accept: () => {
+        this.deletePO(po);
+      }
+    });
+  }
+
+  /**
+   * Xóa PO sau khi xác nhận
+   */
+  deletePO(po: PurchaseOrderList): void {
+    this.loading = true;
+    this.poService.delete(po.id).subscribe({
+      next: () => {
+        this.loading = false;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Thành công',
+          detail: `Đã xóa PO ${po.poNumber} thành công`
+        });
+        this.loadPurchaseOrders();
+      },
+      error: (error) => {
+        console.error('Error deleting PO:', error);
+        this.loading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: error.error?.error || 'Không thể xóa PO'
+        });
+      }
+    });
   }
 
   /**

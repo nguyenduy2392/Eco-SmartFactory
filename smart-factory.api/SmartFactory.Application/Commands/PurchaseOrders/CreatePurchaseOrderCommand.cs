@@ -1,4 +1,5 @@
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using SmartFactory.Application.Data;
 using SmartFactory.Application.DTOs;
@@ -37,6 +38,14 @@ public class CreatePurchaseOrderCommandHandler : IRequestHandler<CreatePurchaseO
         if (customer == null)
         {
             throw new Exception($"Customer with ID {request.CustomerId} not found");
+        }
+
+        // Validate PONumber is unique
+        var existingPO = await _context.PurchaseOrders
+            .FirstOrDefaultAsync(p => p.PONumber == request.PONumber, cancellationToken);
+        if (existingPO != null)
+        {
+            throw new Exception($"Mã PO '{request.PONumber}' đã tồn tại trong hệ thống. Vui lòng sử dụng mã PO khác.");
         }
 
         var po = new PurchaseOrder
@@ -108,5 +117,6 @@ public class CreatePurchaseOrderCommandHandler : IRequestHandler<CreatePurchaseO
         };
     }
 }
+
 
 

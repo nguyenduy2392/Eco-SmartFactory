@@ -1,0 +1,139 @@
+<div class="card">
+  <!-- Header -->
+  <div class="flex justify-content-between align-items-center mb-4">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900 m-0 mb-2">Danh sách Sản phẩm</h1>
+      <p class="text-gray-600 m-0">Quản lý và theo dõi tất cả các sản phẩm</p>
+    </div>
+    <div class="flex gap-2">
+      <button
+        pButton
+        label="+ Thêm Sản phẩm"
+        icon="pi pi-plus"
+        class="p-button-primary"
+        (click)="createProduct()">
+      </button>
+    </div>
+  </div>
+
+  <!-- Filter Section -->
+  <div class="grid mb-4">
+    <div class="col-12 md:col-6">
+      <label class="block text-sm font-medium mb-2">Tìm kiếm</label>
+      <input
+        type="text"
+        pInputText
+        [(ngModel)]="searchText"
+        (ngModelChange)="applyGlobalFilter()"
+        placeholder="Tìm mã sản phẩm, tên sản phẩm..."
+        class="w-full">
+    </div>
+  </div>
+
+  <!-- Products Table -->
+  <p-table
+    #dt
+    [value]="products"
+    [loading]="loading"
+    [paginator]="true"
+    [rows]="20"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Hiển thị {first} đến {last} trong tổng số {totalRecords} sản phẩm"
+    [globalFilterFields]="['code', 'name']"
+    [filterDelay]="0"
+    styleClass="p-datatable-gridlines"
+    [tableStyle]="{'min-width': '60rem'}">
+    
+    <!-- Template cho khi không có dữ liệu -->
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="8" class="text-center py-8">
+          <i class="pi pi-inbox text-6xl text-gray-300 mb-3 block"></i>
+          <p class="text-gray-500 text-lg font-medium">Chưa có sản phẩm nào</p>
+          <p class="text-gray-400 text-sm mt-2">Hãy tạo sản phẩm mới hoặc import từ PO</p>
+        </td>
+      </tr>
+    </ng-template>
+
+    <!-- Header -->
+    <ng-template pTemplate="header">
+      <tr>
+        <th class="text-center" style="width: 60px;">#</th>
+        <th pSortableColumn="name" style="min-width: 200px;">
+          SẢN PHẨM <p-sortIcon field="name"></p-sortIcon>
+        </th>
+        <th pSortableColumn="code" style="min-width: 150px;">
+          MÃ SẢN PHẨM <p-sortIcon field="code"></p-sortIcon>
+        </th>
+        <th pSortableColumn="code" style="min-width: 150px;">
+          MÃ SKU <p-sortIcon field="code"></p-sortIcon>
+        </th>
+        <th class="text-center" style="min-width: 100px;">
+          SỐ LƯỢNG
+        </th>
+        <th class="text-right" style="min-width: 150px;">
+          ĐƠN GIÁ
+        </th>
+        <th class="text-right" style="min-width: 150px;">
+          THÀNH TIỀN
+        </th>
+        <th class="text-center" style="min-width: 120px;">THAO TÁC</th>
+      </tr>
+    </ng-template>
+
+    <!-- Body -->
+    <ng-template pTemplate="body" let-product let-rowIndex="rowIndex">
+      <tr class="hover:bg-gray-50 cursor-pointer" (click)="viewProduct(product.id)">
+        <td class="text-center text-gray-500">{{ rowIndex + 1 }}</td>
+        <td>
+          <div class="flex align-items-center gap-3">
+            <div *ngIf="product.imageUrl" class="product-image-small">
+              <img [src]="product.imageUrl" [alt]="product.name" class="w-full h-full object-cover">
+            </div>
+            <div *ngIf="!product.imageUrl" class="product-image-placeholder">
+              <i class="pi pi-image"></i>
+            </div>
+            <div class="flex flex-column">
+              <span class="font-medium">{{ product.name }}</span>
+              <span *ngIf="product.description" class="text-xs text-gray-500">{{ product.description }}</span>
+            </div>
+          </div>
+        </td>
+        <td>
+          <span class="font-semibold text-primary font-mono">{{ product.code }}</span>
+        </td>
+        <td>
+          <span class="font-mono text-sm">{{ product.code }}</span>
+        </td>
+        <td class="text-center">
+          <span class="font-medium">{{ product.totalQuantity | number }}</span>
+        </td>
+        <td class="text-right font-semibold">
+          <span *ngIf="product.latestUnitPrice">
+            {{ formatCurrency(product.latestUnitPrice) }}
+          </span>
+          <span *ngIf="!product.latestUnitPrice" class="text-gray-400">-</span>
+        </td>
+        <td class="text-right font-bold">
+          <span *ngIf="product.latestUnitPrice && product.totalQuantity">
+            {{ formatCurrency((product.latestUnitPrice || 0) * product.totalQuantity) }}
+          </span>
+          <span *ngIf="!product.latestUnitPrice || !product.totalQuantity" class="text-gray-400">-</span>
+        </td>
+        <td class="text-center">
+          <button
+            pButton
+            icon="pi pi-eye"
+            class="p-button-rounded p-button-text p-button-sm"
+            pTooltip="Xem chi tiết"
+            (click)="viewProduct(product.id); $event.stopPropagation()">
+          </button>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- Toast for notifications -->
+<p-toast></p-toast>
+

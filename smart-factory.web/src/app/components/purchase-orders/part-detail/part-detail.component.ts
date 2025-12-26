@@ -3,6 +3,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { SharedModule } from '../../../shared.module';
 import { PrimengModule } from '../../../primeng.module';
+import { PartService, PartDetail as ApiPartDetail } from '../../../services/part.service';
+import { MessageService } from 'primeng/api';
 
 export interface PartDetail {
   id: string;
@@ -77,7 +79,9 @@ export class PartDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private location: Location
+    private location: Location,
+    private partService: PartService,
+    private messageService: MessageService
   ) { }
 
   ngOnInit(): void {
@@ -92,82 +96,72 @@ export class PartDetailComponent implements OnInit {
   }
 
   loadPartDetail(): void {
-    // TODO: Replace with actual API call
+    if (!this.componentId || !this.poId) {
+      return;
+    }
+
     this.loading = true;
     
-    // Mock data for demonstration
-    setTimeout(() => {
-      this.part = {
-        id: this.componentId!,
-        productId: this.productId!,
-        poId: this.poId!,
-        componentName: 'Vỏ Nhựa Ngoài - Top Housing',
-        partNumber: 'PN-2023-8821',
-        revision: 'Rev 1.2',
-        status: 'In Production',
-        processes: [
-          {
-            id: '1',
-            name: 'Ép Phun (Injection)',
-            icon: 'pi-box',
-            color: 'blue',
-            description: 'Primary forming process',
-            isExpanded: true,
-            stages: [
-              {
-                id: '1-1',
-                name: 'Chuẩn bị & Sấy nguyên liệu',
-                machineId: 'MAY-EP-01',
-                materials: [
-                  { id: 'm1', name: 'Nhựa ABS - Black', quantity: 120, unit: 'kg' },
-                  { id: 'm2', name: 'Hạt màu đen', quantity: 2, unit: 'kg' }
-                ],
-                tools: [
-                  { id: 't1', name: 'Máy sấy hạt nhựa', toolId: 'TOOL-005' }
-                ]
-              },
-              {
-                id: '1-2',
-                name: 'Ép định hình sản phẩm',
-                cycleTime: 45,
-                materials: [],
-                tools: [
-                  { id: 't2', name: 'Khuôn ép chính', toolId: 'MOLD-A88' }
-                ]
-              }
-            ]
-          },
-          {
-            id: '2',
-            name: 'Sơn (Painting)',
-            icon: 'pi-palette',
-            color: 'orange',
-            description: 'Finishing process',
-            isExpanded: true,
-            stages: [
-              {
-                id: '2-1',
-                name: 'Phun sơn lót',
-                materials: [
-                  { id: 'm3', name: 'Sơn lót xám', quantity: 0.5, unit: 'L' }
-                ],
-                tools: []
-              }
-            ]
-          },
-          {
-            id: '3',
-            name: 'Lắp ráp (Assembly)',
-            icon: 'pi-wrench',
-            color: 'purple',
-            description: 'Final assembly',
-            isExpanded: false,
-            stages: []
-          }
-        ]
-      };
-      this.loading = false;
-    }, 500);
+    this.partService.getById(this.componentId, this.poId).subscribe({
+      next: (apiPart: ApiPartDetail) => {
+        // Map API response to component interface
+        this.part = {
+          id: apiPart.id,
+          productId: apiPart.productId,
+          poId: this.poId!,
+          componentName: apiPart.name,
+          partNumber: apiPart.code,
+          revision: apiPart.productCode ? `Rev ${apiPart.productCode}` : 'Rev 1.0',
+          status: apiPart.status || (apiPart.isActive ? 'In Production' : 'Draft'),
+          processes: apiPart.processes.map(process => ({
+            id: process.id,
+            name: process.name,
+            icon: process.icon,
+            color: process.color,
+            description: process.description || '',
+            isExpanded: true, // Default to expanded
+            stages: process.stages.map(stage => ({
+              id: stage.id,
+              name: stage.operationName,
+              machineId: stage.machineId,
+              cycleTime: stage.cycleTime,
+              materials: stage.materials.map(m => ({
+                id: m.id,
+                name: m.name,
+                quantity: m.quantity,
+                unit: m.unit
+              })),
+              tools: stage.tools.map(t => ({
+                id: t.id,
+                name: t.name,
+                toolId: t.toolId
+              }))
+            }))
+          }))
+        };
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading part detail:', error);
+        this.loading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: 'Không thể tải thông tin chi tiết linh kiện'
+        });
+        // Fallback to empty part
+        this.part = {
+          id: this.componentId!,
+          productId: this.productId!,
+          poId: this.poId!,
+          componentName: '',
+          partNumber: '',
+          revision: '',
+          status: 'Draft',
+          processes: []
+        };
+      }
+    });
   }
 
   goBack(): void {

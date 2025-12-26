@@ -173,9 +173,16 @@
             *ngIf="po.versionType !== 'PRODUCTION'"
             pButton
             icon="pi pi-copy"
-            class="p-button-rounded p-button-text p-button-sm"
+            class="p-button-rounded p-button-text p-button-sm mr-1"
             pTooltip="Clone version"
             (click)="cloneVersion(po); $event.stopPropagation()">
+          </button>
+          <button
+            pButton
+            icon="pi pi-trash"
+            class="p-button-rounded p-button-text p-button-sm p-button-danger"
+            pTooltip="Xóa PO"
+            (click)="confirmDelete(po); $event.stopPropagation()">
           </button>
         </td>
       </tr>
@@ -257,15 +264,16 @@
           pButton
           icon="pi pi-download"
           class="p-button-outlined p-button-info"
-          pTooltip="Tải template mẫu"
+          pTooltip="Tải template Excel mẫu với dữ liệu mẫu"
           tooltipPosition="top"
           (click)="downloadTemplate(importForm.templateType)"
-          [disabled]="importLoading">
+          [disabled]="importLoading"
+          label="Tải template">
         </button>
       </div>
       <small class="text-gray-500">
         <i class="pi pi-info-circle"></i> 
-        Nhấn nút tải xuống để tải template Excel mẫu
+        Nhấn nút "Tải template" để tải file Excel mẫu với đầy đủ các cột và dữ liệu mẫu
       </small>
     </div>
 
@@ -370,3 +378,6 @@
 
 <!-- Toast for notifications -->
 <p-toast></p-toast>
+
+<!-- Confirmation Dialog -->
+<p-confirmDialog></p-confirmDialog>

@@ -87,10 +87,12 @@ public class GetPurchaseOrderByIdQueryHandler : IRequestHandler<GetPurchaseOrder
                 PrintContent = op.PrintContent,
                 CycleTime = op.CycleTime,
                 AssemblyContent = op.AssemblyContent,
+                Notes = op.Notes,
                 SequenceOrder = op.SequenceOrder
             }).OrderBy(op => op.SequenceOrder).ToList()
         };
     }
 }
+
 
 

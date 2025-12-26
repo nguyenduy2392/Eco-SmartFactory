@@ -34,19 +34,26 @@ public class PurchaseOrdersController : BaseApiController
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreatePurchaseOrderRequest request)
     {
-        var command = new CreatePurchaseOrderCommand
+        try
         {
-            PONumber = request.PONumber,
-            CustomerId = request.CustomerId,
-            TemplateType = request.TemplateType,
-            PODate = request.PODate,
-            ExpectedDeliveryDate = request.ExpectedDeliveryDate,
-            Notes = request.Notes,
-            Products = request.Products
-        };
+            var command = new CreatePurchaseOrderCommand
+            {
+                PONumber = request.PONumber,
+                CustomerId = request.CustomerId,
+                TemplateType = request.TemplateType,
+                PODate = request.PODate,
+                ExpectedDeliveryDate = request.ExpectedDeliveryDate,
+                Notes = request.Notes,
+                Products = request.Products
+            };
 
-        var result = await Mediator.Send(command);
-        return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+            var result = await Mediator.Send(command);
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
     }
 
     [HttpPut("{id}")]
@@ -115,6 +122,21 @@ public class PurchaseOrdersController : BaseApiController
         {
             var result = await Mediator.Send(command);
             return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        try
+        {
+            var command = new DeletePurchaseOrderCommand { Id = id };
+            var result = await Mediator.Send(command);
+            return Ok(new { success = true, message = "PO đã được xóa thành công" });
         }
         catch (Exception ex)
         {

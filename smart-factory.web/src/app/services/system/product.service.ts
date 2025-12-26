@@ -1,35 +1,64 @@
 import { Injectable } from '@angular/core';
-import { MasterService } from '../master/master.service';
-import { EnvService } from '../../env.service';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { Product, ProductWithPrice, CreateProductRequest, UpdateProductRequest } from '../../models/interface/product.interface';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProductService {
-  public apiURL = this.env.baseApiUrl;
+  private apiUrl = `${environment.apiUrl}/products`;
 
-  constructor(
-    private master: MasterService,
-    private env: EnvService,
-  ) { }
+  constructor(private http: HttpClient) { }
 
-  GetAllProducts() {
-    return this.master.get(`${this.apiURL}api/products`);
+  /**
+   * Lấy danh sách tất cả sản phẩm
+   */
+  getAll(): Observable<Product[]> {
+    return this.http.get<Product[]>(this.apiUrl);
   }
 
-  GetProductById(id: string) {
-    return this.master.get(`${this.apiURL}api/products/${id}`);
+  /**
+   * Lấy danh sách sản phẩm với giá
+   */
+  getAllWithPrices(): Observable<ProductWithPrice[]> {
+    return this.http.get<ProductWithPrice[]>(`${this.apiUrl}?withPrices=true`);
   }
 
-  CreateProduct(model: any) {
-    return this.master.post(`${this.apiURL}api/products`, model);
+  /**
+   * Lấy chi tiết sản phẩm theo ID
+   */
+  getById(id: string): Observable<Product> {
+    return this.http.get<Product>(`${this.apiUrl}/${id}`);
   }
 
-  UpdateProduct(id: string, model: any) {
-    return this.master.put(`${this.apiURL}api/products/${id}`, model);
+  /**
+   * Lấy chi tiết sản phẩm trong PO (bao gồm danh sách linh kiện)
+   */
+  getDetailByPO(productId: string, purchaseOrderId: string): Observable<any> {
+    const params = new HttpParams().set('purchaseOrderId', purchaseOrderId);
+    return this.http.get<any>(`${this.apiUrl}/${productId}/detail`, { params });
   }
 
-  DeleteProduct(id: string) {
-    return this.master.delete(`${this.apiURL}api/products/${id}`);
+  /**
+   * Tạo sản phẩm mới
+   */
+  create(request: CreateProductRequest): Observable<Product> {
+    return this.http.post<Product>(this.apiUrl, request);
+  }
+
+  /**
+   * Cập nhật sản phẩm
+   */
+  update(id: string, request: UpdateProductRequest): Observable<Product> {
+    return this.http.put<Product>(`${this.apiUrl}/${id}`, request);
+  }
+
+  /**
+   * Xóa sản phẩm
+   */
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }

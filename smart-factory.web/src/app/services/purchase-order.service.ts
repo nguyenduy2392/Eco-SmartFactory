@@ -84,5 +84,12 @@ export class PurchaseOrderService {
     }
     return this.http.post<PurchaseOrder>(`${this.apiUrl}/import-excel`, formData);
   }
+
+  /**
+   * Xóa PO
+   */
+  delete(id: string): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(`${this.apiUrl}/${id}`);
+  }
 }
 

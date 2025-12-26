@@ -10,14 +10,50 @@ namespace SmartFactory.Api.Controllers;
 public class ProductsController : BaseApiController
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] bool withPrices = false)
     {
-        var query = new GetAllProductsQuery();
+        if (withPrices)
+        {
+            var queryWithPrices = new GetProductsWithPricesQuery();
+            var result = await Mediator.Send(queryWithPrices);
+            return Ok(result);
+        }
+        else
+        {
+            var query = new GetAllProductsQuery();
+            var result = await Mediator.Send(query);
+            return Ok(result);
+        }
+    }
+
+    [HttpGet("{id}/detail", Name = "GetProductDetailByPO", Order = 1)]
+    public async Task<IActionResult> GetDetailByPO(Guid id, [FromQuery] Guid purchaseOrderId)
+    {
+        if (purchaseOrderId == Guid.Empty)
+        {
+            return BadRequest(new { message = "purchaseOrderId is required" });
+        }
+
+        var query = new GetProductDetailByPOQuery 
+        { 
+            ProductId = id,
+            PurchaseOrderId = purchaseOrderId
+        };
         var result = await Mediator.Send(query);
+        
+        if (result == null)
+        {
+            return NotFound(new { 
+                message = "Product detail not found for the specified Product and Purchase Order",
+                productId = id,
+                purchaseOrderId = purchaseOrderId
+            });
+        }
+        
         return Ok(result);
     }
 
-    [HttpGet("{id}")]
+    [HttpGet("{id}", Name = "GetProductById", Order = 2)]
     public async Task<IActionResult> GetById(Guid id)
     {
         var query = new GetProductByIdQuery { ProductId = id };

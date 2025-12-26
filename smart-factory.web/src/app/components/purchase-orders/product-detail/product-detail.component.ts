@@ -3,6 +3,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { SharedModule } from '../../../shared.module';
 import { PrimengModule } from '../../../primeng.module';
+import { ProductService } from '../../../services/system/product.service';
+import { MessageService } from 'primeng/api';
 
 export interface ProductDetail {
   id: string;
@@ -47,7 +49,9 @@ export class ProductDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private location: Location
+    private location: Location,
+    private productService: ProductService,
+    private messageService: MessageService
   ) { }
 
   ngOnInit(): void {
@@ -61,55 +65,66 @@ export class ProductDetailComponent implements OnInit {
   }
 
   loadProductDetail(): void {
-    // TODO: Replace with actual API call
+    if (!this.productId || !this.poId) {
+      return;
+    }
+
     this.loading = true;
     
-    // Mock data for demonstration
-    setTimeout(() => {
-      this.product = {
-        id: this.productId!,
-        poId: this.poId!,
-        poNumber: 'PO-2023-089',
-        productName: 'Executive Office Chair - Ergonomic Series',
-        sku: 'SKU-CHAIR-0089-BLK',
-        quantity: 500,
-        material: 'Mesh Fabric',
-        color: 'Midnight Black',
-        colorHex: '#000000',
-        description: 'Standard ergonomic model with lumbar support and adjustable armrests.',
-        status: 'In Production',
-        components: [
-          {
-            id: '1',
-            componentName: 'Wheel Base Assembly',
-            partId: 'CPT-WHL-001',
-            material: 'Reinforced Nylon',
-            quantityRequired: '1 pc',
-            status: 'Ready',
-            description: 'Main structural support'
-          },
-          {
-            id: '2',
-            componentName: 'Gas Lift Mechanism',
-            partId: 'CPT-GAS-024',
-            material: 'Steel',
-            quantityRequired: '1 pc',
-            status: 'Processing',
-            description: 'Height adjustment unit'
-          },
-          {
-            id: '3',
-            componentName: 'Armrest Set (L/R)',
-            partId: 'CPT-ARM-112',
-            material: 'PU + Plastic',
-            quantityRequired: '1 set',
-            status: 'Pending',
-            description: 'Adjustable padded arms'
-          }
-        ]
-      };
-      this.loading = false;
-    }, 500);
+    this.productService.getDetailByPO(this.productId, this.poId).subscribe({
+      next: (apiProduct: any) => {
+        // Map API response to component interface
+        this.product = {
+          id: apiProduct.id,
+          poId: this.poId!,
+          poNumber: apiProduct.poNumber,
+          productName: apiProduct.productName,
+          sku: apiProduct.sku,
+          quantity: apiProduct.quantity,
+          material: apiProduct.material || '',
+          color: apiProduct.color || '',
+          colorHex: apiProduct.colorHex || '#000000',
+          description: apiProduct.description || '',
+          imageUrl: apiProduct.imageUrl,
+          status: apiProduct.status || 'Draft',
+          components: apiProduct.components?.map((comp: any) => ({
+            id: comp.id,
+            componentName: comp.componentName,
+            partId: comp.partId,
+            material: comp.material || '',
+            quantityRequired: comp.quantityRequired || '0 pcs',
+            status: comp.status === 'Ready' ? 'Ready' : 
+                    comp.status === 'Processing' ? 'Processing' : 'Pending',
+            description: comp.description
+          })) || []
+        };
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading product detail:', error);
+        this.loading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: 'Không thể tải thông tin chi tiết sản phẩm'
+        });
+        // Fallback to empty product
+        this.product = {
+          id: this.productId!,
+          poId: this.poId!,
+          poNumber: '',
+          productName: '',
+          sku: '',
+          quantity: 0,
+          material: '',
+          color: '',
+          colorHex: '#000000',
+          description: '',
+          status: 'Draft',
+          components: []
+        };
+      }
+    });
   }
 
   goBack(): void {

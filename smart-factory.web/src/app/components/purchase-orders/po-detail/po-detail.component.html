@@ -191,6 +191,7 @@
           <tr>
             <th class="text-center" style="width: 60px;">#</th>
             <th>Sản phẩm</th>
+            <th>Mã sản phẩm</th>
             <th>Mã SKU</th>
             <th class="text-center">Số lượng</th>
             <th class="text-right">Đơn giá</th>
@@ -210,9 +211,11 @@
                 </div>
                 <div class="flex flex-column">
                   <span class="font-medium">{{ product.productName }}</span>
-                  <span class="text-xs text-gray-500">{{ product.productCode }}</span>
                 </div>
               </div>
+            </td>
+            <td>
+              <span class="font-mono text-sm font-semibold text-primary">{{ product.productCode }}</span>
             </td>
             <td>
               <span class="font-mono text-sm">{{ product.productCode }}</span>
@@ -256,7 +259,7 @@
         </tbody>
         <tbody *ngIf="!purchaseOrder.products || purchaseOrder.products.length === 0">
           <tr>
-            <td colspan="7" class="text-center py-8 text-gray-500">
+            <td colspan="8" class="text-center py-8 text-gray-500">
               <i class="pi pi-inbox text-6xl mb-3 block text-gray-300"></i>
               <p class="text-lg font-medium">Chưa có sản phẩm nào</p>
             </td>
@@ -264,7 +267,7 @@
         </tbody>
         <tfoot *ngIf="purchaseOrder.products && purchaseOrder.products.length > 0">
           <tr class="total-row">
-            <td colspan="5" class="text-right font-bold">Tổng cộng:</td>
+            <td colspan="6" class="text-right font-bold">Tổng cộng:</td>
             <td class="text-right text-xl font-black text-primary">
               {{ purchaseOrder.totalAmount | currency: 'VND': 'symbol': '1.0-0' }}
             </td>
@@ -273,68 +276,6 @@
         </tfoot>
       </table>
     </div>
-  </div>
-
-  <!-- Công đoạn gia công (Accordion) -->
-  <div class="mt-6" *ngIf="purchaseOrder.operations && purchaseOrder.operations.length > 0">
-    <h3 class="section-title mb-4">Chi tiết công đoạn gia công</h3>
-    
-    <p-accordion>
-      <p-accordionTab
-        *ngFor="let processingType of getProcessingTypeNames()"
-        [header]="processingType + ' (' + getOperationsByProcessingType()[processingType].length + ' công đoạn)'">
-        
-        <p-table
-          [value]="getOperationsByProcessingType()[processingType]"
-          styleClass="p-datatable-sm">
-          
-          <ng-template pTemplate="header">
-            <tr>
-              <th style="width: 50px">#</th>
-              <th>Linh kiện</th>
-              <th>Tên công đoạn</th>
-              <th>Phương pháp</th>
-              <th class="text-center">Charge</th>
-              <th class="text-center">SL</th>
-              <th class="text-right">Đơn giá</th>
-              <th class="text-right">Thành tiền</th>
-            </tr>
-          </ng-template>
-
-          <ng-template pTemplate="body" let-operation>
-            <tr>
-              <td>{{ operation.sequenceOrder }}</td>
-              <td>
-                <div class="font-semibold text-primary">{{ operation.partCode }}</div>
-                <div class="text-sm text-gray-600">{{ operation.partName }}</div>
-              </td>
-              <td>
-                <div>{{ operation.operationName }}</div>
-                <div class="text-xs text-gray-500 mt-1">
-                  <span *ngIf="operation.sprayPosition">Vị trí: {{ operation.sprayPosition }}&nbsp;</span>
-                  <span *ngIf="operation.printContent">Nội dung: {{ operation.printContent }}&nbsp;</span>
-                  <span *ngIf="operation.assemblyContent">{{ operation.assemblyContent }}&nbsp;</span>
-                  <span *ngIf="operation.cycleTime">Chu kỳ: {{ operation.cycleTime }}s</span>
-                </div>
-              </td>
-              <td>
-                <span *ngIf="operation.processMethodName" class="text-sm">
-                  {{ operation.processMethodName }}
-                </span>
-              </td>
-              <td class="text-center">{{ operation.chargeCount }}</td>
-              <td class="text-center">{{ operation.quantity | number }}</td>
-              <td class="text-right">
-                {{ operation.unitPrice | currency: 'VND': 'symbol': '1.0-0' }}
-              </td>
-              <td class="text-right font-semibold">
-                {{ operation.totalAmount | currency: 'VND': 'symbol': '1.0-0' }}
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </p-accordionTab>
-    </p-accordion>
   </div>
 
   <!-- Help Section -->
