@@ -65,7 +65,24 @@ export class ProcessBOMService {
    * - New BOM must have at least one material line
    */
   create(request: CreateBOMRequest): Observable<ProcessBOM> {
-    return this.http.post<ProcessBOM>(this.apiUrl, request);
+    // Map frontend request (camelCase) to BE DTO (PascalCase)
+    const beRequest: any = {
+      partId: request.partId,
+      processingTypeId: request.processingTypeId,
+      effectiveDate: request.effectiveDate,
+      notes: request.notes,
+      details: request.details.map(d => ({
+        materialCode: d.materialCode,
+        materialName: d.materialName || '',
+        quantityPerUnit: d.qtyPerUnit,
+        scrapRate: d.scrapRate,
+        unit: d.uom,
+        processStep: d.processStep,
+        notes: d.notes,
+        sequenceOrder: 0 // Will be set by BE
+      }))
+    };
+    return this.http.post<ProcessBOM>(this.apiUrl, beRequest);
   }
 
   /**

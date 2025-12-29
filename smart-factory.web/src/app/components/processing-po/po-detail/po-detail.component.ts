@@ -153,6 +153,8 @@ export class PODetailComponent implements OnInit {
   }
 
   getProcessingTypeLabel(type: string): string {
+    // This component doesn't load processing types, so we keep a simple map
+    // If needed, can inject ProcessingTypeService and load from API
     const typeMap: { [key: string]: string } = {
       'EP_NHUA': 'ÉP NHỰA',
       'PHUN_IN': 'PHUN IN',
@@ -302,8 +304,26 @@ export class PODetailComponent implements OnInit {
     };
 
     this.availabilityService.checkAvailability(request).subscribe({
-      next: (result) => {
-        this.availabilityResult = result;
+      next: (result: any) => {
+        // Map BE response to frontend interface
+        this.availabilityResult = {
+          overallStatus: result.overallStatus,
+          purchaseOrderId: result.purchaseOrderId,
+          plannedQuantity: result.plannedQuantity,
+          checkDate: result.checkedAt ? new Date(result.checkedAt) : new Date(),
+          partResults: result.partDetails?.map((p: any) => ({
+            partId: p.partId,
+            partCode: p.partCode,
+            partName: p.partName,
+            processingType: p.processingType,
+            processingTypeName: p.processingTypeName,
+            requiredQty: p.requiredQuantity,
+            canProduce: p.canProduce,
+            severity: p.severity,
+            bomVersion: p.bomVersion,
+            hasActiveBOM: p.hasActiveBOM
+          })) || []
+        };
         this.availabilityLoading = false;
       },
       error: (error) => {
@@ -312,7 +332,7 @@ export class PODetailComponent implements OnInit {
         this.messageService.add({
           severity: 'error',
           summary: 'Lỗi',
-          detail: error.error?.message || 'Không thể kiểm tra khả dụng NVL'
+          detail: error.error?.message || 'Không thể kiểm tra khả dụng linh kiện'
         });
       }
     });
@@ -320,9 +340,9 @@ export class PODetailComponent implements OnInit {
 
   getOverallStatusLabel(status: string): string {
     const statusMap: { [key: string]: string } = {
-      'PASS': 'ĐỦ NGUYÊN VẬT LIỆU',
-      'FAIL': 'THIẾU NGUYÊN VẬT LIỆU',
-      'WARNING': 'CẢN BÁO'
+      'PASS': 'CÓ THỂ SẢN XUẤT',
+      'FAIL': 'KHÔNG THỂ SẢN XUẤT',
+      'WARNING': 'CẢNH BÁO'
     };
     return statusMap[status] || status;
   }

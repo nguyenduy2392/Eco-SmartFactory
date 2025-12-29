@@ -45,6 +45,7 @@ public class GetProcessBOMByIdQueryHandler : IRequestHandler<GetProcessBOMByIdQu
             ProcessingTypeName = bom.ProcessingType.Name,
             Version = bom.Version,
             Status = bom.Status,
+            EffectiveDate = bom.EffectiveDate,
             Name = bom.Name,
             Notes = bom.Notes,
             CreatedAt = bom.CreatedAt,

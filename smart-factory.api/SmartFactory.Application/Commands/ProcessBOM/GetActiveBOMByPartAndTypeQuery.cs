@@ -50,6 +50,7 @@ public class GetActiveBOMByPartAndTypeQueryHandler : IRequestHandler<GetActiveBO
             ProcessingTypeName = bom.ProcessingType.Name,
             Version = bom.Version,
             Status = bom.Status,
+            EffectiveDate = bom.EffectiveDate,
             Name = bom.Name,
             Notes = bom.Notes,
             CreatedAt = bom.CreatedAt,

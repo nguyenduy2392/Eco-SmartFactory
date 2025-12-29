@@ -7,6 +7,14 @@ namespace SmartFactory.Api.Controllers;
 [Authorize]
 public class PartsController : BaseApiController
 {
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var query = new GetAllPartsQuery();
+        var result = await Mediator.Send(query);
+        return Ok(result);
+    }
+
     [HttpGet("{partId}")]
     public async Task<IActionResult> GetById(Guid partId, [FromQuery] Guid purchaseOrderId)
     {

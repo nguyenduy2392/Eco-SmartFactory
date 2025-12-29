@@ -64,4 +64,93 @@ code {
   font-size: 0.9rem;
 }
 
+// BOM Detail Dialog Styles
+:host {
+  ::ng-deep {
+    .bom-detail-dialog {
+      .p-dialog-content {
+        max-height: 85vh;
+        overflow-y: auto;
+        padding: 1.5rem;
+        padding-top: 1.5rem;
+      }
+
+      .p-dialog-header {
+        position: relative;
+        z-index: 10;
+      }
+
+      .bom-detail-content {
+        min-height: 200px;
+        position: relative;
+        z-index: 1;
+      }
+
+      .bom-info-section {
+        position: relative;
+        z-index: 1;
+        padding-top: 0.5rem;
+        margin-bottom: 1rem;
+      }
+
+      .bom-materials-section {
+        margin-top: 1.5rem;
+        position: relative;
+        z-index: 1;
+
+        h4 {
+          margin-bottom: 1rem;
+          color: var(--text-color);
+          font-weight: 600;
+        }
+
+        .bom-materials-table-wrapper {
+          border: 1px solid var(--surface-border);
+          border-radius: 4px;
+          overflow: auto;
+          width: 100%;
+
+          .p-datatable {
+            width: 100%;
+
+            .p-datatable-wrapper {
+              overflow-x: auto;
+              overflow-y: auto;
+              max-height: 400px;
+            }
+
+            .p-datatable-thead > tr > th {
+              background-color: var(--primary-color);
+              color: white;
+              font-weight: 600;
+              position: sticky;
+              top: 0;
+              z-index: 2;
+              white-space: nowrap;
+            }
+
+            .p-datatable-tbody {
+              td {
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                max-width: 300px;
+
+                &:last-child {
+                  white-space: normal;
+                  max-width: none;
+                }
+              }
+
+              tr:hover {
+                background-color: var(--surface-100);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
 

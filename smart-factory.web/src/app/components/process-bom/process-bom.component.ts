@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ProcessBOMService } from '../../services/process-bom.service';
 import { PartService, PartDetail } from '../../services/part.service';
+import { ProcessingTypeService } from '../../services/processing-type.service';
+import { ProcessingType } from '../../models/processing-type.interface';
 import {
   ProcessBOM,
   ProcessBOMList,
@@ -60,11 +62,7 @@ export class ProcessBOMComponent implements OnInit {
   bomDetailsForm: BOMDetailForm[] = [];
 
   // Options
-  processingTypeOptions = [
-    { label: 'ÉP NHỰA', value: 'EP_NHUA' },
-    { label: 'PHUN IN', value: 'PHUN_IN' },
-    { label: 'LẮP RÁP', value: 'LAP_RAP' }
-  ];
+  processingTypeOptions: { label: string; value: string; id: string }[] = [];
 
   statusOptions = [
     { label: 'Tất cả', value: undefined },
@@ -83,13 +81,39 @@ export class ProcessBOMComponent implements OnInit {
   constructor(
     private bomService: ProcessBOMService,
     private partService: PartService,
+    private processingTypeService: ProcessingTypeService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) { }
 
   ngOnInit(): void {
+    this.loadProcessingTypes();
     this.loadParts();
     this.loadBOMList();
+  }
+
+  loadProcessingTypes(): void {
+    this.processingTypeService.getAll().subscribe({
+      next: (types) => {
+        this.processingTypeOptions = types.map(type => ({
+          label: type.name,
+          value: type.code,
+          id: type.id
+        }));
+        // Set default processing type if options are loaded
+        if (this.processingTypeOptions.length > 0 && !this.createBOMForm.processingType) {
+          this.createBOMForm.processingType = this.processingTypeOptions[0].value;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading processing types:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: 'Không thể tải danh sách loại gia công'
+        });
+      }
+    });
   }
 
   loadParts(): void {
@@ -145,8 +169,32 @@ export class ProcessBOMComponent implements OnInit {
   // View BOM Detail
   viewBOMDetail(bom: ProcessBOMList): void {
     this.bomService.getById(bom.id).subscribe({
-      next: (detail) => {
-        this.selectedBOM = detail;
+      next: (detail: any) => {
+        // Map BE response (PascalCase) to frontend interface (camelCase)
+        this.selectedBOM = {
+          id: detail.id,
+          partId: detail.partId,
+          partCode: detail.partCode,
+          partName: detail.partName,
+          processingType: detail.processingType || detail.processingTypeName,
+          version: detail.version,
+          status: detail.status,
+          effectiveDate: detail.effectiveDate ? new Date(detail.effectiveDate) : undefined,
+          notes: detail.notes,
+          createdAt: detail.createdAt ? new Date(detail.createdAt) : new Date(),
+          createdBy: detail.createdBy,
+          bomDetails: detail.bomDetails?.map((d: any) => ({
+            id: d.id,
+            bomId: d.processBOMId || d.bomId,
+            materialCode: d.materialCode,
+            materialName: d.materialName,
+            qtyPerUnit: d.quantityPerUnit ?? d.qtyPerUnit,
+            scrapRate: d.scrapRate,
+            uom: d.unit ?? d.uom,
+            processStep: d.processStep,
+            notes: d.notes
+          })) || []
+        };
         this.showBOMDetailDialog = true;
       },
       error: (error) => {
@@ -177,9 +225,12 @@ export class ProcessBOMComponent implements OnInit {
   }
 
   resetCreateBOMForm(): void {
+    const defaultProcessingType = this.processingTypeOptions.length > 0 
+      ? this.processingTypeOptions[0].value 
+      : '';
     this.createBOMForm = {
       partId: '',
-      processingType: 'EP_NHUA',
+      processingType: defaultProcessingType,
       effectiveDate: new Date(),
       notes: ''
     };
@@ -289,13 +340,17 @@ export class ProcessBOMComponent implements OnInit {
 
     this.createBOMLoading = true;
 
+    const processingTypeId = this.processingTypeOptions.find(opt => opt.value === this.createBOMForm.processingType)?.id;
+
     const request: CreateBOMRequest = {
       partId: this.createBOMForm.partId,
       processingType: this.createBOMForm.processingType as 'EP_NHUA' | 'PHUN_IN' | 'LAP_RAP',
+      processingTypeId: processingTypeId?.toString() || '',
       effectiveDate: this.createBOMForm.effectiveDate,
       notes: this.createBOMForm.notes,
-      bomDetails: this.bomDetailsForm.map(detail => ({
+      details: this.bomDetailsForm.map(detail => ({
         materialCode: detail.materialCode.trim(),
+        materialName: detail.materialName?.trim() || '',
         qtyPerUnit: detail.qtyPerUnit,
         scrapRate: detail.scrapRate,
         uom: detail.uom,
@@ -378,12 +433,8 @@ export class ProcessBOMComponent implements OnInit {
   }
 
   getProcessingTypeLabel(type: string): string {
-    const typeMap: { [key: string]: string } = {
-      'EP_NHUA': 'ÉP NHỰA',
-      'PHUN_IN': 'PHUN IN',
-      'LAP_RAP': 'LẮP RÁP'
-    };
-    return typeMap[type] || type;
+    const option = this.processingTypeOptions.find(opt => opt.value === type);
+    return option ? option.label : type;
   }
 
   get bomDetails(): BOMDetail[] {

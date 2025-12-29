@@ -7,25 +7,23 @@ using SmartFactory.Application.DTOs;
 namespace SmartFactory.Application.Commands.AvailabilityCheck;
 
 /// <summary>
-/// Command to check material availability for production planning
+/// Command to check part availability for production planning
 /// PHASE 1: Availability Check Logic
 /// Purpose: Decide whether PMC is allowed to plan production
 /// 
 /// Data sources:
-/// - PO Operations (contract quantity)
-/// - Process BOM (ACTIVE)
-/// - PO Material Baseline (NHAP_NGUYEN_VAT_LIEU)
-/// - Inventory on-hand quantity
+/// - PO Operations (contract quantity per part)
+/// - Process BOM (ACTIVE) - to verify if part can be produced
 /// 
 /// Calculation:
-/// Required_Qty = Planned_Qty × BOM_Qty × (1 + Scrap_Rate)
-/// Available_Qty = Inventory_Qty + PO_Material_Baseline_Qty
-/// Shortage = Required_Qty - Available_Qty
+/// Required_Qty = Planned_Qty × PO_Operation_Quantity (per part)
+/// Available: Check if ACTIVE BOM exists for (Part + ProcessingType)
+/// - Has ACTIVE BOM → Can produce → OK
+/// - No ACTIVE BOM → Cannot produce → CRITICAL
 /// 
 /// Result rules:
-/// - Shortage > 0 → FAIL (CRITICAL)
-/// - Available_Qty < Required_Qty × 1.1 → WARNING
-/// - Else → PASS
+/// - No ACTIVE BOM → FAIL (CRITICAL)
+/// - Has ACTIVE BOM → PASS
 /// 
 /// IMPORTANT: Availability check MUST NOT:
 /// - Change inventory
@@ -86,130 +84,66 @@ public class CheckMaterialAvailabilityCommandHandler : IRequestHandler<CheckMate
             OverallStatus = "PASS"
         };
 
-        // Dictionary to track material requirements
-        var materialRequirements = new Dictionary<string, MaterialRequirement>();
-
-        // Step 1: Calculate required materials from BOM for each PO Operation
+        // Step 1: Check availability for each part in PO Operations
         foreach (var operation in po.POOperations)
         {
+            // Required quantity = Planned_Qty × PO_Operation_Quantity
+            var requiredQty = request.PlannedQuantity * operation.Quantity;
+
             // Get ACTIVE BOM for this (Part + ProcessingType)
             var activeBOM = await _context.ProcessBOMs
-                .Include(b => b.BOMDetails)
                 .Where(b => b.PartId == operation.PartId 
                     && b.ProcessingTypeId == operation.ProcessingTypeId 
                     && b.Status == "ACTIVE")
                 .FirstOrDefaultAsync(cancellationToken);
 
-            if (activeBOM == null)
-            {
-                _logger.LogWarning("No ACTIVE BOM found for Part {PartCode} + ProcessingType {ProcessingType}. Skipping material check.",
-                    operation.Part.Code, operation.ProcessingType.Name);
-                continue;
-            }
-
-            // Calculate required materials
-            foreach (var bomDetail in activeBOM.BOMDetails)
-            {
-                // Required_Qty = Planned_Qty × BOM_Qty × (1 + Scrap_Rate)
-                var requiredQty = request.PlannedQuantity * bomDetail.QuantityPerUnit * (1 + bomDetail.ScrapRate);
-
-                if (!materialRequirements.ContainsKey(bomDetail.MaterialCode))
-                {
-                    materialRequirements[bomDetail.MaterialCode] = new MaterialRequirement
-                    {
-                        MaterialCode = bomDetail.MaterialCode,
-                        MaterialName = bomDetail.MaterialName,
-                        Unit = bomDetail.Unit,
-                        TotalRequiredQty = 0
-                    };
-                }
-
-                materialRequirements[bomDetail.MaterialCode].TotalRequiredQty += requiredQty;
-            }
-        }
-
-        if (!materialRequirements.Any())
-        {
-            _logger.LogWarning("No BOM found for PO {PONumber}. Cannot perform availability check.", po.PONumber);
-            result.OverallStatus = "WARNING";
-            return result;
-        }
-
-        // Step 2: Check availability for each material
-        foreach (var (materialCode, requirement) in materialRequirements)
-        {
-            // Get inventory on-hand quantity
-            var material = await _context.Materials
-                .FirstOrDefaultAsync(m => m.Code == materialCode, cancellationToken);
-
-            var inventoryQty = material?.CurrentStock ?? 0;
-
-            // Get PO Material Baseline quantity
-            var poBaselineQty = po.MaterialBaselines
-                .Where(mb => mb.MaterialCode == materialCode)
-                .Sum(mb => mb.CommittedQuantity);
-
-            // Available_Qty = Inventory_Qty + PO_Material_Baseline_Qty
-            var availableQty = inventoryQty + poBaselineQty;
-
-            // Shortage = Required_Qty - Available_Qty
-            var shortage = requirement.TotalRequiredQty - availableQty;
-
-            // Determine severity
+            // Determine availability and severity
             string severity;
-            if (shortage > 0)
+            bool canProduce = activeBOM != null;
+            
+            if (!canProduce)
             {
                 severity = "CRITICAL";
                 result.OverallStatus = "FAIL";
-            }
-            else if (availableQty < requirement.TotalRequiredQty * 1.1m)
-            {
-                severity = "WARNING";
-                if (result.OverallStatus == "PASS")
-                {
-                    result.OverallStatus = "WARNING";
-                }
             }
             else
             {
                 severity = "OK";
             }
 
-            var detail = new MaterialAvailabilityDetail
+            var detail = new PartAvailabilityDetail
             {
-                MaterialCode = materialCode,
-                MaterialName = requirement.MaterialName,
-                RequiredQuantity = requirement.TotalRequiredQty,
-                AvailableQuantity = availableQty,
-                Shortage = Math.Max(0, shortage),
-                Unit = requirement.Unit,
+                PartId = operation.PartId,
+                PartCode = operation.Part.Code,
+                PartName = operation.Part.Name,
+                ProcessingType = operation.ProcessingType.Code,
+                ProcessingTypeName = operation.ProcessingType.Name,
+                RequiredQuantity = requiredQty,
+                CanProduce = canProduce,
                 Severity = severity,
-                InventoryQuantity = inventoryQty,
-                POBaselineQuantity = poBaselineQty
+                BOMVersion = activeBOM?.Version,
+                HasActiveBOM = canProduce
             };
 
-            result.MaterialDetails.Add(detail);
+            result.PartDetails.Add(detail);
 
-            _logger.LogInformation("Material {MaterialCode}: Required={Required}, Available={Available}, Shortage={Shortage}, Severity={Severity}",
-                materialCode, requirement.TotalRequiredQty, availableQty, shortage, severity);
+            _logger.LogInformation("Part {PartCode} ({ProcessingType}): Required={Required}, CanProduce={CanProduce}, Severity={Severity}",
+                operation.Part.Code, operation.ProcessingType.Code, requiredQty, canProduce, severity);
         }
 
-        _logger.LogInformation("Availability check for PO {PONumber}: Overall status = {Status}, Materials checked = {Count}",
-            po.PONumber, result.OverallStatus, result.MaterialDetails.Count);
+        if (!result.PartDetails.Any())
+        {
+            _logger.LogWarning("No PO Operations found for PO {PONumber}. Cannot perform availability check.", po.PONumber);
+            result.OverallStatus = "WARNING";
+            return result;
+        }
+
+        _logger.LogInformation("Availability check for PO {PONumber}: Overall status = {Status}, Parts checked = {Count}",
+            po.PONumber, result.OverallStatus, result.PartDetails.Count);
 
         return result;
     }
 }
 
-/// <summary>
-/// Internal class for tracking material requirements
-/// </summary>
-internal class MaterialRequirement
-{
-    public string MaterialCode { get; set; } = string.Empty;
-    public string MaterialName { get; set; } = string.Empty;
-    public string Unit { get; set; } = string.Empty;
-    public decimal TotalRequiredQty { get; set; }
-}
 
 

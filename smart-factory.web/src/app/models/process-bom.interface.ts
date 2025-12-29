@@ -45,13 +45,15 @@ export interface ProcessBOMList {
 export interface CreateBOMRequest {
   partId: string;
   processingType: 'EP_NHUA' | 'PHUN_IN' | 'LAP_RAP';
+  processingTypeId:string,
   effectiveDate: Date;
   notes?: string;
-  bomDetails: CreateBOMDetailRequest[];
+  details: CreateBOMDetailRequest[];
 }
 
 export interface CreateBOMDetailRequest {
   materialCode: string;
+  materialName?: string;
   qtyPerUnit: number;
   scrapRate: number;
   uom: string;

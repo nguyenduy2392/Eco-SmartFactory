@@ -33,6 +33,11 @@ public class ProcessBOM
     public string Status { get; set; } = "ACTIVE";
     
     /// <summary>
+    /// Ngày hiệu lực của BOM
+    /// </summary>
+    public DateTime? EffectiveDate { get; set; }
+    
+    /// <summary>
     /// BOM Name / Description
     /// </summary>
     public string? Name { get; set; }

@@ -108,19 +108,21 @@ export interface AvailabilityCheckRequest {
 
 export interface AvailabilityCheckResult {
   overallStatus: 'PASS' | 'FAIL' | 'WARNING';
-  totalRequired: number;
-  totalAvailable: number;
+  purchaseOrderId: string;
+  plannedQuantity: number;
   checkDate: Date;
-  materialResults: MaterialAvailabilityResult[];
+  partResults: PartAvailabilityResult[];
 }
 
-export interface MaterialAvailabilityResult {
-  materialCode: string;
-  materialName: string;
+export interface PartAvailabilityResult {
+  partId: string;
+  partCode: string;
+  partName: string;
+  processingType: string;
+  processingTypeName: string;
   requiredQty: number;
-  availableQty: number;
-  inventoryQty: number;
-  poBaselineQty: number;
-  shortage: number;
+  canProduce: boolean;
   severity: 'OK' | 'WARNING' | 'CRITICAL';
+  bomVersion?: string;
+  hasActiveBOM: boolean;
 }

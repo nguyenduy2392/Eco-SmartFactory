@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { PurchaseOrderService } from '../../../services/purchase-order.service';
 import { CustomerService } from '../../../services/customer.service';
+import { ProcessingTypeService } from '../../../services/processing-type.service';
+import { ProcessingType } from '../../../models/processing-type.interface';
 import {
   PurchaseOrderList,
   ImportPOResponse,
@@ -53,22 +55,13 @@ export class POListComponent implements OnInit {
     { label: 'Đã khóa', value: 'LOCKED' }
   ];
 
-  processingTypeOptions = [
-    { label: 'Tất cả', value: undefined },
-    { label: 'ÉP NHỰA', value: 'EP_NHUA' },
-    { label: 'PHUN IN', value: 'PHUN_IN' },
-    { label: 'LẮP RÁP', value: 'LAP_RAP' }
-  ];
-
-  importProcessingTypeOptions = [
-    { label: 'ÉP NHỰA', value: 'EP_NHUA' },
-    { label: 'PHUN IN', value: 'PHUN_IN' },
-    { label: 'LẮP RÁP', value: 'LAP_RAP' }
-  ];
+  processingTypeOptions: { label: string; value: string | undefined }[] = [];
+  importProcessingTypeOptions: { label: string; value: string }[] = [];
 
   constructor(
     private poService: PurchaseOrderService,
     private customerService: CustomerService,
+    private processingTypeService: ProcessingTypeService,
     private router: Router,
     private route: ActivatedRoute,
     private messageService: MessageService,
@@ -81,8 +74,41 @@ export class POListComponent implements OnInit {
       if (params['customerId']) {
         this.selectedCustomerId = params['customerId'];
       }
+      this.loadProcessingTypes();
       this.loadCustomers();
       this.loadPurchaseOrders();
+    });
+  }
+
+  loadProcessingTypes(): void {
+    this.processingTypeService.getAll().subscribe({
+      next: (types) => {
+        // For filter dropdown - include "All" option
+        this.processingTypeOptions = [
+          { label: 'Tất cả', value: undefined },
+          ...types.map(type => ({
+            label: type.name,
+            value: type.code
+          }))
+        ];
+        // For import form - no "All" option
+        this.importProcessingTypeOptions = types.map(type => ({
+          label: type.name,
+          value: type.code
+        }));
+        // Set default processing type if options are loaded
+        if (this.importProcessingTypeOptions.length > 0 && !this.importForm.processingType) {
+          this.importForm.processingType = this.importProcessingTypeOptions[0].value;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading processing types:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: 'Không thể tải danh sách loại gia công'
+        });
+      }
     });
   }
 
@@ -160,10 +186,13 @@ export class POListComponent implements OnInit {
   }
 
   resetImportForm(): void {
+    const defaultProcessingType = this.importProcessingTypeOptions.length > 0 
+      ? this.importProcessingTypeOptions[0].value 
+      : '';
     this.importForm = {
       poNumber: '',
       customerId: '',
-      processingType: 'EP_NHUA',
+      processingType: defaultProcessingType,
       poDate: new Date(),
       expectedDeliveryDate: null,
       notes: ''
@@ -344,12 +373,8 @@ export class POListComponent implements OnInit {
   }
 
   getProcessingTypeLabel(type: string): string {
-    const typeMap: { [key: string]: string } = {
-      'EP_NHUA': 'ÉP NHỰA',
-      'PHUN_IN': 'PHUN IN',
-      'LAP_RAP': 'LẮP RÁP'
-    };
-    return typeMap[type] || type;
+    const option = this.importProcessingTypeOptions.find(opt => opt.value === type);
+    return option ? option.label : type;
   }
 }
 

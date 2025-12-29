@@ -53,7 +53,7 @@
         </p-button>
         <p-button
           *ngIf="isApproved"
-          label="Kiểm tra khả dụng NVL"
+          label="Kiểm tra khả dụng linh kiện"
           icon="pi pi-check-circle"
           (onClick)="openAvailabilityDialog()"
           severity="info">
@@ -359,7 +359,7 @@
 
 <!-- Availability Check Dialog -->
 <p-dialog
-  header="Kiểm tra khả dụng nguyên vật liệu"
+  header="Kiểm tra khả dụng linh kiện"
   [(visible)]="showAvailabilityDialog"
   [modal]="true"
   [style]="{width: '900px'}"

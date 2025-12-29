@@ -126,6 +126,11 @@ namespace SmartFactory.Application.Migrations
                 column: "ProcessBOMId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_ProcessBOMs_PartId",
+                table: "ProcessBOMs",
+                column: "PartId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_ProcessBOMs_PartId_ProcessingTypeId_Version",
                 table: "ProcessBOMs",
                 columns: new[] { "PartId", "ProcessingTypeId", "Version" },

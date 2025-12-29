@@ -2,13 +2,13 @@
   <div class="flex justify-content-between align-items-center mb-4">
     <h2 class="text-2xl font-bold m-0">
       <i class="pi pi-check-circle mr-2"></i>
-      Kiểm tra khả dụng nguyên vật liệu
+      Kiểm tra khả dụng linh kiện
     </h2>
   </div>
 
   <p-message 
     severity="info" 
-    text="Kiểm tra xem nguyên vật liệu có đủ cho kế hoạch sản xuất hay không. Chỉ có thể kiểm tra với PO đã được phê duyệt cho PMC."
+    text="Kiểm tra xem linh kiện có thể sản xuất được hay không. Chỉ có thể kiểm tra với PO đã được phê duyệt cho PMC."
     class="mb-4">
   </p-message>
 
@@ -39,12 +39,12 @@
                     <div class="text-sm text-500">{{ po.customerName }}</div>
                   </div>
                   <div class="text-right">
-                    <p-tag [value]="po.version" severity="info" [style]="{'font-size': '0.75rem'}"></p-tag>
+                    <p-tag [value]="po.version" severity="info" styleClass="text-xs"></p-tag>
                   </div>
                 </div>
               </ng-template>
               <ng-template let-po pTemplate="selectedItem">
-                <div *ngIf="po">
+                <div>
                   <strong>{{ po.poNumber }}</strong> - {{ po.customerName }} ({{ po.version }})
                 </div>
               </ng-template>
@@ -101,9 +101,9 @@
 
     <!-- Overall Status -->
     <div class="mb-4">
-      <div class="overall-status-card" [ngClass]="'status-' + availabilityResult.overallStatus.toLowerCase()">
+      <div class="overall-status-card" [ngClass]="getStatusClass(availabilityResult.overallStatus)">
         <div class="flex align-items-center justify-content-center gap-3 p-4">
-          <i [class]="getOverallStatusIcon(availabilityResult.overallStatus)" class="status-icon"></i>
+          <i [ngClass]="[getOverallStatusIcon(availabilityResult.overallStatus), 'status-icon']"></i>
           <div class="text-center">
             <div class="status-label">{{ getOverallStatusLabel(availabilityResult.overallStatus) }}</div>
             <div class="text-sm text-600 mt-2">
@@ -120,71 +120,67 @@
       <div class="col-12 md:col-6">
         <p-card>
           <div class="flex flex-column align-items-center text-center">
-            <i class="pi pi-shopping-cart text-5xl text-blue-500 mb-3"></i>
-            <div class="text-500 mb-2 text-lg">Tổng yêu cầu</div>
-            <div class="text-4xl font-bold text-primary">{{ availabilityResult.totalRequired }}</div>
+            <i class="pi pi-sitemap text-5xl text-blue-500 mb-3"></i>
+            <div class="text-500 mb-2 text-lg">Tổng số linh kiện</div>
+            <div class="text-4xl font-bold text-primary">{{ availabilityResult.partResults.length }}</div>
           </div>
         </p-card>
       </div>
       <div class="col-12 md:col-6">
         <p-card>
           <div class="flex flex-column align-items-center text-center">
-            <i class="pi pi-box text-5xl mb-3" 
-               [ngClass]="availabilityResult.totalAvailable >= availabilityResult.totalRequired ? 'text-green-500' : 'text-red-500'"></i>
-            <div class="text-500 mb-2 text-lg">Tổng khả dụng</div>
+            <i class="pi pi-check-circle text-5xl mb-3" 
+               [ngClass]="getStatusColor(availabilityResult.overallStatus)"></i>
+            <div class="text-500 mb-2 text-lg">Có thể sản xuất</div>
             <div class="text-4xl font-bold" 
-                 [ngClass]="availabilityResult.totalAvailable >= availabilityResult.totalRequired ? 'text-green-500' : 'text-red-500'">
-              {{ availabilityResult.totalAvailable }}
+                 [ngClass]="getStatusColor(availabilityResult.overallStatus)">
+              {{ getCanProduceCount() }} / {{ availabilityResult.partResults.length }}
             </div>
           </div>
         </p-card>
       </div>
     </div>
 
-    <!-- Material Details Table -->
+    <!-- Part Details Table -->
     <p-card>
       <ng-template pTemplate="header">
         <div class="flex align-items-center gap-2 p-3">
           <i class="pi pi-list text-xl"></i>
-          <span class="text-xl font-semibold">Chi tiết theo nguyên vật liệu</span>
+          <span class="text-xl font-semibold">Chi tiết theo linh kiện</span>
         </div>
       </ng-template>
 
       <p-table
-        [value]="availabilityResult.materialResults"
+        [value]="availabilityResult.partResults"
         [paginator]="true"
         [rows]="10"
         [rowsPerPageOptions]="[10, 25, 50]"
         styleClass="p-datatable-sm p-datatable-gridlines">
         <ng-template pTemplate="header">
           <tr>
-            <th pSortableColumn="materialCode">
-              Mã NVL
-              <p-sortIcon field="materialCode"></p-sortIcon>
+            <th pSortableColumn="partCode">
+              Mã linh kiện
+              <p-sortIcon field="partCode"></p-sortIcon>
             </th>
-            <th pSortableColumn="materialName">
-              Tên NVL
-              <p-sortIcon field="materialName"></p-sortIcon>
+            <th pSortableColumn="partName">
+              Tên linh kiện
+              <p-sortIcon field="partName"></p-sortIcon>
+            </th>
+            <th pSortableColumn="processingType">
+              Loại gia công
+              <p-sortIcon field="processingType"></p-sortIcon>
             </th>
             <th pSortableColumn="requiredQty" class="text-right">
-              Yêu cầu
+              Số lượng cần
               <p-sortIcon field="requiredQty"></p-sortIcon>
             </th>
-            <th pSortableColumn="inventoryQty" class="text-right">
-              Tồn kho
-              <p-sortIcon field="inventoryQty"></p-sortIcon>
+            <th pSortableColumn="bomVersion">
+              BOM Version
+              <p-sortIcon field="bomVersion"></p-sortIcon>
             </th>
-            <th pSortableColumn="poBaselineQty" class="text-right">
-              Baseline (PO)
-              <p-sortIcon field="poBaselineQty"></p-sortIcon>
-            </th>
-            <th pSortableColumn="availableQty" class="text-right">
-              Khả dụng
-              <p-sortIcon field="availableQty"></p-sortIcon>
-            </th>
-            <th pSortableColumn="shortage" class="text-right">
-              Thiếu
-              <p-sortIcon field="shortage"></p-sortIcon>
+            <th pSortableColumn="canProduce" class="text-center">
+              Có thể sản xuất
+              <p-sortIcon field="canProduce"></p-sortIcon>
             </th>
             <th pSortableColumn="severity" class="text-center">
               Tình trạng
@@ -193,30 +189,30 @@
           </tr>
         </ng-template>
 
-        <ng-template pTemplate="body" let-mat>
-          <tr [ngClass]="{'material-row-critical': mat.severity === 'CRITICAL', 'material-row-warning': mat.severity === 'WARNING'}">
+        <ng-template pTemplate="body" let-part>
+          <tr [ngClass]="getRowClass(part.severity)">
             <td>
-              <code>{{ mat.materialCode }}</code>
+              <code>{{ part.partCode }}</code>
             </td>
-            <td>{{ mat.materialName }}</td>
-            <td class="text-right">
-              <strong>{{ mat.requiredQty }}</strong>
-            </td>
-            <td class="text-right">{{ mat.inventoryQty }}</td>
-            <td class="text-right">{{ mat.poBaselineQty }}</td>
-            <td class="text-right">
-              <strong [ngClass]="mat.shortage <= 0 ? 'text-green-600' : 'text-red-600'">
-                {{ mat.availableQty }}
-              </strong>
+            <td>{{ part.partName }}</td>
+            <td>
+              <p-tag [value]="part.processingTypeName" severity="info"></p-tag>
             </td>
             <td class="text-right">
-              <strong class="text-red-600" *ngIf="mat.shortage > 0">{{ mat.shortage }}</strong>
-              <span class="text-500" *ngIf="mat.shortage <= 0">-</span>
+              <strong>{{ part.requiredQty }}</strong>
+            </td>
+            <td>
+              <span *ngIf="part.bomVersion" class="font-semibold">{{ part.bomVersion }}</span>
+              <span *ngIf="!part.bomVersion" class="text-500">-</span>
+            </td>
+            <td class="text-center">
+              <i [ngClass]="getCanProduceIcon(part.canProduce)" 
+                 class="text-2xl"></i>
             </td>
             <td class="text-center">
               <p-tag
-                [value]="getMaterialSeverityLabel(mat.severity)"
-                [severity]="getMaterialSeveritySeverity(mat.severity)">
+                [value]="getPartSeverityLabel(part.severity)"
+                [severity]="getPartSeveritySeverity(part.severity)">
               </p-tag>
             </td>
           </tr>
@@ -224,7 +220,7 @@
 
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="8" class="text-center">
+            <td colspan="7" class="text-center">
               <div class="p-4">
                 <i class="pi pi-inbox text-4xl text-400"></i>
                 <p class="text-xl text-500 mt-3">Không có dữ liệu</p>
@@ -241,12 +237,12 @@
         *ngIf="availabilityResult.overallStatus === 'FAIL'"
         severity="error"
         [closable]="false">
-        <ng-template pTemplate>
+        <ng-template pTemplate="content">
           <div class="flex align-items-center">
             <i class="pi pi-times-circle text-2xl mr-3"></i>
             <div>
-              <strong class="block mb-1">Không đủ nguyên vật liệu để sản xuất</strong>
-              <p class="m-0">Vui lòng bổ sung nguyên vật liệu thiếu trước khi tạo kế hoạch sản xuất.</p>
+              <strong class="block mb-1">Có linh kiện không thể sản xuất</strong>
+              <p class="m-0">Một số linh kiện không có BOM đang hoạt động. Vui lòng tạo BOM trước khi tạo kế hoạch sản xuất.</p>
             </div>
           </div>
         </ng-template>
@@ -256,12 +252,12 @@
         *ngIf="availabilityResult.overallStatus === 'WARNING'"
         severity="warn"
         [closable]="false">
-        <ng-template pTemplate>
+        <ng-template pTemplate="content">
           <div class="flex align-items-center">
             <i class="pi pi-exclamation-triangle text-2xl mr-3"></i>
             <div>
-              <strong class="block mb-1">Nguyên vật liệu gần hết</strong>
-              <p class="m-0">Có thể tiến hành sản xuất nhưng nên bổ sung nguyên vật liệu để đảm bảo suôn sẻ.</p>
+              <strong class="block mb-1">Cảnh báo</strong>
+              <p class="m-0">Có linh kiện cần kiểm tra trước khi tạo kế hoạch sản xuất.</p>
             </div>
           </div>
         </ng-template>
@@ -271,12 +267,12 @@
         *ngIf="availabilityResult.overallStatus === 'PASS'"
         severity="success"
         [closable]="false">
-        <ng-template pTemplate>
+        <ng-template pTemplate="content">
           <div class="flex align-items-center justify-content-between">
             <div class="flex align-items-center">
               <i class="pi pi-check-circle text-2xl mr-3"></i>
               <div>
-                <strong class="block mb-1">Đủ nguyên vật liệu</strong>
+                <strong class="block mb-1">Tất cả linh kiện có thể sản xuất</strong>
                 <p class="m-0">Có thể tiến hành tạo kế hoạch sản xuất.</p>
               </div>
             </div>
@@ -296,7 +292,7 @@
 
   <div *ngIf="!availabilityResult" class="text-center p-5">
     <i class="pi pi-info-circle text-5xl text-400 mb-3"></i>
-    <p class="text-xl text-500">Chọn PO và nhập số lượng để kiểm tra khả dụng nguyên vật liệu</p>
+    <p class="text-xl text-500">Chọn PO và nhập số lượng để kiểm tra khả dụng linh kiện</p>
   </div>
 </div>
 

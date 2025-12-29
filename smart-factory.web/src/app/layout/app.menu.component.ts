@@ -40,7 +40,7 @@ export class AppMenuComponent implements OnInit {
                         routerLink: ['/process-bom']
                     },
                     {
-                        label: 'Kiểm tra khả dụng NVL',
+                        label: 'Kiểm tra khả dụng linh kiện',
                         icon: 'pi pi-fw pi-check-circle',
                         routerLink: ['/availability-check']
                     },

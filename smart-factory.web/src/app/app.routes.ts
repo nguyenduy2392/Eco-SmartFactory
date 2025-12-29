@@ -74,7 +74,7 @@ export const routes: Routes = [
         path: 'availability-check',
         loadComponent: () => import('./components/availability-check/availability-check.component').then(m => m.AvailabilityCheckComponent),
         data: {
-          title: 'Kiểm tra khả dụng NVL',
+          title: 'Kiểm tra khả dụng linh kiện',
           breadcrumb: 'Availability Check',
           icon: 'pi pi-check-circle'
         }

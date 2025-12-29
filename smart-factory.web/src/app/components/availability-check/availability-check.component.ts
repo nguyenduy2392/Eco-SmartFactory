@@ -71,8 +71,26 @@ export class AvailabilityCheckComponent implements OnInit {
     };
 
     this.availabilityService.checkAvailability(request).subscribe({
-      next: (result) => {
-        this.availabilityResult = result;
+      next: (result: any) => {
+        // Map BE response to frontend interface
+        this.availabilityResult = {
+          overallStatus: result.overallStatus,
+          purchaseOrderId: result.purchaseOrderId,
+          plannedQuantity: result.plannedQuantity,
+          checkDate: result.checkedAt ? new Date(result.checkedAt) : new Date(),
+          partResults: result.partDetails?.map((p: any) => ({
+            partId: p.partId,
+            partCode: p.partCode,
+            partName: p.partName,
+            processingType: p.processingType,
+            processingTypeName: p.processingTypeName,
+            requiredQty: p.requiredQuantity,
+            canProduce: p.canProduce,
+            severity: p.severity,
+            bomVersion: p.bomVersion,
+            hasActiveBOM: p.hasActiveBOM
+          })) || []
+        };
         this.checkLoading = false;
         
         // Show notification based on result
@@ -80,21 +98,21 @@ export class AvailabilityCheckComponent implements OnInit {
           this.messageService.add({
             severity: 'success',
             summary: 'Kiểm tra thành công',
-            detail: 'Nguyên vật liệu đủ để sản xuất',
+            detail: 'Tất cả linh kiện có thể sản xuất',
             life: 3000
           });
         } else if (result.overallStatus === 'FAIL') {
           this.messageService.add({
             severity: 'error',
             summary: 'Kiểm tra thất bại',
-            detail: 'Thiếu nguyên vật liệu. Không thể tiến hành sản xuất.',
+            detail: 'Có linh kiện không thể sản xuất. Vui lòng kiểm tra BOM.',
             life: 5000
           });
         } else {
           this.messageService.add({
             severity: 'warn',
             summary: 'Cảnh báo',
-            detail: 'Nguyên vật liệu gần hết. Nên bổ sung.',
+            detail: 'Có linh kiện cần kiểm tra.',
             life: 4000
           });
         }
@@ -105,7 +123,7 @@ export class AvailabilityCheckComponent implements OnInit {
         this.messageService.add({
           severity: 'error',
           summary: 'Lỗi',
-          detail: error.error?.message || 'Không thể kiểm tra khả dụng NVL'
+          detail: error.error?.message || 'Không thể kiểm tra khả dụng linh kiện'
         });
       }
     });
@@ -142,8 +160,8 @@ export class AvailabilityCheckComponent implements OnInit {
   // Helpers
   getOverallStatusLabel(status: string): string {
     const statusMap: { [key: string]: string } = {
-      'PASS': 'ĐỦ NGUYÊN VẬT LIỆU',
-      'FAIL': 'THIẾU NGUYÊN VẬT LIỆU',
+      'PASS': 'CÓ THỂ SẢN XUẤT',
+      'FAIL': 'KHÔNG THỂ SẢN XUẤT',
       'WARNING': 'CẢNH BÁO'
     };
     return statusMap[status] || status;
@@ -167,16 +185,16 @@ export class AvailabilityCheckComponent implements OnInit {
     return iconMap[status] || 'pi pi-info-circle';
   }
 
-  getMaterialSeverityLabel(severity: string): string {
+  getPartSeverityLabel(severity: string): string {
     const severityMap: { [key: string]: string } = {
-      'OK': 'OK',
+      'OK': 'Có thể sản xuất',
       'WARNING': 'Cảnh báo',
-      'CRITICAL': 'Thiếu'
+      'CRITICAL': 'Không có BOM'
     };
     return severityMap[severity] || severity;
   }
 
-  getMaterialSeveritySeverity(severity: string): string {
+  getPartSeveritySeverity(severity: string): string {
     const severityMap: { [key: string]: string } = {
       'OK': 'success',
       'WARNING': 'warning',
@@ -187,6 +205,29 @@ export class AvailabilityCheckComponent implements OnInit {
 
   get canCreateProductionPlan(): boolean {
     return this.availabilityResult?.overallStatus === 'PASS';
+  }
+
+  getStatusClass(status: string): string {
+    return 'status-' + status.toLowerCase();
+  }
+
+  getStatusColor(status: string): string {
+    return status === 'PASS' ? 'text-green-500' : 'text-red-500';
+  }
+
+  getRowClass(severity: string): { [key: string]: boolean } {
+    return {
+      'material-row-critical': severity === 'CRITICAL',
+      'material-row-warning': severity === 'WARNING'
+    };
+  }
+
+  getCanProduceIcon(canProduce: boolean): string {
+    return canProduce ? 'pi pi-check-circle text-green-500' : 'pi pi-times-circle text-red-500';
+  }
+
+  getCanProduceCount(): number {
+    return this.availabilityResult?.partResults.filter(p => p.canProduce).length || 0;
   }
 }
 

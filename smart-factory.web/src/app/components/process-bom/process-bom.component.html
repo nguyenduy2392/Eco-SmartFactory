@@ -134,61 +134,96 @@
   header="Chi tiết Process BOM"
   [(visible)]="showBOMDetailDialog"
   [modal]="true"
-  [style]="{width: '900px'}"
+  [style]="{width: '90vw', maxWidth: '1200px'}"
+  [styleClass]="'bom-detail-dialog'"
   [draggable]="false"
-  [resizable]="false">
-  <div *ngIf="selectedBOM">
-    <div class="grid mb-3">
-      <div class="col-6">
-        <strong>Linh kiện:</strong> {{ selectedBOM.partCode }} - {{ selectedBOM.partName }}
+  [resizable]="true"
+  [maximizable]="true">
+  <div *ngIf="selectedBOM" class="bom-detail-content">
+    <div class="bom-info-section">
+      <div class="grid mb-3">
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <strong>Linh kiện:</strong> {{ selectedBOM.partCode }} - {{ selectedBOM.partName }}
+        </div>
       </div>
-      <div class="col-6">
-        <strong>Loại gia công:</strong> {{ getProcessingTypeLabel(selectedBOM.processingType) }}
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <strong>Loại gia công:</strong> {{ getProcessingTypeLabel(selectedBOM.processingType) }}
+        </div>
       </div>
-      <div class="col-6">
-        <strong>Version:</strong> {{ selectedBOM.version }}
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <strong>Version:</strong> {{ selectedBOM.version }}
+        </div>
       </div>
-      <div class="col-6">
-        <strong>Trạng thái:</strong> <p-tag [value]="getStatusLabel(selectedBOM.status)" [severity]="getStatusSeverity(selectedBOM.status)"></p-tag>
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <strong>Trạng thái:</strong> <p-tag [value]="getStatusLabel(selectedBOM.status)" [severity]="getStatusSeverity(selectedBOM.status)"></p-tag>
+        </div>
       </div>
-      <div class="col-6">
-        <strong>Ngày hiệu lực:</strong> {{ selectedBOM.effectiveDate | date:'dd/MM/yyyy' }}
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <strong>Ngày hiệu lực:</strong> {{ selectedBOM.effectiveDate | date:'dd/MM/yyyy' }}
+        </div>
       </div>
-      <div class="col-6">
-        <strong>Ngày tạo:</strong> {{ selectedBOM.createdAt | date:'dd/MM/yyyy HH:mm' }}
+      <div class="col-12 md:col-6">
+        <div class="field">
+          <strong>Ngày tạo:</strong> {{ selectedBOM.createdAt | date:'dd/MM/yyyy HH:mm' }}
+        </div>
       </div>
       <div class="col-12" *ngIf="selectedBOM.notes">
-        <strong>Ghi chú:</strong> {{ selectedBOM.notes }}
+        <div class="field">
+          <strong>Ghi chú:</strong> {{ selectedBOM.notes }}
+        </div>
+      </div>
       </div>
     </div>
 
     <p-divider></p-divider>
 
-    <h4>Danh sách nguyên vật liệu</h4>
-    <p-table [value]="bomDetails" styleClass="p-datatable-sm p-datatable-gridlines">
-      <ng-template pTemplate="header">
-        <tr>
-          <th>Mã NVL</th>
-          <th>Tên NVL</th>
-          <th class="text-right">Số lượng/PCS</th>
-          <th class="text-right">Tỷ lệ hao hụt (%)</th>
-          <th>ĐVT</th>
-          <th>Công đoạn</th>
-          <th>Ghi chú</th>
-        </tr>
-      </ng-template>
-      <ng-template pTemplate="body" let-detail>
-        <tr>
-          <td><code>{{ detail.materialCode }}</code></td>
-          <td>{{ detail.materialName || '-' }}</td>
-          <td class="text-right"><strong>{{ detail.qtyPerUnit }}</strong></td>
-          <td class="text-right">{{ (detail.scrapRate * 100).toFixed(2) }}%</td>
-          <td>{{ detail.uom }}</td>
-          <td>{{ detail.processStep || '-' }}</td>
-          <td>{{ detail.notes || '-' }}</td>
-        </tr>
-      </ng-template>
-    </p-table>
+    <div class="bom-materials-section">
+      <h4 class="mb-3">Danh sách nguyên vật liệu</h4>
+      <div class="bom-materials-table-wrapper">
+        <p-table 
+          [value]="bomDetails" 
+          styleClass="p-datatable-sm p-datatable-gridlines"
+          [scrollable]="true"
+          scrollHeight="400px"
+          [tableStyle]="{'min-width': '1000px'}">
+          <ng-template pTemplate="header">
+            <tr>
+              <th style="width: 120px">Mã NVL</th>
+              <th style="width: 200px">Tên NVL</th>
+              <th class="text-right" style="width: 130px">Số lượng/PCS</th>
+              <th class="text-right" style="width: 130px">Tỷ lệ hao hụt (%)</th>
+              <th style="width: 100px">ĐVT</th>
+              <th style="width: 150px">Công đoạn</th>
+              <th style="min-width: 200px">Ghi chú</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-detail>
+            <tr>
+              <td><code>{{ detail.materialCode || '-' }}</code></td>
+              <td>{{ detail.materialName || '-' }}</td>
+              <td class="text-right"><strong>{{ detail.qtyPerUnit != null && detail.qtyPerUnit !== undefined ? (detail.qtyPerUnit | number:'1.4-4') : '-' }}</strong></td>
+              <td class="text-right">{{ detail.scrapRate != null && detail.scrapRate !== undefined ? ((detail.scrapRate * 100).toFixed(2) + '%') : '0.00%' }}</td>
+              <td>{{ detail.uom || '-' }}</td>
+              <td>{{ detail.processStep || '-' }}</td>
+              <td>{{ detail.notes || '-' }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="7" class="text-center p-4">
+                <i class="pi pi-inbox text-2xl text-400"></i>
+                <p class="text-500 mt-2">Không có nguyên vật liệu nào</p>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </div>
+    </div>
 
     <p-message *ngIf="selectedBOM.status === 'ACTIVE'" severity="warn" text="BOM đang hoạt động không thể chỉnh sửa. Vui lòng tạo version mới nếu cần thay đổi." class="mt-3"></p-message>
   </div>

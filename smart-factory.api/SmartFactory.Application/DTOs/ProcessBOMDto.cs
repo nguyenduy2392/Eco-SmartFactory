@@ -13,6 +13,7 @@ public class ProcessBOMDto
     public string ProcessingTypeName { get; set; } = string.Empty;
     public string Version { get; set; } = "V1";
     public string Status { get; set; } = "ACTIVE";
+    public DateTime? EffectiveDate { get; set; }
     public string? Name { get; set; }
     public string? Notes { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -39,6 +40,7 @@ public class CreateProcessBOMRequest
 {
     public Guid PartId { get; set; }
     public Guid ProcessingTypeId { get; set; }
+    public DateTime? EffectiveDate { get; set; }
     public string? Name { get; set; }
     public string? Notes { get; set; }
     public List<CreateProcessBOMDetailRequest> Details { get; set; } = new();
@@ -93,9 +95,9 @@ public class AvailabilityCheckResult
     public int PlannedQuantity { get; set; }
     
     /// <summary>
-    /// Material-level results
+    /// Part-level results
     /// </summary>
-    public List<MaterialAvailabilityDetail> MaterialDetails { get; set; } = new();
+    public List<PartAvailabilityDetail> PartDetails { get; set; } = new();
     
     /// <summary>
     /// Check timestamp
@@ -104,16 +106,21 @@ public class AvailabilityCheckResult
 }
 
 /// <summary>
-/// Material-level availability detail
+/// Part-level availability detail
 /// </summary>
-public class MaterialAvailabilityDetail
+public class PartAvailabilityDetail
 {
-    public string MaterialCode { get; set; } = string.Empty;
-    public string MaterialName { get; set; } = string.Empty;
-    public decimal RequiredQuantity { get; set; }
-    public decimal AvailableQuantity { get; set; }
-    public decimal Shortage { get; set; }
-    public string Unit { get; set; } = string.Empty;
+    public Guid PartId { get; set; }
+    public string PartCode { get; set; } = string.Empty;
+    public string PartName { get; set; } = string.Empty;
+    public string ProcessingType { get; set; } = string.Empty;
+    public string ProcessingTypeName { get; set; } = string.Empty;
+    public int RequiredQuantity { get; set; }
+    
+    /// <summary>
+    /// Whether this part can be produced (has ACTIVE BOM)
+    /// </summary>
+    public bool CanProduce { get; set; }
     
     /// <summary>
     /// Severity: OK, WARNING, CRITICAL
@@ -121,10 +128,14 @@ public class MaterialAvailabilityDetail
     public string Severity { get; set; } = "OK";
     
     /// <summary>
-    /// Source breakdown
+    /// BOM Version if available
     /// </summary>
-    public decimal InventoryQuantity { get; set; }
-    public decimal POBaselineQuantity { get; set; }
+    public string? BOMVersion { get; set; }
+    
+    /// <summary>
+    /// Whether ACTIVE BOM exists
+    /// </summary>
+    public bool HasActiveBOM { get; set; }
 }
 
 

@@ -16,6 +16,7 @@ public class CreateProcessBOMCommand : IRequest<ProcessBOMDto>
 {
     public Guid PartId { get; set; }
     public Guid ProcessingTypeId { get; set; }
+    public DateTime? EffectiveDate { get; set; }
     public string? Name { get; set; }
     public string? Notes { get; set; }
     public List<CreateProcessBOMDetailRequest> Details { get; set; } = new();
@@ -104,6 +105,7 @@ public class CreateProcessBOMCommandHandler : IRequestHandler<CreateProcessBOMCo
             ProcessingTypeId = request.ProcessingTypeId,
             Version = versionLabel,
             Status = "ACTIVE",
+            EffectiveDate = request.EffectiveDate,
             Name = request.Name,
             Notes = request.Notes,
             IsActive = true,
@@ -160,6 +162,7 @@ public class CreateProcessBOMCommandHandler : IRequestHandler<CreateProcessBOMCo
             ProcessingTypeName = processingType.Name,
             Version = bom.Version,
             Status = bom.Status,
+            EffectiveDate = bom.EffectiveDate,
             Name = bom.Name,
             Notes = bom.Notes,
             CreatedAt = bom.CreatedAt,

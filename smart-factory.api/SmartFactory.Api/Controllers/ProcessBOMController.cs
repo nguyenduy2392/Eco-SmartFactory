@@ -9,6 +9,22 @@ namespace SmartFactory.Api.Controllers;
 public class ProcessBOMController : BaseApiController
 {
     /// <summary>
+    /// Get all Process BOMs with optional filters
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> GetAll([FromQuery] Guid? partId, [FromQuery] string? processingType, [FromQuery] string? status)
+    {
+        var query = new GetAllProcessBOMQuery
+        {
+            PartId = partId,
+            ProcessingType = processingType,
+            Status = status
+        };
+        var result = await Mediator.Send(query);
+        return Ok(result);
+    }
+
+    /// <summary>
     /// Create new Process BOM
     /// </summary>
     [HttpPost]
@@ -18,6 +34,7 @@ public class ProcessBOMController : BaseApiController
         {
             PartId = request.PartId,
             ProcessingTypeId = request.ProcessingTypeId,
+            EffectiveDate = request.EffectiveDate,
             Name = request.Name,
             Notes = request.Notes,
             Details = request.Details

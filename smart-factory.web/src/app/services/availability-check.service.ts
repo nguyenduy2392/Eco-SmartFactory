@@ -16,22 +16,20 @@ export class AvailabilityCheckService {
   constructor(private http: HttpClient) { }
 
   /**
-   * Kiểm tra khả dụng nguyên vật liệu
+   * Kiểm tra khả dụng linh kiện
    * 
    * Input:
    * - PO ID (must be APPROVED version)
    * - Planned production quantity
    * 
    * Calculation:
-   * For each material:
-   * Required_Qty = Planned_Qty × BOM_Qty × (1 + Scrap_Rate)
-   * Available_Qty = Inventory_Qty + PO_Material_Baseline_Qty
-   * Shortage = Required_Qty - Available_Qty
+   * For each part in PO Operations:
+   * Required_Qty = Planned_Qty × PO_Operation_Quantity
+   * CanProduce = Has ACTIVE BOM for (Part + ProcessingType)
    * 
    * Result:
-   * - Shortage > 0 → FAIL (CRITICAL)
-   * - Available_Qty < Required_Qty × 1.1 → WARNING
-   * - Else → PASS
+   * - No ACTIVE BOM → FAIL (CRITICAL)
+   * - Has ACTIVE BOM → PASS
    * 
    * IMPORTANT:
    * - Does NOT change inventory
