@@ -1,3 +1,5 @@
+import { PartProcessingType } from './processing-type.interface';
+
 export interface Part {
   id: string;
   code: string;
@@ -11,6 +13,7 @@ export interface Part {
   description?: string;
   isActive: boolean;
   createdAt: Date;
+  processingTypes?: PartProcessingType[]; // Các loại hình gia công mà linh kiện này có thể trải qua
 }
 
 export interface CreatePartRequest {
@@ -23,6 +26,7 @@ export interface CreatePartRequest {
   weight?: number;
   description?: string;
 }
+
 
 
 

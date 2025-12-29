@@ -1,113 +1,126 @@
+// Processing PO - FINANCIAL BASELINE only
 export interface PurchaseOrder {
   id: string;
   poNumber: string;
   customerId: string;
   customerName: string;
-  versionType: 'ORIGINAL' | 'FINAL' | 'PRODUCTION';
-  templateType?: string;
+  processingType: 'EP_NHUA' | 'PHUN_IN' | 'LAP_RAP'; // Processing type determines template
+  version: string; // V0, V1, V2, ...
+  status: 'DRAFT' | 'APPROVED_FOR_PMC' | 'LOCKED'; // Version status
   poDate: Date;
   expectedDeliveryDate?: Date;
-  status: 'New' | 'InProgress' | 'Completed' | 'Cancelled';
   totalAmount: number;
   notes?: string;
-  originalPOId?: string;
-  versionNumber: number;
-  isActive: boolean;
+  originalPOId?: string; // For version tracking
   createdAt: Date;
   createdBy?: string;
-  products?: POProduct[];
-  operations?: POOperation[];
+  operations?: POOperation[]; // NHAP_PO sheet data
+  materialBaseline?: POMaterialBaseline[]; // NHAP_NGUYEN_VAT_LIEU sheet data
 }
 
 export interface PurchaseOrderList {
   id: string;
   poNumber: string;
   customerName: string;
-  versionType: string;
+  processingType: string; // EP_NHUA / PHUN_IN / LAP_RAP
+  version: string; // V0, V1, V2
+  status: string; // DRAFT / APPROVED_FOR_PMC / LOCKED
   poDate: Date;
-  status: string;
   totalAmount: number;
-  productCount: number;
+  operationCount: number; // Number of PO Operations
   createdAt: Date;
 }
 
-export interface CreatePurchaseOrderRequest {
+// Import PO from Excel - ONLY way to create PO
+export interface ImportPORequest {
+  file: File;
   poNumber: string;
   customerId: string;
-  templateType?: string;
+  processingType: 'EP_NHUA' | 'PHUN_IN' | 'LAP_RAP';
   poDate: Date;
   expectedDeliveryDate?: Date;
   notes?: string;
-  products?: CreatePOProductRequest[];
 }
 
-export interface UpdatePurchaseOrderRequest {
-  customerId: string;
-  poDate: Date;
-  expectedDeliveryDate?: Date;
-  status: string;
-  notes?: string;
+// Import response with validation errors
+export interface ImportPOResponse {
+  success: boolean;
+  purchaseOrderId?: string;
+  version?: string; // Always V0 for new import
+  status?: string; // Always DRAFT for new import
+  errors?: ImportError[];
 }
 
+export interface ImportError {
+  row: number;
+  field: string;
+  errorMessage: string;
+  severity: 'error' | 'warning';
+}
+
+// Clone PO to create new version
 export interface ClonePOVersionRequest {
   originalPOId: string;
-  newVersionType: string;
   notes?: string;
 }
 
-export interface POProduct {
-  id: string;
+// Approve PO version for PMC
+export interface ApprovePORequest {
   purchaseOrderId: string;
-  productId: string;
-  productCode: string;
-  productName: string;
-  quantity: number;
-  unitPrice?: number;
-  totalAmount: number;
 }
 
-export interface CreatePOProductRequest {
-  productId: string;
-  quantity: number;
-  unitPrice?: number;
-}
 
+// PO Operation - from NHAP_PO sheet
+// Represents chargeable operations ONLY (pricing, revenue, settlement)
+// Must NOT contain: Tool, Machine, BOM, Production logic
 export interface POOperation {
   id: string;
   purchaseOrderId: string;
-  partId: string;
-  partCode: string;
-  partName: string;
-  processingTypeId: string;
-  processingTypeName: string;
-  processMethodId?: string;
-  processMethodName?: string;
-  operationName: string;
-  chargeCount: number;
-  unitPrice: number;
-  quantity: number;
-  totalAmount: number;
-  sprayPosition?: string;
-  printContent?: string;
-  cycleTime?: number;
-  assemblyContent?: string;
-  sequenceOrder: number;
+  productCode: string; // From Excel
+  partCode: string; // From Excel
+  partName?: string;
+  contractQty: number; // From Excel - contract_qty
+  unitPrice: number; // From Excel - unit_price
+  totalAmount: number; // Calculated: contractQty * unitPrice
+  uom?: string; // Unit of measure
+  notes?: string;
+  rowNumber: number; // For error tracking
 }
 
-export interface CreatePOOperationRequest {
-  partId: string;
-  processingTypeId: string;
-  processMethodId?: string;
-  operationName: string;
-  chargeCount: number;
-  unitPrice: number;
-  quantity: number;
-  sprayPosition?: string;
-  printContent?: string;
-  cycleTime?: number;
-  assemblyContent?: string;
-  sequenceOrder: number;
+// PO Material Baseline - from NHAP_NGUYEN_VAT_LIEU sheet
+// Represents customer-committed materials for availability check ONLY
+// Must NOT affect pricing or settlement
+export interface POMaterialBaseline {
+  id: string;
+  purchaseOrderId: string;
+  materialCode: string; // From Excel
+  materialName?: string;
+  quantity: number; // From Excel - committed quantity from customer
+  uom?: string; // Unit of measure
+  notes?: string;
+  rowNumber: number; // For error tracking
 }
 
+export interface AvailabilityCheckRequest {
+  purchaseOrderId: string;
+  plannedQuantity: number;
+}
 
+export interface AvailabilityCheckResult {
+  overallStatus: 'PASS' | 'FAIL' | 'WARNING';
+  totalRequired: number;
+  totalAvailable: number;
+  checkDate: Date;
+  materialResults: MaterialAvailabilityResult[];
+}
 
+export interface MaterialAvailabilityResult {
+  materialCode: string;
+  materialName: string;
+  requiredQty: number;
+  availableQty: number;
+  inventoryQty: number;
+  poBaselineQty: number;
+  shortage: number;
+  severity: 'OK' | 'WARNING' | 'CRITICAL';
+}

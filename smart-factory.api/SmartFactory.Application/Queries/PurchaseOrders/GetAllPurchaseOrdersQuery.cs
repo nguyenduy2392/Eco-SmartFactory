@@ -8,7 +8,7 @@ namespace SmartFactory.Application.Queries.PurchaseOrders;
 public class GetAllPurchaseOrdersQuery : IRequest<List<PurchaseOrderListDto>>
 {
     public string? Status { get; set; }
-    public string? VersionType { get; set; }
+    public string? Version { get; set; }
     public Guid? CustomerId { get; set; }
 }
 
@@ -34,9 +34,9 @@ public class GetAllPurchaseOrdersQueryHandler : IRequestHandler<GetAllPurchaseOr
             query = query.Where(p => p.Status == request.Status);
         }
 
-        if (!string.IsNullOrEmpty(request.VersionType))
+        if (!string.IsNullOrEmpty(request.Version))
         {
-            query = query.Where(p => p.VersionType == request.VersionType);
+            query = query.Where(p => p.Version == request.Version);
         }
 
         if (request.CustomerId.HasValue)
@@ -51,7 +51,8 @@ public class GetAllPurchaseOrdersQueryHandler : IRequestHandler<GetAllPurchaseOr
                 Id = p.Id,
                 PONumber = p.PONumber,
                 CustomerName = p.Customer.Name,
-                VersionType = p.VersionType,
+                Version = p.Version,
+                ProcessingType = p.ProcessingType,
                 PODate = p.PODate,
                 Status = p.Status,
                 TotalAmount = p.TotalAmount,
@@ -63,6 +64,7 @@ public class GetAllPurchaseOrdersQueryHandler : IRequestHandler<GetAllPurchaseOr
         return pos;
     }
 }
+
 
 
 

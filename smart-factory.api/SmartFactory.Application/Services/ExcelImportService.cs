@@ -23,22 +23,48 @@ public class ExcelImportService
     }
 
     /// <summary>
-    /// Import PO từ file Excel
+    /// Import PO từ file Excel (PHASE 1: 2-sheet format)
+    /// Sheet 1: NHAP_PO (PO Operations)
+    /// Sheet 2: NHAP_NGUYEN_VAT_LIEU (Material Baseline for availability check)
     /// </summary>
     public async Task<ExcelImportResult> ImportPOFromExcel(Stream fileStream, string templateType, string? customerName = null, string? customerCode = null)
     {
         try
         {
             using var package = new ExcelPackage(fileStream);
-            var worksheet = package.Workbook.Worksheets[0]; // First sheet
-
+            
+            // Validate sheet count
+            if (package.Workbook.Worksheets.Count < 2)
+            {
+                return new ExcelImportResult
+                {
+                    Success = false,
+                    ErrorMessage = "Excel file must contain exactly 2 sheets: NHAP_PO and NHAP_NGUYEN_VAT_LIEU"
+                };
+            }
+            
+            // Parse Sheet 1: NHAP_PO (PO Operations)
+            var sheet1 = package.Workbook.Worksheets[0];
             var result = templateType.ToUpper() switch
             {
-                "EP_NHUA" => await ParseEpNhuaTemplate(worksheet),
-                "LAP_RAP" => await ParseLapRapTemplate(worksheet),
-                "PHUN_IN" => await ParsePhunInTemplate(worksheet),
+                "EP_NHUA" => await ParseEpNhuaTemplate(sheet1),
+                "LAP_RAP" => await ParseLapRapTemplate(sheet1),
+                "PHUN_IN" => await ParsePhunInTemplate(sheet1),
                 _ => throw new ArgumentException($"Unknown template type: {templateType}")
             };
+            
+            if (!result.Success)
+            {
+                return result;
+            }
+            
+            // Parse Sheet 2: NHAP_NGUYEN_VAT_LIEU (Material Receipt - nhập kho thực tế)
+            var sheet2 = package.Workbook.Worksheets[1];
+            var materialReceipts = await ParseMaterialReceiptSheet(sheet2);
+            result.MaterialReceipts = materialReceipts;
+            
+            _logger.LogInformation("Imported {OperationCount} operations and {MaterialCount} material receipts",
+                result.Operations.Count, result.MaterialReceipts.Count);
 
             // Thêm thông tin khách hàng
             if (!string.IsNullOrWhiteSpace(customerName))
@@ -793,9 +819,318 @@ public class ExcelImportService
         return 0;
     }
 
+    /// <summary>
+    /// Lấy giá trị DateTime theo tên cột
+    /// </summary>
+    private DateTime GetDateValueByColumn(ExcelWorksheet worksheet, int row, Dictionary<string, int> columnMap, 
+        string key, params string[] alternativeKeys)
+    {
+        // Thử key chính
+        if (columnMap.TryGetValue(key, out int col) && col > 0)
+        {
+            return GetDateValue(worksheet, row, col);
+        }
+        
+        // Thử các alternative keys
+        foreach (var altKey in alternativeKeys)
+        {
+            if (columnMap.TryGetValue(altKey, out col) && col > 0)
+            {
+                return GetDateValue(worksheet, row, col);
+            }
+        }
+        
+        return default;
+    }
+
+    /// <summary>
+    /// Lấy giá trị DateTime từ cell
+    /// </summary>
+    private DateTime GetDateValue(ExcelWorksheet worksheet, int row, int col)
+    {
+        var value = worksheet.Cells[row, col].Value;
+        if (value == null) return default;
+
+        // Nếu là DateTime trực tiếp
+        if (value is DateTime dateTime)
+        {
+            return dateTime;
+        }
+
+        // Nếu là double (Excel date serial number)
+        if (double.TryParse(value.ToString(), out double doubleValue))
+        {
+            try
+            {
+                return DateTime.FromOADate(doubleValue);
+            }
+            catch
+            {
+                // Ignore
+            }
+        }
+
+        // Thử parse string
+        if (DateTime.TryParse(value.ToString(), out DateTime parsedDate))
+        {
+            return parsedDate;
+        }
+
+        return default;
+    }
+
     private string GenerateCustomerCode()
     {
         return $"C-{DateTime.Now:yyyyMMddHHmmss}";
+    }
+    
+    /// <summary>
+    /// Parse NHAP_NGUYEN_VAT_LIEU sheet (Material Receipt - nhập kho thực tế)
+    /// Columns: Mã nguyên vật liệu, Tên nguyên vật liệu, Loại nguyên vật liệu, Đơn vị tính,
+    ///          Mã kho, Số lượng nhập, Số lô, Ngày nhập kho, Mã nhà cung cấp, 
+    ///          Mã PO mua hàng, Số phiếu nhập, Ghi chú, Nhập đầu kỳ tháng
+    /// </summary>
+    private async Task<List<MaterialReceiptData>> ParseMaterialReceiptSheet(ExcelWorksheet worksheet)
+    {
+        var result = new List<MaterialReceiptData>();
+        
+        try
+        {
+            // Tìm header row
+            int headerRow = FindHeaderRow(worksheet);
+            if (headerRow == 0)
+            {
+                _logger.LogWarning("NHAP_NGUYEN_VAT_LIEU: Header row not found, skipping material receipt");
+                return result;
+            }
+            
+            // Parse header để tìm vị trí các cột
+            var columnMap = ParseHeaderRow(worksheet, headerRow);
+            
+            _logger.LogInformation("NHAP_NGUYEN_VAT_LIEU: Parsed header row {HeaderRow}. Found columns: {Columns}",
+                headerRow, string.Join(", ", columnMap.Keys));
+            
+            // Start reading data from row after header
+            int startRow = headerRow + 1;
+            int currentRow = startRow;
+            
+            while (!IsEmptyRow(worksheet, currentRow))
+            {
+                try
+                {
+                    var materialCode = GetValueByColumn(worksheet, currentRow, columnMap, "MaterialCode", 
+                        "Mã nguyên vật liệu", "Mã vật liệu", "原料代码");
+                    var materialName = GetValueByColumn(worksheet, currentRow, columnMap, "MaterialName", 
+                        "Tên nguyên vật liệu", "Tên vật liệu", "原料名称");
+                    
+                    // Skip empty rows
+                    if (string.IsNullOrWhiteSpace(materialCode) && string.IsNullOrWhiteSpace(materialName))
+                    {
+                        currentRow++;
+                        continue;
+                    }
+                    
+                    var materialType = GetValueByColumn(worksheet, currentRow, columnMap, "MaterialType", 
+                        "Loại nguyên vật liệu", "材料类型");
+                    var unit = GetValueByColumn(worksheet, currentRow, columnMap, "Unit", 
+                        "Đơn vị tính", "Đơn vị", "单位");
+                    var warehouseCode = GetValueByColumn(worksheet, currentRow, columnMap, "WarehouseCode", 
+                        "Mã kho", "仓库代码");
+                    var quantity = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "Quantity", 
+                        "Số lượng nhập", "Số lượng", "数量");
+                    var batchNumber = GetValueByColumn(worksheet, currentRow, columnMap, "BatchNumber", 
+                        "Số lô", "批次号");
+                    var receiptDate = GetDateValueByColumn(worksheet, currentRow, columnMap, "ReceiptDate", 
+                        "Ngày nhập kho", "入库日期");
+                    var supplierCode = GetValueByColumn(worksheet, currentRow, columnMap, "SupplierCode", 
+                        "Mã nhà cung cấp", "供应商代码");
+                    var purchasePOCode = GetValueByColumn(worksheet, currentRow, columnMap, "PurchasePOCode", 
+                        "Mã PO mua hàng", "采购订单代码");
+                    var receiptNumber = GetValueByColumn(worksheet, currentRow, columnMap, "ReceiptNumber", 
+                        "Số phiếu nhập", "入库单号");
+                    var notes = GetValueByColumn(worksheet, currentRow, columnMap, "Notes", 
+                        "Ghi chú", "备注");
+                    var beginningPeriodMonth = GetIntValueByColumn(worksheet, currentRow, columnMap, "BeginningPeriodMonth", 
+                        "Nhập đầu kỳ tháng", "期初月份");
+                    
+                    // Validate required fields
+                    if (string.IsNullOrWhiteSpace(materialCode))
+                    {
+                        _logger.LogWarning("NHAP_NGUYEN_VAT_LIEU Row {Row}: MaterialCode is empty, skipping", currentRow);
+                        currentRow++;
+                        continue;
+                    }
+                    
+                    if (quantity <= 0)
+                    {
+                        _logger.LogWarning("NHAP_NGUYEN_VAT_LIEU Row {Row}: Quantity must be > 0, skipping", currentRow);
+                        currentRow++;
+                        continue;
+                    }
+                    
+                    // Nếu không có ngày nhập kho, dùng ngày hiện tại
+                    if (receiptDate == default)
+                    {
+                        receiptDate = DateTime.UtcNow;
+                    }
+                    
+                    // Tạo số phiếu nhập nếu không có
+                    if (string.IsNullOrWhiteSpace(receiptNumber))
+                    {
+                        receiptNumber = $"PNK-{DateTime.Now:yyyy-MM-dd}-{currentRow}";
+                    }
+                    
+                    // Thêm thông tin nhập đầu kỳ vào notes nếu có
+                    if (beginningPeriodMonth > 0)
+                    {
+                        if (string.IsNullOrWhiteSpace(notes))
+                        {
+                            notes = $"Nhập đầu kỳ tháng {beginningPeriodMonth}";
+                        }
+                        else
+                        {
+                            notes = $"{notes}; Nhập đầu kỳ tháng {beginningPeriodMonth}";
+                        }
+                    }
+                    
+                    var materialReceipt = new MaterialReceiptData
+                    {
+                        MaterialCode = materialCode,
+                        MaterialName = materialName,
+                        MaterialType = materialType,
+                        Unit = unit,
+                        WarehouseCode = warehouseCode,
+                        Quantity = quantity,
+                        BatchNumber = batchNumber,
+                        ReceiptDate = receiptDate,
+                        SupplierCode = supplierCode,
+                        PurchasePOCode = purchasePOCode,
+                        ReceiptNumber = receiptNumber,
+                        Notes = notes
+                    };
+                    
+                    result.Add(materialReceipt);
+                    _logger.LogDebug("NHAP_NGUYEN_VAT_LIEU Row {Row}: Added material receipt {MaterialCode} - {Quantity} {Unit} on {ReceiptDate}",
+                        currentRow, materialReceipt.MaterialCode, materialReceipt.Quantity, materialReceipt.Unit, materialReceipt.ReceiptDate);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "NHAP_NGUYEN_VAT_LIEU: Error parsing row {Row}, skipping", currentRow);
+                }
+                
+                currentRow++;
+            }
+            
+            _logger.LogInformation("NHAP_NGUYEN_VAT_LIEU: Parsed {Count} material receipt entries", result.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "NHAP_NGUYEN_VAT_LIEU: Error parsing material receipt sheet");
+        }
+        
+        return result;
+    }
+
+    /// <summary>
+    /// Parse NHAP_NGUYEN_VAT_LIEU sheet (Material Baseline) - DEPRECATED, kept for backward compatibility
+    /// Columns: Mã sản phẩm, Tên sản phẩm, Mã linh kiện, Tên linh kiện, Mã nguyên vật liệu, 
+    ///          Tên nguyên vật liệu, Số lượng, Đơn vị, Ghi chú
+    /// </summary>
+    private async Task<List<POMaterialBaselineData>> ParseMaterialBaselineSheet(ExcelWorksheet worksheet)
+    {
+        var result = new List<POMaterialBaselineData>();
+        
+        try
+        {
+            // Tìm header row
+            int headerRow = FindHeaderRow(worksheet);
+            if (headerRow == 0)
+            {
+                _logger.LogWarning("NHAP_NGUYEN_VAT_LIEU: Header row not found, skipping material baseline");
+                return result;
+            }
+            
+            // Parse header để tìm vị trí các cột
+            var columnMap = ParseHeaderRow(worksheet, headerRow);
+            
+            _logger.LogInformation("NHAP_NGUYEN_VAT_LIEU: Parsed header row {HeaderRow}. Found columns: {Columns}",
+                headerRow, string.Join(", ", columnMap.Keys));
+            
+            // Start reading data from row after header
+            int startRow = headerRow + 1;
+            int currentRow = startRow;
+            
+            while (!IsEmptyRow(worksheet, currentRow))
+            {
+                try
+                {
+                    var materialCode = GetValueByColumn(worksheet, currentRow, columnMap, "MaterialCode", 
+                        "Mã nguyên vật liệu", "Mã vật liệu", "原料代码");
+                    var materialName = GetValueByColumn(worksheet, currentRow, columnMap, "MaterialName", 
+                        "Tên nguyên vật liệu", "Tên vật liệu", "原料名称");
+                    
+                    // Skip empty rows
+                    if (string.IsNullOrWhiteSpace(materialCode) && string.IsNullOrWhiteSpace(materialName))
+                    {
+                        currentRow++;
+                        continue;
+                    }
+                    
+                    var materialBaseline = new POMaterialBaselineData
+                    {
+                        ProductCode = GetValueByColumn(worksheet, currentRow, columnMap, "ProductCode", 
+                            "Mã sản phẩm", "产品代码"),
+                        ProductName = GetValueByColumn(worksheet, currentRow, columnMap, "ProductName", 
+                            "Tên sản phẩm", "产品名称"),
+                        PartCode = GetValueByColumn(worksheet, currentRow, columnMap, "PartCode", 
+                            "Mã linh kiện", "零件代码"),
+                        PartName = GetValueByColumn(worksheet, currentRow, columnMap, "PartName", 
+                            "Tên linh kiện", "零件名称"),
+                        MaterialCode = materialCode,
+                        MaterialName = materialName,
+                        CommittedQuantity = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "Quantity", 
+                            "Số lượng", "数量"),
+                        Unit = GetValueByColumn(worksheet, currentRow, columnMap, "Unit", 
+                            "Đơn vị", "单位"),
+                        Notes = GetValueByColumn(worksheet, currentRow, columnMap, "Notes", 
+                            "Ghi chú", "备注")
+                    };
+                    
+                    // Validate required fields
+                    if (string.IsNullOrWhiteSpace(materialBaseline.MaterialCode))
+                    {
+                        _logger.LogWarning("NHAP_NGUYEN_VAT_LIEU Row {Row}: MaterialCode is empty, skipping", currentRow);
+                        currentRow++;
+                        continue;
+                    }
+                    
+                    if (materialBaseline.CommittedQuantity <= 0)
+                    {
+                        _logger.LogWarning("NHAP_NGUYEN_VAT_LIEU Row {Row}: CommittedQuantity must be > 0, skipping", currentRow);
+                        currentRow++;
+                        continue;
+                    }
+                    
+                    result.Add(materialBaseline);
+                    _logger.LogDebug("NHAP_NGUYEN_VAT_LIEU Row {Row}: Added material {MaterialCode} - {Quantity} {Unit}",
+                        currentRow, materialBaseline.MaterialCode, materialBaseline.CommittedQuantity, materialBaseline.Unit);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "NHAP_NGUYEN_VAT_LIEU: Error parsing row {Row}, skipping", currentRow);
+                }
+                
+                currentRow++;
+            }
+            
+            _logger.LogInformation("NHAP_NGUYEN_VAT_LIEU: Parsed {Count} material baseline entries", result.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "NHAP_NGUYEN_VAT_LIEU: Error parsing material baseline sheet");
+        }
+        
+        return result;
     }
 
     /// <summary>
@@ -830,7 +1165,7 @@ public class ExcelImportService
 }
 
 /// <summary>
-/// Kết quả import Excel
+/// Kết quả import Excel (PHASE 1: 2-sheet format)
 /// </summary>
 public class ExcelImportResult
 {
@@ -838,6 +1173,8 @@ public class ExcelImportResult
     public string? ErrorMessage { get; set; }
     public string TemplateType { get; set; } = string.Empty;
     public List<POOperationData> Operations { get; set; } = new();
+    public List<POMaterialBaselineData> MaterialBaselines { get; set; } = new(); // Deprecated, kept for backward compatibility
+    public List<MaterialReceiptData> MaterialReceipts { get; set; } = new(); // New: Material Receipt data
     public List<string> Errors { get; set; } = new();
     
     // Customer info
@@ -895,6 +1232,42 @@ public class POOperationData
     // Additional fields
     public DateTime? CompletionDate { get; set; } // Ngày hoàn thành
     public string? Notes { get; set; } // Ghi chú
+}
+
+/// <summary>
+/// Data model cho PO Material Baseline từ Excel (Sheet 2: NHAP_NGUYEN_VAT_LIEU)
+/// DEPRECATED: Sử dụng MaterialReceiptData thay thế
+/// </summary>
+public class POMaterialBaselineData
+{
+    public string? ProductCode { get; set; }
+    public string? ProductName { get; set; }
+    public string? PartCode { get; set; }
+    public string? PartName { get; set; }
+    public string MaterialCode { get; set; } = string.Empty;
+    public string MaterialName { get; set; } = string.Empty;
+    public decimal CommittedQuantity { get; set; }
+    public string Unit { get; set; } = string.Empty;
+    public string? Notes { get; set; }
+}
+
+/// <summary>
+/// Data model cho Material Receipt từ Excel (Sheet 2: NHAP_NGUYEN_VAT_LIEU)
+/// </summary>
+public class MaterialReceiptData
+{
+    public string MaterialCode { get; set; } = string.Empty;
+    public string MaterialName { get; set; } = string.Empty;
+    public string? MaterialType { get; set; }
+    public string Unit { get; set; } = string.Empty;
+    public string WarehouseCode { get; set; } = string.Empty;
+    public decimal Quantity { get; set; }
+    public string? BatchNumber { get; set; }
+    public DateTime ReceiptDate { get; set; }
+    public string? SupplierCode { get; set; }
+    public string? PurchasePOCode { get; set; }
+    public string ReceiptNumber { get; set; } = string.Empty;
+    public string? Notes { get; set; }
 }
 
 

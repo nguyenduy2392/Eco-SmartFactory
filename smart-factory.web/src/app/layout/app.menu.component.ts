@@ -22,7 +22,7 @@ export class AppMenuComponent implements OnInit {
             {
                 label: 'Trang chủ',
                 items: [
-                    { label: 'Tổng quan', icon: 'pi pi-fw pi-home', routerLink: ['/'] }
+                    { label: 'Tổng quan', icon: 'pi pi-fw pi-home', routerLink: ['/dashboard'] }
                 ]
             },
             {
@@ -30,9 +30,24 @@ export class AppMenuComponent implements OnInit {
                 icon: 'pi pi-fw pi-box',
                 items: [
                     {
-                        label: 'Quản lý PO',
-                        icon: 'pi pi-fw pi-shopping-cart',
-                        routerLink: ['/purchase-orders']
+                        label: 'Processing PO',
+                        icon: 'pi pi-fw pi-file-import',
+                        routerLink: ['/processing-po']
+                    },
+                    {
+                        label: 'Process BOM',
+                        icon: 'pi pi-fw pi-sitemap',
+                        routerLink: ['/process-bom']
+                    },
+                    {
+                        label: 'Kiểm tra khả dụng NVL',
+                        icon: 'pi pi-fw pi-check-circle',
+                        routerLink: ['/availability-check']
+                    },
+                    {
+                        label: 'Sản phẩm',
+                        icon: 'pi pi-fw pi-box',
+                        routerLink: ['/products']
                     },
                     {
                         label: 'Chủ hàng',

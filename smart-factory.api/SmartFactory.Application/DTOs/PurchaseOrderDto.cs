@@ -6,11 +6,25 @@ public class PurchaseOrderDto
     public string PONumber { get; set; } = string.Empty;
     public Guid CustomerId { get; set; }
     public string CustomerName { get; set; } = string.Empty;
-    public string VersionType { get; set; } = "ORIGINAL";
-    public string? TemplateType { get; set; }
+    
+    /// <summary>
+    /// Version: V0, V1, V2...
+    /// </summary>
+    public string Version { get; set; } = "V0";
+    
+    /// <summary>
+    /// Processing Type: EP_NHUA, LAP_RAP, PHUN_IN
+    /// </summary>
+    public string? ProcessingType { get; set; }
+    
     public DateTime PODate { get; set; }
     public DateTime? ExpectedDeliveryDate { get; set; }
-    public string Status { get; set; } = "New";
+    
+    /// <summary>
+    /// Status: DRAFT, APPROVED_FOR_PMC, LOCKED
+    /// </summary>
+    public string Status { get; set; } = "DRAFT";
+    
     public decimal TotalAmount { get; set; }
     public string? Notes { get; set; }
     public Guid? OriginalPOId { get; set; }
@@ -22,6 +36,7 @@ public class PurchaseOrderDto
     // Related data
     public List<POProductDto>? Products { get; set; }
     public List<POOperationDto>? Operations { get; set; }
+    public List<POMaterialBaselineDto>? MaterialBaselines { get; set; }
 }
 
 public class PurchaseOrderListDto
@@ -29,9 +44,10 @@ public class PurchaseOrderListDto
     public Guid Id { get; set; }
     public string PONumber { get; set; } = string.Empty;
     public string CustomerName { get; set; } = string.Empty;
-    public string VersionType { get; set; } = "ORIGINAL";
+    public string Version { get; set; } = "V0";
+    public string? ProcessingType { get; set; }
     public DateTime PODate { get; set; }
-    public string Status { get; set; } = "New";
+    public string Status { get; set; } = "DRAFT";
     public decimal TotalAmount { get; set; }
     public int ProductCount { get; set; }
     public DateTime CreatedAt { get; set; }
@@ -60,9 +76,22 @@ public class UpdatePurchaseOrderRequest
 public class ClonePOVersionRequest
 {
     public Guid OriginalPOId { get; set; }
-    public string NewVersionType { get; set; } = "FINAL";
     public string? Notes { get; set; }
 }
+
+public class POMaterialBaselineDto
+{
+    public Guid Id { get; set; }
+    public Guid PurchaseOrderId { get; set; }
+    public string MaterialCode { get; set; } = string.Empty;
+    public string MaterialName { get; set; } = string.Empty;
+    public decimal CommittedQuantity { get; set; }
+    public string Unit { get; set; } = string.Empty;
+    public string? ProductCode { get; set; }
+    public string? PartCode { get; set; }
+    public string? Notes { get; set; }
+}
+
 
 
 

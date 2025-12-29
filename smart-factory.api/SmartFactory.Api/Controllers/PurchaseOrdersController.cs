@@ -11,12 +11,12 @@ namespace SmartFactory.Api.Controllers;
 public class PurchaseOrdersController : BaseApiController
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] string? status, [FromQuery] string? versionType, [FromQuery] Guid? customerId)
+    public async Task<IActionResult> GetAll([FromQuery] string? status, [FromQuery] string? version, [FromQuery] Guid? customerId)
     {
         var query = new GetAllPurchaseOrdersQuery 
         { 
             Status = status,
-            VersionType = versionType,
+            Version = version,
             CustomerId = customerId
         };
         var result = await Mediator.Send(query);
@@ -79,17 +79,31 @@ public class PurchaseOrdersController : BaseApiController
         var command = new ClonePOVersionCommand
         {
             OriginalPOId = request.OriginalPOId,
-            NewVersionType = request.NewVersionType,
             Notes = request.Notes
         };
 
         var result = await Mediator.Send(command);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
+    
+    [HttpPost("{id}/approve")]
+    public async Task<IActionResult> ApproveVersion(Guid id)
+    {
+        try
+        {
+            var command = new ApprovePOVersionCommand { PurchaseOrderId = id };
+            var result = await Mediator.Send(command);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
 
     [HttpPost("import-excel")]
     public async Task<IActionResult> ImportFromExcel([FromForm] IFormFile file, [FromForm] string poNumber, 
-        [FromForm] Guid? customerId, [FromForm] string templateType, [FromForm] DateTime poDate, 
+        [FromForm] Guid? customerId, [FromForm] string processingType, [FromForm] DateTime poDate, 
         [FromForm] DateTime? expectedDeliveryDate, [FromForm] string? notes,
         [FromForm] string? customerName, [FromForm] string? customerCode)
     {
@@ -110,7 +124,7 @@ public class PurchaseOrdersController : BaseApiController
             FileStream = stream,
             PONumber = poNumber,
             CustomerId = customerId,
-            TemplateType = templateType,
+            TemplateType = processingType,
             PODate = poDate,
             ExpectedDeliveryDate = expectedDeliveryDate,
             Notes = notes,

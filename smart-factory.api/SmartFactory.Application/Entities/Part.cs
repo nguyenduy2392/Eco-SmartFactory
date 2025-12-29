@@ -56,7 +56,9 @@ public class Part
     // Navigation properties
     public virtual Product Product { get; set; } = null!;
     public virtual ICollection<POOperation> POOperations { get; set; } = new List<POOperation>();
+    public virtual ICollection<PartProcessingType> PartProcessingTypes { get; set; } = new List<PartProcessingType>();
 }
+
 
 
 

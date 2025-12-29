@@ -56,7 +56,11 @@ public class Customer
     
     // Navigation properties
     public virtual ICollection<PurchaseOrder> PurchaseOrders { get; set; } = new List<PurchaseOrder>();
+    public virtual ICollection<Material> Materials { get; set; } = new List<Material>();
+    public virtual ICollection<MaterialReceipt> MaterialReceipts { get; set; } = new List<MaterialReceipt>();
 }
+
+
 
 
 

@@ -99,18 +99,18 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
             throw new Exception($"Mã PO '{request.PONumber}' đã tồn tại trong hệ thống. Vui lòng sử dụng mã PO khác hoặc xóa PO cũ trước khi import.");
         }
 
-        // Create Purchase Order
+        // Create Purchase Order (PHASE 1: V0 with DRAFT status)
         var po = new PurchaseOrder
         {
             PONumber = request.PONumber,
             CustomerId = customerId,
-            TemplateType = request.TemplateType,
+            ProcessingType = request.TemplateType,
             PODate = request.PODate,
             ExpectedDeliveryDate = request.ExpectedDeliveryDate,
             Notes = request.Notes,
-            VersionType = "ORIGINAL",
-            VersionNumber = 1,
-            Status = "New",
+            Version = "V0", // PHASE 1: V0 is the original imported version
+            VersionNumber = 0,
+            Status = "DRAFT", // PHASE 1: Starts as DRAFT
             TotalAmount = 0,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
@@ -360,10 +360,87 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
         }
 
         po.TotalAmount = totalAmount;
+        
+        // Save Material Receipts from Sheet 2 (nhập kho thực tế)
+        foreach (var receiptData in importResult.MaterialReceipts)
+        {
+            // Get or create Material
+            var material = await _context.Materials
+                .FirstOrDefaultAsync(m => m.Code == receiptData.MaterialCode && m.CustomerId == customerId, cancellationToken);
+
+            if (material == null)
+            {
+                // Tạo Material mới
+                material = new Material
+                {
+                    Code = receiptData.MaterialCode,
+                    Name = receiptData.MaterialName,
+                    Type = receiptData.MaterialType ?? "Unknown",
+                    Unit = receiptData.Unit,
+                    CustomerId = customerId,
+                    Supplier = receiptData.SupplierCode,
+                    CurrentStock = 0, // Sẽ được cập nhật sau khi tạo MaterialReceipt
+                    MinStock = 0,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Materials.Add(material);
+                await _context.SaveChangesAsync(cancellationToken);
+                _logger.LogInformation("Created new Material: {MaterialCode} - {MaterialName}", material.Code, material.Name);
+            }
+            else
+            {
+                // Cập nhật thông tin Material nếu có thay đổi
+                if (!string.IsNullOrWhiteSpace(receiptData.MaterialName) && material.Name != receiptData.MaterialName)
+                {
+                    material.Name = receiptData.MaterialName;
+                }
+                if (!string.IsNullOrWhiteSpace(receiptData.MaterialType) && material.Type != receiptData.MaterialType)
+                {
+                    material.Type = receiptData.MaterialType;
+                }
+                if (!string.IsNullOrWhiteSpace(receiptData.Unit) && material.Unit != receiptData.Unit)
+                {
+                    material.Unit = receiptData.Unit;
+                }
+                if (!string.IsNullOrWhiteSpace(receiptData.SupplierCode) && material.Supplier != receiptData.SupplierCode)
+                {
+                    material.Supplier = receiptData.SupplierCode;
+                }
+                material.UpdatedAt = DateTime.UtcNow;
+            }
+
+            // Tạo MaterialReceipt
+            var materialReceipt = new MaterialReceipt
+            {
+                CustomerId = customerId,
+                MaterialId = material.Id,
+                WarehouseCode = receiptData.WarehouseCode,
+                Quantity = receiptData.Quantity,
+                Unit = receiptData.Unit,
+                BatchNumber = receiptData.BatchNumber,
+                ReceiptDate = receiptData.ReceiptDate,
+                SupplierCode = receiptData.SupplierCode,
+                PurchasePOCode = receiptData.PurchasePOCode,
+                ReceiptNumber = receiptData.ReceiptNumber,
+                Notes = receiptData.Notes,
+                Status = "RECEIVED", // Tự động xác nhận khi import
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.MaterialReceipts.Add(materialReceipt);
+
+            // Cập nhật CurrentStock của Material
+            material.CurrentStock += receiptData.Quantity;
+            material.UpdatedAt = DateTime.UtcNow;
+
+            _logger.LogDebug("Created MaterialReceipt: {ReceiptNumber} - {MaterialCode} - {Quantity} {Unit}",
+                materialReceipt.ReceiptNumber, material.Code, receiptData.Quantity, receiptData.Unit);
+        }
+        
         await _context.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Imported PO from Excel: {PONumber} with {OperationCount} operations", 
-            po.PONumber, importResult.Operations.Count);
+        _logger.LogInformation("Imported PO from Excel: {PONumber} with {OperationCount} operations and {MaterialCount} material receipts", 
+            po.PONumber, importResult.Operations.Count, importResult.MaterialReceipts.Count);
 
         return new PurchaseOrderDto
         {
@@ -371,8 +448,8 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
             PONumber = po.PONumber,
             CustomerId = po.CustomerId,
             CustomerName = customer.Name,
-            VersionType = po.VersionType,
-            TemplateType = po.TemplateType,
+            Version = po.Version,
+            ProcessingType = po.ProcessingType,
             PODate = po.PODate,
             ExpectedDeliveryDate = po.ExpectedDeliveryDate,
             Status = po.Status,

@@ -280,6 +280,9 @@ namespace SmartFactory.Application.Migrations
                     b.Property<decimal>("CurrentStock")
                         .HasColumnType("decimal(18,3)");
 
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
@@ -319,7 +322,89 @@ namespace SmartFactory.Application.Migrations
                     b.HasIndex("Code")
                         .IsUnique();
 
+                    b.HasIndex("CustomerId");
+
                     b.ToTable("Materials");
+                });
+
+            modelBuilder.Entity("SmartFactory.Application.Entities.MaterialReceipt", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BatchNumber")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<Guid>("CustomerId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MaterialId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("PurchasePOCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<DateTime>("ReceiptDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ReceiptNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("SupplierCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("WarehouseCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CustomerId");
+
+                    b.HasIndex("MaterialId");
+
+                    b.HasIndex("ReceiptNumber")
+                        .IsUnique();
+
+                    b.ToTable("MaterialReceipts");
                 });
 
             modelBuilder.Entity("SmartFactory.Application.Entities.Part", b =>
@@ -379,6 +464,106 @@ namespace SmartFactory.Application.Migrations
                     b.HasIndex("ProductId");
 
                     b.ToTable("Parts");
+                });
+
+            modelBuilder.Entity("SmartFactory.Application.Entities.PartProcessingType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("PartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ProcessingTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("SequenceOrder")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProcessingTypeId");
+
+                    b.HasIndex("PartId", "ProcessingTypeId")
+                        .IsUnique();
+
+                    b.ToTable("PartProcessingTypes");
+                });
+
+            modelBuilder.Entity("SmartFactory.Application.Entities.POMaterialBaseline", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("CommittedQuantity")
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("MaterialCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("MaterialName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("PartCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ProductCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<Guid>("PurchaseOrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PurchaseOrderId");
+
+                    b.ToTable("POMaterialBaselines");
                 });
 
             modelBuilder.Entity("SmartFactory.Application.Entities.POOperation", b =>
@@ -491,6 +676,119 @@ namespace SmartFactory.Application.Migrations
                     b.HasIndex("PurchaseOrderId");
 
                     b.ToTable("POProducts");
+                });
+
+            modelBuilder.Entity("SmartFactory.Application.Entities.ProcessBOM", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid>("PartId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("ProcessingTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProcessingTypeId");
+
+                    b.HasIndex("PartId", "ProcessingTypeId", "Version")
+                        .IsUnique();
+
+                    b.ToTable("ProcessBOMs");
+                });
+
+            modelBuilder.Entity("SmartFactory.Application.Entities.ProcessBOMDetail", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("MaterialCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("MaterialName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("ProcessBOMId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ProcessStep")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<decimal>("QuantityPerUnit")
+                        .HasColumnType("decimal(18,6)");
+
+                    b.Property<decimal>("ScrapRate")
+                        .HasColumnType("decimal(10,4)");
+
+                    b.Property<int>("SequenceOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProcessBOMId");
+
+                    b.ToTable("ProcessBOMDetails");
                 });
 
             modelBuilder.Entity("SmartFactory.Application.Entities.ProcessingType", b =>
@@ -797,14 +1095,14 @@ namespace SmartFactory.Application.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("ProcessingType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("TemplateType")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
 
                     b.Property<decimal>("TotalAmount")
                         .HasColumnType("decimal(18,2)");
@@ -815,13 +1113,13 @@ namespace SmartFactory.Application.Migrations
                     b.Property<string>("UpdatedBy")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("Version")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)");
+
                     b.Property<int>("VersionNumber")
                         .HasColumnType("int");
-
-                    b.Property<string>("VersionType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
 
                     b.HasKey("Id");
 
@@ -965,6 +1263,36 @@ namespace SmartFactory.Application.Migrations
                     b.Navigation("ProductionOperation");
                 });
 
+            modelBuilder.Entity("SmartFactory.Application.Entities.Material", b =>
+                {
+                    b.HasOne("SmartFactory.Application.Entities.Customer", "Customer")
+                        .WithMany("Materials")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+                });
+
+            modelBuilder.Entity("SmartFactory.Application.Entities.MaterialReceipt", b =>
+                {
+                    b.HasOne("SmartFactory.Application.Entities.Customer", "Customer")
+                        .WithMany("MaterialReceipts")
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SmartFactory.Application.Entities.Material", "Material")
+                        .WithMany("MaterialReceipts")
+                        .HasForeignKey("MaterialId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Material");
+                });
+
             modelBuilder.Entity("SmartFactory.Application.Entities.Part", b =>
                 {
                     b.HasOne("SmartFactory.Application.Entities.Product", "Product")
@@ -974,6 +1302,36 @@ namespace SmartFactory.Application.Migrations
                         .IsRequired();
 
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("SmartFactory.Application.Entities.PartProcessingType", b =>
+                {
+                    b.HasOne("SmartFactory.Application.Entities.Part", "Part")
+                        .WithMany("PartProcessingTypes")
+                        .HasForeignKey("PartId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SmartFactory.Application.Entities.ProcessingType", "ProcessingType")
+                        .WithMany("PartProcessingTypes")
+                        .HasForeignKey("ProcessingTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Part");
+
+                    b.Navigation("ProcessingType");
+                });
+
+            modelBuilder.Entity("SmartFactory.Application.Entities.POMaterialBaseline", b =>
+                {
+                    b.HasOne("SmartFactory.Application.Entities.PurchaseOrder", "PurchaseOrder")
+                        .WithMany("MaterialBaselines")
+                        .HasForeignKey("PurchaseOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PurchaseOrder");
                 });
 
             modelBuilder.Entity("SmartFactory.Application.Entities.POOperation", b =>
@@ -1027,6 +1385,36 @@ namespace SmartFactory.Application.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("PurchaseOrder");
+                });
+
+            modelBuilder.Entity("SmartFactory.Application.Entities.ProcessBOM", b =>
+                {
+                    b.HasOne("SmartFactory.Application.Entities.Part", "Part")
+                        .WithMany()
+                        .HasForeignKey("PartId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SmartFactory.Application.Entities.ProcessingType", "ProcessingType")
+                        .WithMany()
+                        .HasForeignKey("ProcessingTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Part");
+
+                    b.Navigation("ProcessingType");
+                });
+
+            modelBuilder.Entity("SmartFactory.Application.Entities.ProcessBOMDetail", b =>
+                {
+                    b.HasOne("SmartFactory.Application.Entities.ProcessBOM", "ProcessBOM")
+                        .WithMany("BOMDetails")
+                        .HasForeignKey("ProcessBOMId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ProcessBOM");
                 });
 
             modelBuilder.Entity("SmartFactory.Application.Entities.ProcessMethod", b =>
@@ -1136,6 +1524,10 @@ namespace SmartFactory.Application.Migrations
 
             modelBuilder.Entity("SmartFactory.Application.Entities.Customer", b =>
                 {
+                    b.Navigation("MaterialReceipts");
+
+                    b.Navigation("Materials");
+
                     b.Navigation("PurchaseOrders");
                 });
 
@@ -1146,6 +1538,8 @@ namespace SmartFactory.Application.Migrations
 
             modelBuilder.Entity("SmartFactory.Application.Entities.Material", b =>
                 {
+                    b.Navigation("MaterialReceipts");
+
                     b.Navigation("ProductionOperationMaterials");
 
                     b.Navigation("ProductionOperations");
@@ -1154,6 +1548,8 @@ namespace SmartFactory.Application.Migrations
             modelBuilder.Entity("SmartFactory.Application.Entities.Part", b =>
                 {
                     b.Navigation("POOperations");
+
+                    b.Navigation("PartProcessingTypes");
                 });
 
             modelBuilder.Entity("SmartFactory.Application.Entities.POOperation", b =>
@@ -1161,8 +1557,15 @@ namespace SmartFactory.Application.Migrations
                     b.Navigation("MappingPOProductions");
                 });
 
+            modelBuilder.Entity("SmartFactory.Application.Entities.ProcessBOM", b =>
+                {
+                    b.Navigation("BOMDetails");
+                });
+
             modelBuilder.Entity("SmartFactory.Application.Entities.ProcessingType", b =>
                 {
+                    b.Navigation("PartProcessingTypes");
+
                     b.Navigation("ProcessMethods");
                 });
 
@@ -1183,6 +1586,8 @@ namespace SmartFactory.Application.Migrations
             modelBuilder.Entity("SmartFactory.Application.Entities.PurchaseOrder", b =>
                 {
                     b.Navigation("DerivedVersions");
+
+                    b.Navigation("MaterialBaselines");
 
                     b.Navigation("POOperations");
 

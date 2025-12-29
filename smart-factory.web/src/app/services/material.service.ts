@@ -12,12 +12,25 @@ export class MaterialService {
 
   constructor(private http: HttpClient) { }
 
-  getAll(isActive?: boolean): Observable<Material[]> {
+  /**
+   * Lấy danh sách tất cả materials (có thể filter theo customer)
+   */
+  getAll(isActive?: boolean, customerId?: string): Observable<Material[]> {
     let params = new HttpParams();
     if (isActive !== undefined) {
       params = params.set('isActive', isActive.toString());
     }
+    if (customerId) {
+      params = params.set('customerId', customerId);
+    }
     return this.http.get<Material[]>(this.apiUrl, { params });
+  }
+
+  /**
+   * Lấy danh sách materials theo chủ hàng
+   */
+  getByCustomer(customerId: string, isActive?: boolean): Observable<Material[]> {
+    return this.getAll(isActive, customerId);
   }
 
   getById(id: string): Observable<Material> {

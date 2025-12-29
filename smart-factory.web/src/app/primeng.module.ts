@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { ButtonModule } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { MessagesModule } from 'primeng/messages';
+import { MessageModule } from 'primeng/message';
 import { CalendarModule } from 'primeng/calendar';
 import { ChartModule } from 'primeng/chart';
 import { InputTextModule } from 'primeng/inputtext';
@@ -54,6 +55,7 @@ import {SidebarModule} from 'primeng/sidebar';
     ToastModule,
     ButtonModule,
     MessagesModule,
+    MessageModule,
     CalendarModule,
     ChartModule,
     InputTextModule,
@@ -104,6 +106,7 @@ import {SidebarModule} from 'primeng/sidebar';
     ToastModule,
     ButtonModule,
     MessagesModule,
+    MessageModule,
     CalendarModule,
     ChartModule,
     InputTextModule,

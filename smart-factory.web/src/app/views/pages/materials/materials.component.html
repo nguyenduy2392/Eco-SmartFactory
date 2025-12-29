@@ -3,8 +3,20 @@
     <div class="card">
       <div class="flex justify-content-between align-items-center mb-4">
         <h5 class="m-0">Quản lý vật tư</h5>
-        <button pButton type="button" label="Thêm vật tư" icon="pi pi-plus" 
-                class="p-button-primary" (click)="openCreateDialog()"></button>
+        <div class="flex align-items-center gap-2">
+          <p-dropdown 
+            [options]="customers" 
+            [(ngModel)]="selectedCustomerId"
+            optionLabel="name" 
+            optionValue="id"
+            placeholder="Tất cả chủ hàng"
+            [showClear]="true"
+            styleClass="w-12rem"
+            (onChange)="onCustomerFilterChange()">
+          </p-dropdown>
+          <button pButton type="button" label="Thêm vật tư" icon="pi pi-plus" 
+                  class="p-button-primary" (click)="openCreateDialog()"></button>
+        </div>
       </div>
 
       <p-table 
@@ -18,6 +30,7 @@
           <tr>
             <th>Mã VT</th>
             <th>Tên vật tư</th>
+            <th>Chủ hàng</th>
             <th>Loại</th>
             <th>Tồn kho</th>
             <th>Đơn vị</th>
@@ -30,6 +43,10 @@
           <tr>
             <td>{{ material.code }}</td>
             <td>{{ material.name }}</td>
+            <td>
+              <span *ngIf="material.customerName">{{ material.customerName }}</span>
+              <span *ngIf="!material.customerName && material.customerCode">{{ material.customerCode }}</span>
+            </td>
             <td>{{ material.type }}</td>
             <td>
               <p-tag 
@@ -55,6 +72,143 @@
     </div>
   </div>
 </div>
+
+<!-- Dialog Form -->
+<p-dialog 
+  [(visible)]="showDialog" 
+  [header]="isEdit ? 'Cập nhật vật tư' : 'Thêm vật tư mới'"
+  [modal]="true" 
+  [style]="{width: '600px'}"
+  [closable]="true">
+  
+  <form>
+    <div class="grid">
+      <div class="col-12">
+        <label for="customerId" class="block mb-2">Chủ hàng <span class="text-red-500">*</span></label>
+        <p-dropdown 
+          id="customerId"
+          [options]="customers" 
+          [(ngModel)]="materialForm.customerId"
+          optionLabel="name" 
+          optionValue="id"
+          placeholder="Chọn chủ hàng"
+          [showClear]="false"
+          styleClass="w-full"
+          [required]="true">
+        </p-dropdown>
+      </div>
+
+      <div class="col-6">
+        <label for="code" class="block mb-2">Mã vật tư <span class="text-red-500">*</span></label>
+        <input pInputText id="code" [(ngModel)]="materialForm.code" name="code" class="w-full" required />
+      </div>
+
+      <div class="col-6">
+        <label for="name" class="block mb-2">Tên vật tư <span class="text-red-500">*</span></label>
+        <input pInputText id="name" [(ngModel)]="materialForm.name" name="name" class="w-full" required />
+      </div>
+
+      <div class="col-6">
+        <label for="type" class="block mb-2">Loại vật tư</label>
+        <p-dropdown 
+          id="type"
+          [options]="materialTypes" 
+          [(ngModel)]="materialForm.type"
+          optionLabel="label" 
+          optionValue="value"
+          placeholder="Chọn loại"
+          styleClass="w-full"
+          name="type">
+        </p-dropdown>
+      </div>
+
+      <div class="col-6">
+        <label for="unit" class="block mb-2">Đơn vị tính</label>
+        <p-dropdown 
+          id="unit"
+          [options]="units" 
+          [(ngModel)]="materialForm.unit"
+          optionLabel="label" 
+          optionValue="value"
+          placeholder="Chọn đơn vị"
+          styleClass="w-full"
+          name="unit">
+        </p-dropdown>
+      </div>
+
+      <div class="col-6">
+        <label for="currentStock" class="block mb-2">Tồn kho hiện tại</label>
+        <p-inputNumber 
+          id="currentStock"
+          [(ngModel)]="materialForm.currentStock" 
+          name="currentStock"
+          [min]="0"
+          [useGrouping]="false"
+          styleClass="w-full">
+        </p-inputNumber>
+      </div>
+
+      <div class="col-6">
+        <label for="minStock" class="block mb-2">Tồn kho tối thiểu</label>
+        <p-inputNumber 
+          id="minStock"
+          [(ngModel)]="materialForm.minStock" 
+          name="minStock"
+          [min]="0"
+          [useGrouping]="false"
+          styleClass="w-full">
+        </p-inputNumber>
+      </div>
+
+      <div class="col-6">
+        <label for="colorCode" class="block mb-2">Mã màu</label>
+        <input pInputText id="colorCode" [(ngModel)]="materialForm.colorCode" name="colorCode" class="w-full" />
+      </div>
+
+      <div class="col-6">
+        <label for="supplier" class="block mb-2">Nhà cung cấp</label>
+        <input pInputText id="supplier" [(ngModel)]="materialForm.supplier" name="supplier" class="w-full" />
+      </div>
+
+      <div class="col-6">
+        <label for="unitCost" class="block mb-2">Đơn giá</label>
+        <p-inputNumber 
+          id="unitCost"
+          [(ngModel)]="materialForm.unitCost" 
+          name="unitCost"
+          [min]="0"
+          [useGrouping]="false"
+          mode="decimal"
+          [minFractionDigits]="2"
+          styleClass="w-full">
+        </p-inputNumber>
+      </div>
+
+      <div class="col-6">
+        <label for="isActive" class="block mb-2">Trạng thái</label>
+        <p-selectButton 
+          id="isActive"
+          [options]="[{label: 'Hoạt động', value: true}, {label: 'Ngừng', value: false}]"
+          [(ngModel)]="materialForm.isActive"
+          name="isActive">
+        </p-selectButton>
+      </div>
+
+      <div class="col-12">
+        <label for="description" class="block mb-2">Mô tả</label>
+        <textarea pInputTextarea id="description" [(ngModel)]="materialForm.description" name="description" 
+                  rows="3" class="w-full"></textarea>
+      </div>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Hủy" icon="pi pi-times" 
+            class="p-button-text" (click)="showDialog = false"></button>
+    <button pButton type="button" [label]="isEdit ? 'Cập nhật' : 'Tạo mới'" 
+            icon="pi pi-check" class="p-button-primary" (click)="saveMaterial()"></button>
+  </ng-template>
+</p-dialog>
 
 <p-toast></p-toast>
 

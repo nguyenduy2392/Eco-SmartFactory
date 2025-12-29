@@ -33,7 +33,9 @@ public class ProcessingType
     
     // Navigation properties
     public virtual ICollection<ProcessMethod> ProcessMethods { get; set; } = new List<ProcessMethod>();
+    public virtual ICollection<PartProcessingType> PartProcessingTypes { get; set; } = new List<PartProcessingType>();
 }
+
 
 
 

@@ -1,0 +1,400 @@
+<div class="card">
+  <div class="flex justify-content-between align-items-center mb-4">
+    <h2 class="text-2xl font-bold m-0">
+      <i class="pi pi-file-import mr-2"></i>
+      Quản lý Processing PO
+    </h2>
+    <p-button
+      label="Import PO từ Excel"
+      icon="pi pi-upload"
+      (onClick)="openImportDialog()"
+      styleClass="p-button-success">
+    </p-button>
+  </div>
+
+  <!-- Filters -->
+  <div class="grid mb-4">
+    <div class="col-12 md:col-3">
+      <label for="status" class="block mb-2">Trạng thái</label>
+      <p-dropdown
+        id="status"
+        [options]="statusOptions"
+        [(ngModel)]="selectedStatus"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Chọn trạng thái"
+        [style]="{'width': '100%'}"
+        (onChange)="applyFilters()">
+      </p-dropdown>
+    </div>
+
+    <div class="col-12 md:col-3">
+      <label for="processingType" class="block mb-2">Loại gia công</label>
+      <p-dropdown
+        id="processingType"
+        [options]="processingTypeOptions"
+        [(ngModel)]="selectedProcessingType"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Chọn loại gia công"
+        [style]="{'width': '100%'}"
+        (onChange)="applyFilters()">
+      </p-dropdown>
+    </div>
+
+    <div class="col-12 md:col-3">
+      <label for="customer" class="block mb-2">Chủ hàng</label>
+      <p-dropdown
+        id="customer"
+        [options]="customers"
+        [(ngModel)]="selectedCustomerId"
+        optionLabel="name"
+        optionValue="id"
+        placeholder="Chọn chủ hàng"
+        [style]="{'width': '100%'}"
+        [filter]="true"
+        filterBy="name"
+        (onChange)="applyFilters()">
+      </p-dropdown>
+    </div>
+
+    <div class="col-12 md:col-3">
+      <label for="search" class="block mb-2">Tìm kiếm</label>
+      <span class="p-input-icon-left w-full">
+        <i class="pi pi-search"></i>
+        <input
+          pInputText
+          id="search"
+          type="text"
+          [(ngModel)]="searchText"
+          placeholder="Tìm theo số PO, chủ hàng..."
+          class="w-full">
+      </span>
+    </div>
+  </div>
+
+  <div class="flex gap-2 mb-4">
+    <p-button
+      label="Làm mới"
+      icon="pi pi-refresh"
+      (onClick)="loadPurchaseOrders()"
+      styleClass="p-button-outlined">
+    </p-button>
+    <p-button
+      label="Xóa bộ lọc"
+      icon="pi pi-filter-slash"
+      (onClick)="resetFilters()"
+      styleClass="p-button-outlined p-button-secondary">
+    </p-button>
+  </div>
+
+  <!-- PO Table -->
+  <p-table
+    [value]="filteredPurchaseOrders"
+    [loading]="loading"
+    [paginator]="true"
+    [rows]="10"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Hiển thị {first} đến {last} trong tổng số {totalRecords} PO"
+    styleClass="p-datatable-gridlines p-datatable-striped"
+    [tableStyle]="{'min-width': '50rem'}">
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="poNumber">
+          Số PO
+          <p-sortIcon field="poNumber"></p-sortIcon>
+        </th>
+        <th pSortableColumn="customerName">
+          Chủ hàng
+          <p-sortIcon field="customerName"></p-sortIcon>
+        </th>
+        <th pSortableColumn="processingType">
+          Loại gia công
+          <p-sortIcon field="processingType"></p-sortIcon>
+        </th>
+        <th pSortableColumn="version">
+          Version
+          <p-sortIcon field="version"></p-sortIcon>
+        </th>
+        <th pSortableColumn="status">
+          Trạng thái
+          <p-sortIcon field="status"></p-sortIcon>
+        </th>
+        <th pSortableColumn="operationCount" class="text-right">
+          Số thao tác
+          <p-sortIcon field="operationCount"></p-sortIcon>
+        </th>
+        <th pSortableColumn="totalAmount" class="text-right">
+          Tổng tiền
+          <p-sortIcon field="totalAmount"></p-sortIcon>
+        </th>
+        <th pSortableColumn="poDate">
+          Ngày PO
+          <p-sortIcon field="poDate"></p-sortIcon>
+        </th>
+        <th class="text-center" style="width: 180px">Thao tác</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-po>
+      <tr>
+        <td>
+          <strong>{{ po.poNumber }}</strong>
+        </td>
+        <td>{{ po.customerName }}</td>
+        <td>
+          <p-tag
+            [value]="getProcessingTypeLabel(po.processingType)"
+            [severity]="'info'">
+          </p-tag>
+        </td>
+        <td>
+          <span class="font-semibold">{{ po.version }}</span>
+        </td>
+        <td>
+          <p-tag
+            [value]="getStatusLabel(po.status)"
+            [severity]="getStatusSeverity(po.status)">
+          </p-tag>
+        </td>
+        <td class="text-right">
+          <span class="font-semibold">{{ po.operationCount }}</span>
+        </td>
+        <td class="text-right">
+          <strong>{{ po.totalAmount | currency:'VND':'symbol':'1.0-0' }}</strong>
+        </td>
+        <td>{{ po.poDate | date:'dd/MM/yyyy' }}</td>
+        <td class="text-center">
+          <div class="flex justify-content-center gap-2">
+            <p-button
+              icon="pi pi-eye"
+              [rounded]="true"
+              [outlined]="true"
+              severity="info"
+              (onClick)="viewPODetail(po)"
+              pTooltip="Xem chi tiết"
+              tooltipPosition="top">
+            </p-button>
+            <p-button
+              *ngIf="po.status === 'DRAFT'"
+              icon="pi pi-trash"
+              [rounded]="true"
+              [outlined]="true"
+              severity="danger"
+              (onClick)="deletePO(po)"
+              pTooltip="Xóa PO"
+              tooltipPosition="top">
+            </p-button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="9" class="text-center">
+          <div class="p-4">
+            <i class="pi pi-inbox text-4xl text-400"></i>
+            <p class="text-xl text-500 mt-3">Không có PO nào</p>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- Import Dialog -->
+<p-dialog
+  header="Import Processing PO từ Excel"
+  [(visible)]="showImportDialog"
+  [modal]="true"
+  [style]="{width: '600px'}"
+  [draggable]="false"
+  [resizable]="false">
+  <div class="p-fluid">
+    <div class="field">
+      <label for="poNumber">Số PO <span class="text-red-500">*</span></label>
+      <input
+        pInputText
+        id="poNumber"
+        type="text"
+        [(ngModel)]="importForm.poNumber"
+        placeholder="Nhập số PO"
+        required>
+    </div>
+
+    <div class="field">
+      <label for="importCustomer">Chủ hàng <span class="text-red-500">*</span></label>
+      <p-dropdown
+        id="importCustomer"
+        [options]="customers"
+        [(ngModel)]="importForm.customerId"
+        optionLabel="name"
+        optionValue="id"
+        placeholder="Chọn chủ hàng"
+        [filter]="true"
+        filterBy="name"
+        [style]="{'width': '100%'}"
+        required>
+      </p-dropdown>
+    </div>
+
+    <div class="field">
+      <label for="importProcessingType">Loại gia công <span class="text-red-500">*</span></label>
+      <p-dropdown
+        id="importProcessingType"
+        [options]="importProcessingTypeOptions"
+        [(ngModel)]="importForm.processingType"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Chọn loại gia công"
+        [style]="{'width': '100%'}"
+        required>
+      </p-dropdown>
+      <small class="text-500 block mt-2">
+        <i class="pi pi-info-circle mr-1"></i>
+        File Excel phải chứa 2 sheets: NHAP_PO và NHAP_NGUYEN_VAT_LIEU (nhập kho nguyên vật liệu)
+      </small>
+    </div>
+
+    <div class="field">
+      <label for="poDate">Ngày PO <span class="text-red-500">*</span></label>
+      <p-calendar
+        id="poDate"
+        [(ngModel)]="importForm.poDate"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+        [style]="{'width': '100%'}"
+        required>
+      </p-calendar>
+    </div>
+
+    <div class="field">
+      <label for="expectedDeliveryDate">Ngày dự kiến giao hàng</label>
+      <p-calendar
+        id="expectedDeliveryDate"
+        [(ngModel)]="importForm.expectedDeliveryDate"
+        dateFormat="dd/mm/yy"
+        [showIcon]="true"
+        [style]="{'width': '100%'}">
+      </p-calendar>
+    </div>
+
+    <div class="field">
+      <label for="importNotes">Ghi chú</label>
+      <textarea
+        pInputTextarea
+        id="importNotes"
+        [(ngModel)]="importForm.notes"
+        rows="3"
+        placeholder="Nhập ghi chú...">
+      </textarea>
+    </div>
+
+    <div class="field">
+      <label>File Excel <span class="text-red-500">*</span></label>
+      <p-fileUpload
+        mode="basic"
+        chooseLabel="Chọn file"
+        [auto]="true"
+        accept=".xlsx,.xls"
+        [maxFileSize]="10000000"
+        (onSelect)="onFileSelect($event)"
+        (onRemove)="onFileRemove()"
+        [customUpload]="true"
+        [showUploadButton]="false"
+        [showCancelButton]="false">
+      </p-fileUpload>
+      <small class="text-500 block mt-2" *ngIf="selectedFile">
+        <i class="pi pi-check-circle text-green-500 mr-1"></i>
+        Đã chọn: {{ selectedFile.name }}
+      </small>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-end gap-2">
+      <p-button
+        label="Hủy"
+        icon="pi pi-times"
+        (onClick)="closeImportDialog()"
+        styleClass="p-button-text"
+        [disabled]="importLoading">
+      </p-button>
+      <p-button
+        label="Import"
+        icon="pi pi-upload"
+        (onClick)="importPO()"
+        [loading]="importLoading"
+        [disabled]="!selectedFile">
+      </p-button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<!-- Import Error Dialog -->
+<p-dialog
+  header="Lỗi Import PO"
+  [(visible)]="showImportErrorDialog"
+  [modal]="true"
+  [style]="{width: '700px'}"
+  [draggable]="false"
+  [resizable]="false">
+  <div class="mb-3">
+    <p-message
+      severity="error"
+      text="Import thất bại. Vui lòng kiểm tra và sửa các lỗi sau:">
+    </p-message>
+  </div>
+
+  <p-table
+    [value]="importErrors"
+    [paginator]="true"
+    [rows]="10"
+    styleClass="p-datatable-sm">
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 80px">Dòng</th>
+        <th style="width: 150px">Trường</th>
+        <th>Lỗi</th>
+        <th style="width: 100px">Mức độ</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-error>
+      <tr>
+        <td class="text-center">
+          <strong>{{ error.row }}</strong>
+        </td>
+        <td>
+          <code>{{ error.field }}</code>
+        </td>
+        <td>{{ error.errorMessage }}</td>
+        <td>
+          <p-tag
+            [value]="error.severity === 'error' ? 'Lỗi' : 'Cảnh báo'"
+            [severity]="error.severity === 'error' ? 'danger' : 'warning'">
+          </p-tag>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <ng-template pTemplate="footer">
+    <p-button
+      label="Đóng"
+      icon="pi pi-times"
+      (onClick)="closeImportErrorDialog()"
+      styleClass="p-button-text">
+    </p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- Confirmation Dialog (for delete) -->
+<p-confirmDialog></p-confirmDialog>
+
+<!-- Toast Messages -->
+<p-toast></p-toast>
+
+

@@ -8,13 +8,15 @@ using SmartFactory.Application.Entities;
 namespace SmartFactory.Application.Commands.PurchaseOrders;
 
 /// <summary>
-/// Clone PO từ version này sang version khác
-/// ORIGINAL (PM import) -> FINAL (PM chốt) -> PRODUCTION (PMC điều chỉnh)
+/// Clone PO to create new version
+/// PHASE 1: Cloning creates new version (V1, V2, V3...)
+/// - Same data
+/// - Status = DRAFT
+/// - Can be edited until APPROVED_FOR_PMC
 /// </summary>
 public class ClonePOVersionCommand : IRequest<PurchaseOrderDto>
 {
     public Guid OriginalPOId { get; set; }
-    public string NewVersionType { get; set; } = "FINAL";
     public string? Notes { get; set; }
 }
 
@@ -38,6 +40,7 @@ public class ClonePOVersionCommandHandler : IRequestHandler<ClonePOVersionComman
             .Include(p => p.Customer)
             .Include(p => p.POProducts)
             .Include(p => p.POOperations)
+            .Include(p => p.MaterialBaselines)
             .FirstOrDefaultAsync(p => p.Id == request.OriginalPOId, cancellationToken);
 
         if (originalPO == null)
@@ -45,34 +48,33 @@ public class ClonePOVersionCommandHandler : IRequestHandler<ClonePOVersionComman
             throw new Exception($"Purchase Order with ID {request.OriginalPOId} not found");
         }
 
-        // Validate version flow: ORIGINAL -> FINAL -> PRODUCTION
-        if (originalPO.VersionType == "ORIGINAL" && request.NewVersionType != "FINAL")
-        {
-            throw new Exception("Can only clone ORIGINAL to FINAL version");
-        }
-        if (originalPO.VersionType == "FINAL" && request.NewVersionType != "PRODUCTION")
-        {
-            throw new Exception("Can only clone FINAL to PRODUCTION version");
-        }
-        if (originalPO.VersionType == "PRODUCTION")
-        {
-            throw new Exception("Cannot clone PRODUCTION version further");
-        }
+        // PHASE 1: Find root PO (for determining version number)
+        var rootPOId = originalPO.OriginalPOId ?? originalPO.Id;
+        
+        // Get all versions of this PO
+        var allVersions = await _context.PurchaseOrders
+            .Where(p => p.Id == rootPOId || p.OriginalPOId == rootPOId)
+            .ToListAsync(cancellationToken);
 
-        // Create new PO version
+        // Determine next version number
+        var maxVersionNumber = allVersions.Max(p => p.VersionNumber);
+        var nextVersionNumber = maxVersionNumber + 1;
+        var nextVersionLabel = $"V{nextVersionNumber}";
+
+        // Create new PO version (PHASE 1: Same data, Status = DRAFT)
         var newPO = new PurchaseOrder
         {
-            PONumber = $"{originalPO.PONumber}-{request.NewVersionType}",
+            PONumber = originalPO.PONumber, // Keep same PO Number
             CustomerId = originalPO.CustomerId,
-            VersionType = request.NewVersionType,
-            TemplateType = originalPO.TemplateType,
+            Version = nextVersionLabel,
+            VersionNumber = nextVersionNumber,
+            ProcessingType = originalPO.ProcessingType,
             PODate = originalPO.PODate,
             ExpectedDeliveryDate = originalPO.ExpectedDeliveryDate,
-            Status = "New",
+            Status = "DRAFT", // PHASE 1: New version starts as DRAFT
             TotalAmount = originalPO.TotalAmount,
             Notes = request.Notes ?? originalPO.Notes,
-            OriginalPOId = originalPO.Id,
-            VersionNumber = originalPO.VersionNumber + 1,
+            OriginalPOId = rootPOId,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -113,15 +115,34 @@ public class ClonePOVersionCommandHandler : IRequestHandler<ClonePOVersionComman
                 CycleTime = originalOperation.CycleTime,
                 AssemblyContent = originalOperation.AssemblyContent,
                 SequenceOrder = originalOperation.SequenceOrder,
+                Notes = originalOperation.Notes,
                 CreatedAt = DateTime.UtcNow
             };
             _context.POOperations.Add(newOperation);
         }
 
+        // PHASE 1: Clone Material Baselines
+        foreach (var originalBaseline in originalPO.MaterialBaselines)
+        {
+            var newBaseline = new POMaterialBaseline
+            {
+                PurchaseOrderId = newPO.Id,
+                MaterialCode = originalBaseline.MaterialCode,
+                MaterialName = originalBaseline.MaterialName,
+                CommittedQuantity = originalBaseline.CommittedQuantity,
+                Unit = originalBaseline.Unit,
+                ProductCode = originalBaseline.ProductCode,
+                PartCode = originalBaseline.PartCode,
+                Notes = originalBaseline.Notes,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.POMaterialBaselines.Add(newBaseline);
+        }
+
         await _context.SaveChangesAsync(cancellationToken);
 
-        _logger.LogInformation("Cloned PO: {OriginalPONumber} to {NewVersionType} with ID: {NewPOId}", 
-            originalPO.PONumber, request.NewVersionType, newPO.Id);
+        _logger.LogInformation("Cloned PO: {OriginalPONumber} {OriginalVersion} to {NewVersion} with ID: {NewPOId}", 
+            originalPO.PONumber, originalPO.Version, nextVersionLabel, newPO.Id);
 
         return new PurchaseOrderDto
         {
@@ -129,8 +150,8 @@ public class ClonePOVersionCommandHandler : IRequestHandler<ClonePOVersionComman
             PONumber = newPO.PONumber,
             CustomerId = newPO.CustomerId,
             CustomerName = originalPO.Customer.Name,
-            VersionType = newPO.VersionType,
-            TemplateType = newPO.TemplateType,
+            Version = newPO.Version,
+            ProcessingType = newPO.ProcessingType,
             PODate = newPO.PODate,
             ExpectedDeliveryDate = newPO.ExpectedDeliveryDate,
             Status = newPO.Status,
@@ -143,6 +164,7 @@ public class ClonePOVersionCommandHandler : IRequestHandler<ClonePOVersionComman
         };
     }
 }
+
 
 
 

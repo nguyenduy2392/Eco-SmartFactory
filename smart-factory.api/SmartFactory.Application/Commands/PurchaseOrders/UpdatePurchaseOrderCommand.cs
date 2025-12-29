@@ -64,8 +64,8 @@ public class UpdatePurchaseOrderCommandHandler : IRequestHandler<UpdatePurchaseO
             PONumber = po.PONumber,
             CustomerId = po.CustomerId,
             CustomerName = customer.Name,
-            VersionType = po.VersionType,
-            TemplateType = po.TemplateType,
+            Version = po.Version,
+            ProcessingType = po.ProcessingType,
             PODate = po.PODate,
             ExpectedDeliveryDate = po.ExpectedDeliveryDate,
             Status = po.Status,
@@ -77,6 +77,7 @@ public class UpdatePurchaseOrderCommandHandler : IRequestHandler<UpdatePurchaseO
         };
     }
 }
+
 
 
 

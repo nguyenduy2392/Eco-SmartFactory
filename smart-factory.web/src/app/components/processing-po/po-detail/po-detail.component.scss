@@ -1,0 +1,82 @@
+:host {
+  ::ng-deep {
+    .p-tabview {
+      .p-tabview-nav {
+        background: transparent;
+        border-bottom: 2px solid var(--surface-border);
+
+        .p-tabview-nav-link {
+          border: none;
+          background: transparent;
+          padding: 1rem 1.5rem;
+
+          &:not(.p-disabled):focus {
+            box-shadow: none;
+          }
+        }
+
+        .p-tabview-ink-bar {
+          background-color: var(--primary-color);
+          height: 3px;
+        }
+      }
+
+      .p-tabview-panels {
+        padding: 2rem 0;
+        background: transparent;
+      }
+    }
+
+    .p-datatable {
+      .p-datatable-thead > tr > th {
+        background-color: var(--primary-color);
+        color: white;
+        font-weight: 600;
+      }
+
+      .p-datatable-tbody > tr:hover {
+        background-color: var(--surface-100);
+      }
+    }
+
+    .p-selectbutton {
+      .p-button {
+        padding: 0.75rem 1.25rem;
+      }
+    }
+
+    .p-inputgroup {
+      .p-inputgroup-addon {
+        background-color: var(--surface-100);
+        border-color: var(--surface-300);
+        color: var(--primary-color);
+      }
+
+      input[readonly] {
+        background-color: var(--surface-50);
+        cursor: default;
+      }
+    }
+  }
+}
+
+.field {
+  margin-bottom: 1.5rem;
+
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+}
+
+code {
+  background-color: var(--surface-100);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+

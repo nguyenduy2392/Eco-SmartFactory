@@ -101,9 +101,20 @@ export class AppMenuitemComponent implements OnInit, OnDestroy {
         // toggle active state
         if (this.item.items) {
             this.active = !this.active;
+            // Don't prevent default for items with submenu - let them expand/collapse
+            if (this.item.items && !this.item.routerLink) {
+                event.preventDefault();
+            }
         }
 
-        this.menuService.onMenuStateChange({ key: this.key });
+        // If item has routerLink, let router handle navigation
+        // Don't prevent default to allow routerLink to work
+        if (this.item.routerLink && !this.item.items) {
+            // Router will handle navigation, just update menu state
+            this.menuService.onMenuStateChange({ key: this.key });
+        } else {
+            this.menuService.onMenuStateChange({ key: this.key });
+        }
     }
 
     get submenuAnimation() {

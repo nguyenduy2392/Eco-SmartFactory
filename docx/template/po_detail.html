@@ -83,31 +83,50 @@
 <span class="text-[#111418] dark:text-white text-sm font-medium leading-normal">#PO-2023-8832</span>
 </div>
 <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 px-2">
-<div class="flex flex-col gap-2">
-<div class="flex items-center gap-3">
-<h1 class="text-[#111418] dark:text-white text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">Đơn hàng #PO-2023-8832</h1>
-<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 border border-blue-200 dark:border-blue-800">
-                                Đang xử lý
+                <div class="flex flex-col gap-2">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <h1 class="text-[#111418] dark:text-white text-3xl md:text-4xl font-black leading-tight tracking-[-0.033em]">Đơn hàng #PO-2023-8832</h1>
+                        <div class="flex items-center gap-2">
+                            <!-- Version Selector -->
+                            <select id="versionSelector" class="px-3 py-1.5 rounded-lg border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-[#1A2633] text-sm font-bold focus:border-primary focus:ring-2 focus:ring-primary">
+                                <option value="V0">V0 (Original)</option>
+                                <option value="V1" selected>V1 (Current)</option>
+                                <option value="V2">V2 (Latest)</option>
+                            </select>
+                            <!-- Version Status -->
+                            <span id="versionStatus" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-bold bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 border border-green-200 dark:border-green-800">
+                                <span class="material-symbols-outlined text-[16px] mr-1">check_circle</span>
+                                APPROVED_FOR_PMC
                             </span>
-</div>
-<p class="text-[#617589] dark:text-[#94a3b8] text-base font-normal leading-normal max-w-2xl">
-                            Được tạo ngày 24/10/2023 bởi Nguyễn Văn A
+                            <!-- Lock Status -->
+                            <span id="lockStatus" class="inline-flex items-center px-2.5 py-1 rounded text-xs font-bold bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                                <span class="material-symbols-outlined text-[14px] mr-1">lock</span>
+                                LOCKED
+                            </span>
+                        </div>
+                    </div>
+                    <p class="text-[#617589] dark:text-[#94a3b8] text-base font-normal leading-normal max-w-2xl">
+                            Được tạo ngày 24/10/2023 bởi Nguyễn Văn A • Loại gia công: <strong>EP_NHUA</strong>
                         </p>
-</div>
-<div class="flex gap-3">
-<button class="flex items-center justify-center gap-2 cursor-pointer overflow-hidden rounded-lg h-10 px-4 bg-white dark:bg-[#1A2633] border border-[#e5e7eb] dark:border-[#2a3845] text-[#d32f2f] dark:text-[#ef5350] text-sm font-bold leading-normal tracking-[0.015em] shadow-sm hover:bg-gray-50 dark:hover:bg-[#23303e] transition-colors">
-<span class="material-symbols-outlined text-[20px]">delete</span>
-<span class="hidden sm:inline">Hủy đơn</span>
-</button>
-<button class="flex items-center justify-center gap-2 cursor-pointer overflow-hidden rounded-lg h-10 px-4 bg-white dark:bg-[#1A2633] border border-[#e5e7eb] dark:border-[#2a3845] text-[#111418] dark:text-white text-sm font-bold leading-normal tracking-[0.015em] shadow-sm hover:bg-gray-50 dark:hover:bg-[#23303e] transition-colors">
-<span class="material-symbols-outlined text-[20px]">print</span>
-<span class="hidden sm:inline">In Đơn hàng</span>
-</button>
-<button class="flex items-center justify-center gap-2 cursor-pointer overflow-hidden rounded-lg h-10 px-6 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] shadow-md hover:bg-blue-600 transition-colors">
-<span class="material-symbols-outlined text-[20px]">save</span>
-<span>Lưu thay đổi</span>
-</button>
-</div>
+                </div>
+                <div class="flex gap-3">
+                    <button class="flex items-center justify-center gap-2 cursor-pointer overflow-hidden rounded-lg h-10 px-4 bg-white dark:bg-[#1A2633] border border-[#e5e7eb] dark:border-[#2a3845] text-[#111418] dark:text-white text-sm font-bold leading-normal tracking-[0.015em] shadow-sm hover:bg-gray-50 dark:hover:bg-[#23303e] transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">print</span>
+                        <span class="hidden sm:inline">In Đơn hàng</span>
+                    </button>
+                    <button id="cloneVersionBtn" class="flex items-center justify-center gap-2 cursor-pointer overflow-hidden rounded-lg h-10 px-4 bg-white dark:bg-[#1A2633] border border-[#e5e7eb] dark:border-[#2a3845] text-primary text-sm font-bold leading-normal tracking-[0.015em] shadow-sm hover:bg-blue-50 dark:hover:bg-[#23303e] transition-colors">
+                        <span class="material-symbols-outlined text-[20px]">content_copy</span>
+                        <span class="hidden sm:inline">Clone Version</span>
+                    </button>
+                    <button id="approveBtn" class="flex items-center justify-center gap-2 cursor-pointer overflow-hidden rounded-lg h-10 px-4 bg-green-600 text-white text-sm font-bold leading-normal tracking-[0.015em] shadow-md hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <span class="material-symbols-outlined text-[20px]">check_circle</span>
+                        <span>Approve for PMC</span>
+                    </button>
+                    <button id="saveBtn" class="flex items-center justify-center gap-2 cursor-pointer overflow-hidden rounded-lg h-10 px-6 bg-primary text-white text-sm font-bold leading-normal tracking-[0.015em] shadow-md hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <span class="material-symbols-outlined text-[20px]">save</span>
+                        <span>Lưu thay đổi</span>
+                    </button>
+                </div>
 </div>
 <div class="bg-white dark:bg-[#1A2633] border border-[#e5e7eb] dark:border-[#2a3845] rounded-xl p-6 shadow-sm">
 <div class="flex items-center gap-2 mb-6 border-b border-[#f0f2f4] dark:border-[#2a3845] pb-4">
@@ -144,57 +163,58 @@
 </div>
 </div>
 </div>
-<div class="flex flex-col gap-4">
-<div class="flex items-center justify-between">
-<h3 class="text-[#111418] dark:text-white text-xl font-bold leading-tight">Danh sách Sản phẩm</h3>
-<button class="flex items-center justify-center gap-2 cursor-pointer overflow-hidden rounded-lg h-9 px-4 bg-white dark:bg-[#1A2633] border border-[#e5e7eb] dark:border-[#2a3845] text-primary text-sm font-bold leading-normal shadow-sm hover:bg-blue-50 dark:hover:bg-[#23303e] transition-colors">
-<span class="material-symbols-outlined text-[20px]">add_circle</span>
-<span>Thêm Sản phẩm</span>
-</button>
-</div>
+            <!-- Lock Warning -->
+            <div id="lockWarning" class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <div class="flex items-start gap-3">
+                    <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 mt-0.5">lock</span>
+                    <div>
+                        <h4 class="font-bold text-[#111418] dark:text-white mb-1">Version này đã bị khóa</h4>
+                        <p class="text-sm text-[#617589] dark:text-[#94a3b8]">Version này đã được APPROVED và không thể chỉnh sửa. Vui lòng tạo version mới nếu cần thay đổi.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-[#111418] dark:text-white text-xl font-bold leading-tight">PO Operations</h3>
+                        <p class="text-sm text-[#617589] dark:text-[#94a3b8] mt-1">Các công đoạn gia công được tính phí</p>
+                    </div>
+                    <button id="addOperationBtn" class="flex items-center justify-center gap-2 cursor-pointer overflow-hidden rounded-lg h-9 px-4 bg-white dark:bg-[#1A2633] border border-[#e5e7eb] dark:border-[#2a3845] text-primary text-sm font-bold leading-normal shadow-sm hover:bg-blue-50 dark:hover:bg-[#23303e] transition-colors disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <span class="material-symbols-outlined text-[20px]">add_circle</span>
+                        <span>Thêm Operation</span>
+                    </button>
+                </div>
 <div class="overflow-hidden rounded-xl border border-[#e5e7eb] dark:border-[#2a3845] shadow-sm bg-white dark:bg-[#1A2633]">
 <div class="overflow-x-auto">
 <table class="w-full text-left border-collapse">
-<thead>
-<tr class="bg-[#f9fafb] dark:bg-[#23303e] border-b border-[#e5e7eb] dark:border-[#2a3845]">
-<th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8] w-16 text-center">#</th>
-<th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8]">Sản phẩm</th>
-<th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8]">Mã SKU</th>
-<th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8] text-center">Số lượng</th>
-<th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8] text-right">Đơn giá</th>
-<th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8] text-right">Thành tiền</th>
-<th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8] text-center">Thao tác</th>
-</tr>
-</thead>
+                        <thead>
+                            <tr class="bg-[#f9fafb] dark:bg-[#23303e] border-b border-[#e5e7eb] dark:border-[#2a3845]">
+                                <th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8] w-16 text-center">#</th>
+                                <th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8]">Mã sản phẩm</th>
+                                <th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8]">Tên sản phẩm</th>
+                                <th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8]">Mã linh kiện</th>
+                                <th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8]">Tên linh kiện</th>
+                                <th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8]">Vật liệu</th>
+                                <th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8]">Màu sắc</th>
+                                <th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8] text-center">Số lượng hợp đồng</th>
+                                <th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8] text-right">Đơn giá (VND)</th>
+                                <th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8] text-right">Thành tiền (VND)</th>
+                            </tr>
+                        </thead>
 <tbody class="divide-y divide-[#e5e7eb] dark:divide-[#2a3845]">
-<tr class="group hover:bg-gray-50 dark:hover:bg-[#1e293b] transition-colors">
-<td class="py-4 px-4 text-sm text-[#617589] dark:text-[#94a3b8] text-center">1</td>
-<td class="py-4 px-4">
-<div class="flex items-center gap-3">
-<div class="size-10 rounded-lg bg-cover bg-center border border-[#e5e7eb] dark:border-[#2a3845]" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuCXMbZ7k3BV_wyrfU-qK6ITrfjLqBYLTJTrOzd3_Tr2E80hoL_LlKpNHbrFwZjmMyGXdyvHel6yfub0KS_WWQsdoM3SHJnYv5VUGtF7iySFwq6p8ekBbkyYSKOQ6-1QJwhvMmJzpZ7yQ05gLuVdIv9lLen6ZTHwbgdJzsx7sdYzEcgMfCuI7PJZnEf9SYiyfto9U7STxlIwRWkC13bUmi2tCuUXbQaJrB6ickpHFE5c3zMV3ANlpi1wZFS6YtVDvJeMy5xEmm4qYJI");'></div>
-<div class="flex flex-col">
-<span class="text-[#111418] dark:text-white font-medium text-sm">Ghế văn phòng Ergonomic</span>
-<span class="text-xs text-[#617589] dark:text-[#94a3b8]">Nội thất văn phòng</span>
-</div>
-</div>
-</td>
-<td class="py-4 px-4 text-sm text-[#111418] dark:text-white font-mono">ERGO-001-BLK</td>
-<td class="py-4 px-4 text-center">
-<input class="w-20 text-center rounded border border-[#d1d5db] dark:border-[#475569] bg-white dark:bg-[#1A2633] text-sm py-1 px-2 focus:ring-1 focus:ring-primary focus:border-primary text-[#111418] dark:text-white" type="number" value="50"/>
-</td>
-<td class="py-4 px-4 text-sm text-[#111418] dark:text-white text-right font-medium">$120.00</td>
-<td class="py-4 px-4 text-sm text-[#111418] dark:text-white text-right font-bold">$6,000.00</td>
-<td class="py-4 px-4 text-center">
-<div class="flex items-center justify-center gap-2">
-<button class="text-[#617589] hover:text-primary dark:text-[#94a3b8] dark:hover:text-primary transition-colors" title="Edit details">
-<span class="material-symbols-outlined text-[20px]">edit_square</span>
-</button>
-<button class="text-[#617589] hover:text-red-600 dark:text-[#94a3b8] dark:hover:text-red-400 transition-colors" title="Remove">
-<span class="material-symbols-outlined text-[20px]">delete</span>
-</button>
-</div>
-</td>
-</tr>
+                            <tr class="group hover:bg-gray-50 dark:hover:bg-[#1e293b] transition-colors">
+                                <td class="py-4 px-4 text-sm text-[#617589] dark:text-[#94a3b8] text-center">1</td>
+                                <td class="py-4 px-4 text-sm text-[#111418] dark:text-white font-medium">PKW4180</td>
+                                <td class="py-4 px-4 text-sm text-[#111418] dark:text-white">VM-TMTR-00002</td>
+                                <td class="py-4 px-4 text-sm text-[#111418] dark:text-white font-mono">JAZ-PKW4180-T01-01</td>
+                                <td class="py-4 px-4 text-sm text-[#617589] dark:text-[#94a3b8]">Nửa đậu trải</td>
+                                <td class="py-4 px-4 text-sm text-[#111418] dark:text-white">ABS 15AH-H</td>
+                                <td class="py-4 px-4 text-sm text-[#617589] dark:text-[#94a3b8]">3-25962</td>
+                                <td class="py-4 px-4 text-sm text-[#111418] dark:text-white text-center font-medium">33</td>
+                                <td class="py-4 px-4 text-sm text-[#111418] dark:text-white text-right font-medium">35,000</td>
+                                <td class="py-4 px-4 text-sm text-[#111418] dark:text-white text-right font-bold">1,155,000</td>
+                            </tr>
 <tr class="group hover:bg-gray-50 dark:hover:bg-[#1e293b] transition-colors">
 <td class="py-4 px-4 text-sm text-[#617589] dark:text-[#94a3b8] text-center">2</td>
 <td class="py-4 px-4">
@@ -252,18 +272,74 @@
 </td>
 </tr>
 </tbody>
-<tfoot>
-<tr class="bg-[#f9fafb] dark:bg-[#23303e] border-t border-[#e5e7eb] dark:border-[#2a3845]">
-<td class="py-4 px-4 text-right text-sm font-bold text-[#111418] dark:text-white" colspan="5">Tổng cộng:</td>
-<td class="py-4 px-4 text-right text-lg font-black text-primary">$12,275.00</td>
-<td></td>
-</tr>
-</tfoot>
+                        <tfoot>
+                            <tr class="bg-[#f9fafb] dark:bg-[#23303e] border-t border-[#e5e7eb] dark:border-[#2a3845]">
+                                <td class="py-4 px-4 text-right text-sm font-bold text-[#111418] dark:text-white" colspan="9">Tổng cộng:</td>
+                                <td class="py-4 px-4 text-right text-lg font-black text-primary">18,900,000</td>
+                            </tr>
+                        </tfoot>
 </table>
 </div>
-</div>
-</div>
-<div class="mt-4 flex flex-col md:flex-row items-center justify-between rounded-xl bg-[#eef4ff] dark:bg-[#1e293b] p-6 border border-blue-100 dark:border-blue-900/50">
+                </div>
+            </div>
+
+            <!-- Material Baseline Section -->
+            <div class="flex flex-col gap-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-[#111418] dark:text-white text-xl font-bold leading-tight">Material Baseline (Nguyên vật liệu cam kết)</h3>
+                        <p class="text-sm text-[#617589] dark:text-[#94a3b8] mt-1">Nguyên vật liệu khách hàng cam kết cung cấp - chỉ dùng cho Availability Check</p>
+                    </div>
+                </div>
+                <div class="overflow-hidden rounded-xl border border-[#e5e7eb] dark:border-[#2a3845] shadow-sm bg-white dark:bg-[#1A2633]">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-[#f9fafb] dark:bg-[#23303e] border-b border-[#e5e7eb] dark:border-[#2a3845]">
+                                    <th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8] w-16 text-center">#</th>
+                                    <th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8]">Mã nguyên vật liệu</th>
+                                    <th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8]">Tên nguyên vật liệu</th>
+                                    <th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8]">Loại</th>
+                                    <th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8]">Đơn vị tính</th>
+                                    <th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8]">Mã kho</th>
+                                    <th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8] text-center">Số lượng nhập</th>
+                                    <th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8]">Số lô</th>
+                                    <th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8]">Ngày nhập</th>
+                                    <th class="py-3 px-4 text-xs font-semibold uppercase tracking-wider text-[#617589] dark:text-[#94a3b8]">Nhà cung cấp</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-[#e5e7eb] dark:divide-[#2a3845]">
+                                <tr class="hover:bg-gray-50 dark:hover:bg-[#1e293b] transition-colors">
+                                    <td class="py-4 px-4 text-sm text-[#617589] dark:text-[#94a3b8] text-center">1</td>
+                                    <td class="py-4 px-4 text-sm text-[#111418] dark:text-white font-mono">STEEL-SS400-PH10</td>
+                                    <td class="py-4 px-4 text-sm text-[#111418] dark:text-white">Thép trơn SS400 Φ10</td>
+                                    <td class="py-4 px-4 text-sm text-[#617589] dark:text-[#94a3b8]">Thép</td>
+                                    <td class="py-4 px-4 text-sm text-[#111418] dark:text-white">kg</td>
+                                    <td class="py-4 px-4 text-sm text-[#111418] dark:text-white">RAW</td>
+                                    <td class="py-4 px-4 text-sm text-[#111418] dark:text-white text-center font-medium">10000</td>
+                                    <td class="py-4 px-4 text-sm text-[#617589] dark:text-[#94a3b8]">BATCH-2025-01</td>
+                                    <td class="py-4 px-4 text-sm text-[#617589] dark:text-[#94a3b8]">1/5/2025</td>
+                                    <td class="py-4 px-4 text-sm text-[#111418] dark:text-white">NCC-HOA-PHAT</td>
+                                </tr>
+                                <tr class="hover:bg-gray-50 dark:hover:bg-[#1e293b] transition-colors">
+                                    <td class="py-4 px-4 text-sm text-[#617589] dark:text-[#94a3b8] text-center">2</td>
+                                    <td class="py-4 px-4 text-sm text-[#111418] dark:text-white font-mono">ABS-BLACK-H100</td>
+                                    <td class="py-4 px-4 text-sm text-[#111418] dark:text-white">Hạt nhựa ABS đen H100</td>
+                                    <td class="py-4 px-4 text-sm text-[#617589] dark:text-[#94a3b8]">Nhựa</td>
+                                    <td class="py-4 px-4 text-sm text-[#111418] dark:text-white">kg</td>
+                                    <td class="py-4 px-4 text-sm text-[#111418] dark:text-white">RAW</td>
+                                    <td class="py-4 px-4 text-sm text-[#111418] dark:text-white text-center font-medium">5000</td>
+                                    <td class="py-4 px-4 text-sm text-[#617589] dark:text-[#94a3b8]">BATCH-2025-02</td>
+                                    <td class="py-4 px-4 text-sm text-[#617589] dark:text-[#94a3b8]">1/8/2025</td>
+                                    <td class="py-4 px-4 text-sm text-[#111418] dark:text-white">BASF</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 flex flex-col md:flex-row items-center justify-between rounded-xl bg-[#eef4ff] dark:bg-[#1e293b] p-6 border border-blue-100 dark:border-blue-900/50">
 <div class="flex gap-4 items-center mb-4 md:mb-0">
 <div class="size-12 rounded-full bg-white dark:bg-[#0f172a] flex items-center justify-center text-primary shadow-sm">
 <span class="material-symbols-outlined text-[24px]">description</span>

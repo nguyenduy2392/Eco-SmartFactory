@@ -12,6 +12,10 @@ export interface Material {
   description?: string;
   isActive: boolean;
   createdAt: Date;
+  // Gắn với chủ hàng (Customer)
+  customerId: string;
+  customerCode?: string;
+  customerName?: string;
 }
 
 export interface CreateMaterialRequest {
@@ -25,6 +29,7 @@ export interface CreateMaterialRequest {
   minStock: number;
   unitCost?: number;
   description?: string;
+  customerId: string; // Bắt buộc - Material phải gắn với chủ hàng
 }
 
 export interface UpdateMaterialRequest {
@@ -39,7 +44,10 @@ export interface UpdateMaterialRequest {
   unitCost?: number;
   description?: string;
   isActive: boolean;
+  customerId: string; // Bắt buộc - Material phải gắn với chủ hàng
 }
+
+
 
 
 

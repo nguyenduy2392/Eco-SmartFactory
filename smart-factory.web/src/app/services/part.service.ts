@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { PartProcessingType, CreatePartProcessingTypeRequest, UpdatePartProcessingTypeRequest } from '../models/processing-type.interface';
 
 export interface PartDetail {
   id: string;
@@ -19,6 +20,7 @@ export interface PartDetail {
   createdAt: Date;
   status: string;
   processes: ProcessType[];
+  processingTypes?: PartProcessingType[]; // Các loại hình gia công mà linh kiện này có thể trải qua
 }
 
 export interface ProcessType {
@@ -67,11 +69,46 @@ export class PartService {
   constructor(private http: HttpClient) { }
 
   /**
+   * Lấy danh sách tất cả parts
+   */
+  getAll(): Observable<PartDetail[]> {
+    return this.http.get<PartDetail[]>(this.apiUrl);
+  }
+
+  /**
    * Lấy chi tiết linh kiện theo ID và PO ID
    */
   getById(partId: string, purchaseOrderId: string): Observable<PartDetail> {
     const params = new HttpParams().set('purchaseOrderId', purchaseOrderId);
     return this.http.get<PartDetail>(`${this.apiUrl}/${partId}`, { params });
+  }
+
+  /**
+   * Lấy danh sách loại hình gia công của một linh kiện
+   */
+  getProcessingTypes(partId: string): Observable<PartProcessingType[]> {
+    return this.http.get<PartProcessingType[]>(`${this.apiUrl}/${partId}/processing-types`);
+  }
+
+  /**
+   * Thêm loại hình gia công cho linh kiện
+   */
+  addProcessingType(partId: string, request: CreatePartProcessingTypeRequest): Observable<PartProcessingType> {
+    return this.http.post<PartProcessingType>(`${this.apiUrl}/${partId}/processing-types`, request);
+  }
+
+  /**
+   * Cập nhật quan hệ PartProcessingType
+   */
+  updateProcessingType(partId: string, partProcessingTypeId: string, request: UpdatePartProcessingTypeRequest): Observable<PartProcessingType> {
+    return this.http.put<PartProcessingType>(`${this.apiUrl}/${partId}/processing-types/${partProcessingTypeId}`, request);
+  }
+
+  /**
+   * Xóa loại hình gia công khỏi linh kiện
+   */
+  removeProcessingType(partId: string, partProcessingTypeId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${partId}/processing-types/${partProcessingTypeId}`);
   }
 }
 

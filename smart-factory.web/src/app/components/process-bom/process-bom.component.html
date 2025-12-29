@@ -1,0 +1,315 @@
+<div class="card">
+  <div class="flex justify-content-between align-items-center mb-4">
+    <h2 class="text-2xl font-bold m-0">
+      <i class="pi pi-sitemap mr-2"></i>
+      Quản lý Process BOM
+    </h2>
+    <p-button
+      label="Tạo BOM mới"
+      icon="pi pi-plus"
+      (onClick)="openCreateBOMDialog()"
+      styleClass="p-button-success">
+    </p-button>
+  </div>
+
+  <!-- Filters -->
+  <div class="grid mb-4">
+    <div class="col-12 md:col-4">
+      <label for="part" class="block mb-2">Linh kiện</label>
+      <p-dropdown
+        id="part"
+        [options]="parts"
+        [(ngModel)]="selectedPartId"
+        optionLabel="code"
+        optionValue="id"
+        placeholder="Chọn linh kiện"
+        [filter]="true"
+        filterBy="code,name"
+        [style]="{'width': '100%'}"
+        (onChange)="applyFilters()">
+        <ng-template let-part pTemplate="item">
+          <div>
+            <strong>{{ part.code }}</strong> - {{ part.name }}
+          </div>
+        </ng-template>
+      </p-dropdown>
+    </div>
+
+    <div class="col-12 md:col-3">
+      <label for="processingType" class="block mb-2">Loại gia công</label>
+      <p-dropdown
+        id="processingType"
+        [options]="processingTypeOptions"
+        [(ngModel)]="selectedProcessingType"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Chọn loại gia công"
+        [style]="{'width': '100%'}"
+        (onChange)="applyFilters()">
+      </p-dropdown>
+    </div>
+
+    <div class="col-12 md:col-3">
+      <label for="status" class="block mb-2">Trạng thái</label>
+      <p-dropdown
+        id="status"
+        [options]="statusOptions"
+        [(ngModel)]="selectedStatus"
+        optionLabel="label"
+        optionValue="value"
+        placeholder="Chọn trạng thái"
+        [style]="{'width': '100%'}"
+        (onChange)="applyFilters()">
+      </p-dropdown>
+    </div>
+
+    <div class="col-12 md:col-2 flex align-items-end">
+      <p-button
+        label="Xóa bộ lọc"
+        icon="pi pi-filter-slash"
+        (onClick)="resetFilters()"
+        styleClass="p-button-outlined w-full">
+      </p-button>
+    </div>
+  </div>
+
+  <p-message severity="info" text="Process BOM định nghĩa tiêu hao nguyên vật liệu cho 1 PCS linh kiện. BOM độc lập với PO và giá cả." class="mb-3"></p-message>
+
+  <!-- BOM Table -->
+  <p-table
+    [value]="bomList"
+    [loading]="loading"
+    [paginator]="true"
+    [rows]="10"
+    [rowsPerPageOptions]="[10, 25, 50]"
+    [showCurrentPageReport]="true"
+    currentPageReportTemplate="Hiển thị {first} đến {last} trong tổng số {totalRecords} BOM"
+    styleClass="p-datatable-gridlines p-datatable-striped">
+    <ng-template pTemplate="header">
+      <tr>
+        <th pSortableColumn="partCode">Mã linh kiện <p-sortIcon field="partCode"></p-sortIcon></th>
+        <th pSortableColumn="partName">Tên linh kiện <p-sortIcon field="partName"></p-sortIcon></th>
+        <th pSortableColumn="processingType">Loại gia công <p-sortIcon field="processingType"></p-sortIcon></th>
+        <th pSortableColumn="version">Version <p-sortIcon field="version"></p-sortIcon></th>
+        <th pSortableColumn="status">Trạng thái <p-sortIcon field="status"></p-sortIcon></th>
+        <th pSortableColumn="materialCount" class="text-right">Số NVL <p-sortIcon field="materialCount"></p-sortIcon></th>
+        <th pSortableColumn="effectiveDate">Ngày hiệu lực <p-sortIcon field="effectiveDate"></p-sortIcon></th>
+        <th class="text-center" style="width: 150px">Thao tác</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-bom>
+      <tr>
+        <td><code>{{ bom.partCode }}</code></td>
+        <td>{{ bom.partName || '-' }}</td>
+        <td><p-tag [value]="getProcessingTypeLabel(bom.processingType)" severity="info"></p-tag></td>
+        <td><span class="font-semibold">{{ bom.version }}</span></td>
+        <td><p-tag [value]="getStatusLabel(bom.status)" [severity]="getStatusSeverity(bom.status)"></p-tag></td>
+        <td class="text-right"><strong>{{ bom.materialCount }}</strong></td>
+        <td>{{ bom.effectiveDate | date:'dd/MM/yyyy' }}</td>
+        <td class="text-center">
+          <div class="flex justify-content-center gap-2">
+            <p-button icon="pi pi-eye" [rounded]="true" [outlined]="true" severity="info" (onClick)="viewBOMDetail(bom)" pTooltip="Xem chi tiết" tooltipPosition="top"></p-button>
+            <p-button *ngIf="bom.status === 'INACTIVE'" icon="pi pi-trash" [rounded]="true" [outlined]="true" severity="danger" (onClick)="deleteBOM(bom)" pTooltip="Xóa BOM" tooltipPosition="top"></p-button>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="8" class="text-center">
+          <div class="p-4">
+            <i class="pi pi-inbox text-4xl text-400"></i>
+            <p class="text-xl text-500 mt-3">Không có BOM nào</p>
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<!-- BOM Detail Dialog -->
+<p-dialog
+  header="Chi tiết Process BOM"
+  [(visible)]="showBOMDetailDialog"
+  [modal]="true"
+  [style]="{width: '900px'}"
+  [draggable]="false"
+  [resizable]="false">
+  <div *ngIf="selectedBOM">
+    <div class="grid mb-3">
+      <div class="col-6">
+        <strong>Linh kiện:</strong> {{ selectedBOM.partCode }} - {{ selectedBOM.partName }}
+      </div>
+      <div class="col-6">
+        <strong>Loại gia công:</strong> {{ getProcessingTypeLabel(selectedBOM.processingType) }}
+      </div>
+      <div class="col-6">
+        <strong>Version:</strong> {{ selectedBOM.version }}
+      </div>
+      <div class="col-6">
+        <strong>Trạng thái:</strong> <p-tag [value]="getStatusLabel(selectedBOM.status)" [severity]="getStatusSeverity(selectedBOM.status)"></p-tag>
+      </div>
+      <div class="col-6">
+        <strong>Ngày hiệu lực:</strong> {{ selectedBOM.effectiveDate | date:'dd/MM/yyyy' }}
+      </div>
+      <div class="col-6">
+        <strong>Ngày tạo:</strong> {{ selectedBOM.createdAt | date:'dd/MM/yyyy HH:mm' }}
+      </div>
+      <div class="col-12" *ngIf="selectedBOM.notes">
+        <strong>Ghi chú:</strong> {{ selectedBOM.notes }}
+      </div>
+    </div>
+
+    <p-divider></p-divider>
+
+    <h4>Danh sách nguyên vật liệu</h4>
+    <p-table [value]="bomDetails" styleClass="p-datatable-sm p-datatable-gridlines">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Mã NVL</th>
+          <th>Tên NVL</th>
+          <th class="text-right">Số lượng/PCS</th>
+          <th class="text-right">Tỷ lệ hao hụt (%)</th>
+          <th>ĐVT</th>
+          <th>Công đoạn</th>
+          <th>Ghi chú</th>
+        </tr>
+      </ng-template>
+      <ng-template pTemplate="body" let-detail>
+        <tr>
+          <td><code>{{ detail.materialCode }}</code></td>
+          <td>{{ detail.materialName || '-' }}</td>
+          <td class="text-right"><strong>{{ detail.qtyPerUnit }}</strong></td>
+          <td class="text-right">{{ (detail.scrapRate * 100).toFixed(2) }}%</td>
+          <td>{{ detail.uom }}</td>
+          <td>{{ detail.processStep || '-' }}</td>
+          <td>{{ detail.notes || '-' }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+
+    <p-message *ngIf="selectedBOM.status === 'ACTIVE'" severity="warn" text="BOM đang hoạt động không thể chỉnh sửa. Vui lòng tạo version mới nếu cần thay đổi." class="mt-3"></p-message>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Đóng" icon="pi pi-times" (onClick)="closeBOMDetailDialog()" styleClass="p-button-text"></p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- Create BOM Dialog -->
+<p-dialog
+  header="Tạo Process BOM mới"
+  [(visible)]="showCreateBOMDialog"
+  [modal]="true"
+  [style]="{width: '1000px'}"
+  [draggable]="false"
+  [resizable]="false">
+  <div class="p-fluid">
+    <div class="grid">
+      <div class="col-6">
+        <div class="field">
+          <label for="bomPart">Linh kiện <span class="text-red-500">*</span></label>
+          <p-dropdown
+            id="bomPart"
+            [options]="parts"
+            [(ngModel)]="createBOMForm.partId"
+            optionLabel="code"
+            optionValue="id"
+            placeholder="Chọn linh kiện"
+            [filter]="true"
+            filterBy="code,name"
+            [style]="{'width': '100%'}">
+            <ng-template let-part pTemplate="item">
+              <div><strong>{{ part.code }}</strong> - {{ part.name }}</div>
+            </ng-template>
+          </p-dropdown>
+        </div>
+      </div>
+
+      <div class="col-6">
+        <div class="field">
+          <label for="bomProcessingType">Loại gia công <span class="text-red-500">*</span></label>
+          <p-dropdown
+            id="bomProcessingType"
+            [options]="processingTypeOptions"
+            [(ngModel)]="createBOMForm.processingType"
+            optionLabel="label"
+            optionValue="value"
+            placeholder="Chọn loại gia công"
+            [style]="{'width': '100%'}">
+          </p-dropdown>
+        </div>
+      </div>
+
+      <div class="col-6">
+        <div class="field">
+          <label for="effectiveDate">Ngày hiệu lực <span class="text-red-500">*</span></label>
+          <p-calendar
+            id="effectiveDate"
+            [(ngModel)]="createBOMForm.effectiveDate"
+            dateFormat="dd/mm/yy"
+            [showIcon]="true"
+            [style]="{'width': '100%'}">
+          </p-calendar>
+        </div>
+      </div>
+
+      <div class="col-12">
+        <div class="field">
+          <label for="bomNotes">Ghi chú</label>
+          <textarea pInputTextarea id="bomNotes" [(ngModel)]="createBOMForm.notes" rows="2"></textarea>
+        </div>
+      </div>
+    </div>
+
+    <p-divider></p-divider>
+
+    <div class="flex justify-content-between align-items-center mb-3">
+      <h4 class="m-0">Nguyên vật liệu</h4>
+      <p-button label="Thêm dòng" icon="pi pi-plus" (onClick)="addBOMDetailRow()" size="small"></p-button>
+    </div>
+
+    <div class="bom-details-table">
+      <div class="bom-detail-row" *ngFor="let detail of bomDetailsForm; let i = index">
+        <div class="grid">
+          <div class="col-3">
+            <label class="text-xs">Mã NVL <span class="text-red-500">*</span></label>
+            <input pInputText [(ngModel)]="detail.materialCode" placeholder="Nhập mã NVL">
+          </div>
+          <div class="col-2">
+            <label class="text-xs">Số lượng/PCS <span class="text-red-500">*</span></label>
+            <p-inputNumber [(ngModel)]="detail.qtyPerUnit" [min]="0" [maxFractionDigits]="4"></p-inputNumber>
+          </div>
+          <div class="col-2">
+            <label class="text-xs">Hao hụt (%) <span class="text-red-500">*</span></label>
+            <p-inputNumber [(ngModel)]="detail.scrapRate" [min]="0" [max]="100" [maxFractionDigits]="2" suffix="%"></p-inputNumber>
+          </div>
+          <div class="col-2">
+            <label class="text-xs">ĐVT <span class="text-red-500">*</span></label>
+            <p-dropdown [options]="uomOptions" [(ngModel)]="detail.uom" optionLabel="label" optionValue="value" [style]="{'width': '100%'}"></p-dropdown>
+          </div>
+          <div class="col-2">
+            <label class="text-xs">Công đoạn</label>
+            <input pInputText [(ngModel)]="detail.processStep" placeholder="Công đoạn">
+          </div>
+          <div class="col-1 flex align-items-end">
+            <p-button icon="pi pi-trash" severity="danger" [outlined]="true" (onClick)="removeBOMDetailRow(i)" [disabled]="bomDetailsForm.length === 1"></p-button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-end gap-2">
+      <p-button label="Hủy" icon="pi pi-times" (onClick)="closeCreateBOMDialog()" styleClass="p-button-text" [disabled]="createBOMLoading"></p-button>
+      <p-button label="Tạo BOM" icon="pi pi-save" (onClick)="createBOM()" [loading]="createBOMLoading"></p-button>
+    </div>
+  </ng-template>
+</p-dialog>
+
+<p-confirmDialog></p-confirmDialog>
+<p-toast></p-toast>
+

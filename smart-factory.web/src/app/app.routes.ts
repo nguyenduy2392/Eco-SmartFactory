@@ -36,46 +36,48 @@ export const routes: Routes = [
         loadChildren: () => import('./views/pages/systems/system-route').then((m) => m.routes)
       },
       {
-        path: 'purchase-orders',
+        path: 'processing-po',
         data: {
-          title: 'Quản lý PO',
-          breadcrumb: 'Quản lý PO',
-          icon: 'pi pi-shopping-cart'
+          title: 'Quản lý Processing PO',
+          breadcrumb: 'Processing PO',
+          icon: 'pi pi-file-import'
         },
         children: [
           {
             path: '',
-            loadComponent: () => import('./components/purchase-orders/po-list/po-list.component').then(m => m.POListComponent),
+            loadComponent: () => import('./components/processing-po/po-list/po-list.component').then(m => m.POListComponent),
             data: {
-              title: 'Danh sách PO',
+              title: 'Danh sách Processing PO',
               breadcrumb: 'Danh sách'
             }
           },
           {
             path: ':id',
-            loadComponent: () => import('./components/purchase-orders/po-detail/po-detail.component').then(m => m.PODetailComponent),
+            loadComponent: () => import('./components/processing-po/po-detail/po-detail.component').then(m => m.PODetailComponent),
             data: {
               title: 'Chi tiết PO',
               breadcrumb: 'Chi tiết'
             }
-          },
-          {
-            path: ':poId/products/:productId',
-            loadComponent: () => import('./components/purchase-orders/product-detail/product-detail.component').then(m => m.ProductDetailComponent),
-            data: {
-              title: 'Chi tiết Sản phẩm',
-              breadcrumb: 'Chi tiết Sản phẩm'
-            }
-          },
-          {
-            path: ':poId/products/:productId/components/:componentId',
-            loadComponent: () => import('./components/purchase-orders/part-detail/part-detail.component').then(m => m.PartDetailComponent),
-            data: {
-              title: 'Chi tiết Linh kiện',
-              breadcrumb: 'Chi tiết Linh kiện'
-            }
           }
         ]
+      },
+      {
+        path: 'process-bom',
+        loadComponent: () => import('./components/process-bom/process-bom.component').then(m => m.ProcessBOMComponent),
+        data: {
+          title: 'Quản lý Process BOM',
+          breadcrumb: 'Process BOM',
+          icon: 'pi pi-sitemap'
+        }
+      },
+      {
+        path: 'availability-check',
+        loadComponent: () => import('./components/availability-check/availability-check.component').then(m => m.AvailabilityCheckComponent),
+        data: {
+          title: 'Kiểm tra khả dụng NVL',
+          breadcrumb: 'Availability Check',
+          icon: 'pi pi-check-circle'
+        }
       },
       {
         path: 'customers',

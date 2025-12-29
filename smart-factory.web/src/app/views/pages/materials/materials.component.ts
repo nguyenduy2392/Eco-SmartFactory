@@ -1,6 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { MaterialService } from '../../../services/material.service';
+import { CustomerService } from '../../../services/customer.service';
 import { Material } from '../../../models/material.interface';
+import { Customer } from '../../../models/customer.interface';
 import { MessageService } from 'primeng/api';
 import { SharedModule } from '../../../shared.module';
 import { PrimengModule } from '../../../primeng.module';
@@ -14,10 +16,14 @@ import { PrimengModule } from '../../../primeng.module';
 })
 export class MaterialsComponent implements OnInit {
   materials: Material[] = [];
+  customers: Customer[] = [];
   loading = false;
   showDialog = false;
   isEdit = false;
   selectedMaterial: Material | null = null;
+  
+  // Filter theo chủ hàng
+  selectedCustomerId: string | null = null;
 
   materialForm: any = {
     code: '',
@@ -30,7 +36,8 @@ export class MaterialsComponent implements OnInit {
     minStock: 0,
     unitCost: 0,
     description: '',
-    isActive: true
+    isActive: true,
+    customerId: '' // Bắt buộc - Material phải gắn với chủ hàng
   };
 
   materialTypes = [
@@ -49,16 +56,29 @@ export class MaterialsComponent implements OnInit {
 
   constructor(
     private materialService: MaterialService,
+    private customerService: CustomerService,
     private messageService: MessageService
   ) { }
 
   ngOnInit(): void {
+    this.loadCustomers();
     this.loadMaterials();
+  }
+
+  loadCustomers(): void {
+    this.customerService.getAll().subscribe({
+      next: (customers) => {
+        this.customers = customers;
+      },
+      error: (error) => {
+        console.error('Error loading customers:', error);
+      }
+    });
   }
 
   loadMaterials(): void {
     this.loading = true;
-    this.materialService.getAll().subscribe({
+    this.materialService.getAll(undefined, this.selectedCustomerId || undefined).subscribe({
       next: (materials) => {
         this.materials = materials;
         this.loading = false;
@@ -75,6 +95,10 @@ export class MaterialsComponent implements OnInit {
     });
   }
 
+  onCustomerFilterChange(): void {
+    this.loadMaterials();
+  }
+
   openCreateDialog(): void {
     this.isEdit = false;
     this.materialForm = {
@@ -88,7 +112,8 @@ export class MaterialsComponent implements OnInit {
       minStock: 0,
       unitCost: 0,
       description: '',
-      isActive: true
+      isActive: true,
+      customerId: this.selectedCustomerId || '' // Mặc định chọn customer đang filter
     };
     this.showDialog = true;
   }
@@ -107,17 +132,18 @@ export class MaterialsComponent implements OnInit {
       minStock: material.minStock,
       unitCost: material.unitCost || 0,
       description: material.description || '',
-      isActive: material.isActive
+      isActive: material.isActive,
+      customerId: material.customerId // Giữ nguyên customerId
     };
     this.showDialog = true;
   }
 
   saveMaterial(): void {
-    if (!this.materialForm.code || !this.materialForm.name) {
+    if (!this.materialForm.code || !this.materialForm.name || !this.materialForm.customerId) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Cảnh báo',
-        detail: 'Vui lòng nhập đầy đủ thông tin bắt buộc'
+        detail: 'Vui lòng nhập đầy đủ thông tin bắt buộc (bao gồm chủ hàng)'
       });
       return;
     }

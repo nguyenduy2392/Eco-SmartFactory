@@ -1,0 +1,56 @@
+:host {
+  ::ng-deep {
+    .p-datatable {
+      .p-datatable-thead > tr > th {
+        background-color: var(--primary-color);
+        color: white;
+        font-weight: 600;
+      }
+
+      .p-datatable-tbody > tr:hover {
+        background-color: var(--surface-100);
+      }
+    }
+
+    .p-dialog {
+      .p-dialog-header {
+        background-color: var(--primary-color);
+        color: white;
+
+        .p-dialog-header-icon {
+          color: white;
+
+          &:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+          }
+        }
+      }
+    }
+
+    .p-tag {
+      font-weight: 600;
+    }
+
+    .p-button-rounded {
+      width: 2.5rem;
+      height: 2.5rem;
+    }
+  }
+}
+
+.field {
+  margin-bottom: 1.5rem;
+
+  label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: var(--text-color);
+  }
+
+  small {
+    font-size: 0.875rem;
+  }
+}
+
+

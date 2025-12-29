@@ -30,7 +30,13 @@ public class Material
     public string? ColorCode { get; set; }
     
     /// <summary>
-    /// Nhà cung cấp / Chủ hàng cung cấp
+    /// Chủ hàng sở hữu nguyên vật liệu này
+    /// Nguyên vật liệu do chủ hàng cung cấp cho Hải Tân để gia công
+    /// </summary>
+    public Guid CustomerId { get; set; }
+    
+    /// <summary>
+    /// Nhà cung cấp / Chủ hàng cung cấp (tên text - có thể để null nếu dùng CustomerId)
     /// </summary>
     public string? Supplier { get; set; }
     
@@ -40,7 +46,7 @@ public class Material
     public string Unit { get; set; } = "kg";
     
     /// <summary>
-    /// Tồn kho hiện tại
+    /// Tồn kho hiện tại (tính từ tổng các MaterialReceipt)
     /// </summary>
     public decimal CurrentStock { get; set; }
     
@@ -65,9 +71,13 @@ public class Material
     public DateTime? UpdatedAt { get; set; }
     
     // Navigation properties
+    public virtual Customer Customer { get; set; } = null!;
     public virtual ICollection<ProductionOperation> ProductionOperations { get; set; } = new List<ProductionOperation>();
     public virtual ICollection<ProductionOperationMaterial> ProductionOperationMaterials { get; set; } = new List<ProductionOperationMaterial>();
+    public virtual ICollection<MaterialReceipt> MaterialReceipts { get; set; } = new List<MaterialReceipt>();
 }
+
+
 
 
 

@@ -5,9 +5,12 @@ import { environment } from '../../environments/environment';
 import {
   PurchaseOrder,
   PurchaseOrderList,
-  CreatePurchaseOrderRequest,
-  UpdatePurchaseOrderRequest,
-  ClonePOVersionRequest
+  ImportPORequest,
+  ImportPOResponse,
+  ClonePOVersionRequest,
+  ApprovePORequest,
+  AvailabilityCheckRequest,
+  AvailabilityCheckResult
 } from '../models/purchase-order.interface';
 
 @Injectable({
@@ -19,12 +22,13 @@ export class PurchaseOrderService {
   constructor(private http: HttpClient) { }
 
   /**
-   * Lấy danh sách tất cả PO
+   * Lấy danh sách Processing PO
+   * Filter by: status, processingType, customerId
    */
-  getAll(status?: string, versionType?: string, customerId?: string): Observable<PurchaseOrderList[]> {
+  getAll(status?: string, processingType?: string, customerId?: string): Observable<PurchaseOrderList[]> {
     let params = new HttpParams();
     if (status) params = params.set('status', status);
-    if (versionType) params = params.set('versionType', versionType);
+    if (processingType) params = params.set('processingType', processingType);
     if (customerId) params = params.set('customerId', customerId);
 
     return this.http.get<PurchaseOrderList[]>(this.apiUrl, { params });
@@ -32,49 +36,41 @@ export class PurchaseOrderService {
 
   /**
    * Lấy chi tiết PO theo ID
+   * Returns APPROVED version if exists, otherwise latest DRAFT
    */
   getById(id: string): Observable<PurchaseOrder> {
     return this.http.get<PurchaseOrder>(`${this.apiUrl}/${id}`);
   }
 
   /**
-   * Tạo PO mới
+   * Lấy tất cả versions của một PO
    */
-  create(request: CreatePurchaseOrderRequest): Observable<PurchaseOrder> {
-    return this.http.post<PurchaseOrder>(this.apiUrl, request);
+  getVersions(poNumber: string): Observable<PurchaseOrder[]> {
+    return this.http.get<PurchaseOrder[]>(`${this.apiUrl}/versions/${poNumber}`);
   }
 
   /**
-   * Cập nhật PO
-   */
-  update(id: string, request: UpdatePurchaseOrderRequest): Observable<PurchaseOrder> {
-    return this.http.put<PurchaseOrder>(`${this.apiUrl}/${id}`, request);
-  }
-
-  /**
-   * Clone PO version (ORIGINAL -> FINAL -> PRODUCTION)
-   */
-  cloneVersion(request: ClonePOVersionRequest): Observable<PurchaseOrder> {
-    return this.http.post<PurchaseOrder>(`${this.apiUrl}/clone-version`, request);
-  }
-
-  /**
-   * Import PO từ Excel
+   * Import Processing PO từ Excel - ONLY way to create PO
+   * Excel must contain exactly 2 sheets:
+   * 1. NHAP_PO (PO Operations - pricing)
+   * 2. NHAP_NGUYEN_VAT_LIEU (Material Receipt - nhập kho thực tế)
+   * Returns: PO with version = V0, status = DRAFT
+   * Material Receipts sẽ được tạo tự động và cập nhật tồn kho
    */
   importFromExcel(
     file: File,
     poNumber: string,
     customerId: string,
-    templateType: string,
+    processingType: 'EP_NHUA' | 'PHUN_IN' | 'LAP_RAP',
     poDate: Date,
     expectedDeliveryDate: Date | null,
     notes: string
-  ): Observable<PurchaseOrder> {
+  ): Observable<ImportPOResponse> {
     const formData = new FormData();
     formData.append('file', file);
     formData.append('poNumber', poNumber);
     formData.append('customerId', customerId);
-    formData.append('templateType', templateType);
+    formData.append('processingType', processingType);
     formData.append('poDate', poDate.toISOString());
     if (expectedDeliveryDate) {
       formData.append('expectedDeliveryDate', expectedDeliveryDate.toISOString());
@@ -82,11 +78,29 @@ export class PurchaseOrderService {
     if (notes) {
       formData.append('notes', notes);
     }
-    return this.http.post<PurchaseOrder>(`${this.apiUrl}/import-excel`, formData);
+    return this.http.post<ImportPOResponse>(`${this.apiUrl}/import-excel`, formData);
   }
 
   /**
-   * Xóa PO
+   * Clone PO để tạo version mới (V1, V2, ...)
+   * New version status = DRAFT
+   */
+  cloneVersion(request: ClonePOVersionRequest): Observable<PurchaseOrder> {
+    return this.http.post<PurchaseOrder>(`${this.apiUrl}/clone-version`, request);
+  }
+
+  /**
+   * Approve PO version for PMC
+   * - Set status = APPROVED_FOR_PMC
+   * - Lock version (no further edits)
+   * - Only ONE version can be APPROVED at a time
+   */
+  approveForPMC(request: ApprovePORequest): Observable<{ success: boolean; message: string }> {
+    return this.http.post<{ success: boolean; message: string }>(`${this.apiUrl}/approve`, request);
+  }
+
+  /**
+   * Xóa PO (only if status = DRAFT)
    */
   delete(id: string): Observable<{ success: boolean; message: string }> {
     return this.http.delete<{ success: boolean; message: string }>(`${this.apiUrl}/${id}`);
