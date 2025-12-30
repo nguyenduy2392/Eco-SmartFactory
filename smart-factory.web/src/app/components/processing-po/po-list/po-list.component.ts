@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { PurchaseOrderService } from '../../../services/purchase-order.service';
 import { CustomerService } from '../../../services/customer.service';
@@ -21,7 +21,10 @@ import { PrimengModule } from '../../../primeng.module';
   standalone: true,
   imports: [SharedModule, PrimengModule]
 })
-export class POListComponent implements OnInit {
+export class POListComponent implements OnInit, OnChanges {
+  @Input() customerId?: string;
+  @Input() hideHeader = false;
+
   purchaseOrders: PurchaseOrderList[] = [];
   customers: Customer[] = [];
   loading = false;
@@ -69,15 +72,28 @@ export class POListComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    // Đọc queryParams từ URL (nếu có customerId từ trang customers)
-    this.route.queryParams.subscribe(params => {
-      if (params['customerId']) {
-        this.selectedCustomerId = params['customerId'];
-      }
-      this.loadProcessingTypes();
-      this.loadCustomers();
+    // Ưu tiên sử dụng @Input customerId, nếu không có thì đọc từ queryParams
+    if (this.customerId) {
+      this.selectedCustomerId = this.customerId;
+    } else {
+      // Đọc queryParams từ URL (nếu có customerId từ trang customers)
+      this.route.queryParams.subscribe(params => {
+        if (params['customerId']) {
+          this.selectedCustomerId = params['customerId'];
+        }
+      });
+    }
+    
+    this.loadProcessingTypes();
+    this.loadCustomers();
+    this.loadPurchaseOrders();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['customerId'] && !changes['customerId'].firstChange) {
+      this.selectedCustomerId = this.customerId;
       this.loadPurchaseOrders();
-    });
+    }
   }
 
   loadProcessingTypes(): void {
@@ -178,6 +194,10 @@ export class POListComponent implements OnInit {
   openImportDialog(): void {
     this.showImportDialog = true;
     this.resetImportForm();
+    // Nếu có customerId từ input, tự động set vào form
+    if (this.customerId) {
+      this.importForm.customerId = this.customerId;
+    }
   }
 
   closeImportDialog(): void {
@@ -189,9 +209,11 @@ export class POListComponent implements OnInit {
     const defaultProcessingType = this.importProcessingTypeOptions.length > 0 
       ? this.importProcessingTypeOptions[0].value 
       : '';
+    // Ưu tiên sử dụng customerId từ input, nếu không thì giữ giá trị hiện tại
+    const customerId = this.customerId || this.importForm.customerId || '';
     this.importForm = {
       poNumber: '',
-      customerId: '',
+      customerId: customerId,
       processingType: defaultProcessingType,
       poDate: new Date(),
       expectedDeliveryDate: null,

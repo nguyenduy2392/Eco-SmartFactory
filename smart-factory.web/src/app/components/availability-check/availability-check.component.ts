@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { PurchaseOrderService } from '../../services/purchase-order.service';
 import { AvailabilityCheckService } from '../../services/availability-check.service';
+import { PartService, PartDetail } from '../../services/part.service';
+import { ProcessingTypeService } from '../../services/processing-type.service';
 import {
-  PurchaseOrderList,
   AvailabilityCheckRequest,
   AvailabilityCheckResult
 } from '../../models/purchase-order.interface';
+import { ProcessingType } from '../../models/processing-type.interface';
 import { MessageService } from 'primeng/api';
 import { SharedModule } from '../../shared.module';
 import { PrimengModule } from '../../primeng.module';
@@ -18,43 +19,62 @@ import { PrimengModule } from '../../primeng.module';
   imports: [SharedModule, PrimengModule]
 })
 export class AvailabilityCheckComponent implements OnInit {
-  purchaseOrders: PurchaseOrderList[] = [];
+  parts: PartDetail[] = [];
+  processingTypes: ProcessingType[] = [];
   loading = false;
 
   // Check form
-  selectedPOId: string = '';
-  plannedQuantity: number = 0;
+  selectedPartId: string = '';
+  selectedProcessingTypeId: string = '';
+  quantity: number = 0;
   
   // Check result
   checkLoading = false;
   availabilityResult: AvailabilityCheckResult | null = null;
 
   constructor(
-    private poService: PurchaseOrderService,
+    private partService: PartService,
+    private processingTypeService: ProcessingTypeService,
     private availabilityService: AvailabilityCheckService,
     private messageService: MessageService
   ) { }
 
   ngOnInit(): void {
-    this.loadApprovedPOs();
+    this.loadParts();
+    this.loadProcessingTypes();
   }
 
-  loadApprovedPOs(): void {
+  loadParts(): void {
     this.loading = true;
-    // Load only APPROVED_FOR_PMC POs
-    this.poService.getAll('APPROVED_FOR_PMC').subscribe({
-      next: (orders) => {
-        this.purchaseOrders = orders;
+    this.partService.getAll().subscribe({
+      next: (parts) => {
+        this.parts = parts.filter(p => p.isActive);
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error loading POs:', error);
+        console.error('Error loading parts:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Lỗi',
-          detail: 'Không thể tải danh sách PO đã phê duyệt'
+          detail: 'Không thể tải danh sách linh kiện'
         });
         this.loading = false;
+      }
+    });
+  }
+
+  loadProcessingTypes(): void {
+    this.processingTypeService.getAll().subscribe({
+      next: (types) => {
+        this.processingTypes = types.filter(t => t.isActive);
+      },
+      error: (error) => {
+        console.error('Error loading processing types:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: 'Không thể tải danh sách loại gia công'
+        });
       }
     });
   }
@@ -66,17 +86,19 @@ export class AvailabilityCheckComponent implements OnInit {
 
     this.checkLoading = true;
     const request: AvailabilityCheckRequest = {
-      purchaseOrderId: this.selectedPOId,
-      plannedQuantity: this.plannedQuantity
+      partId: this.selectedPartId,
+      processingTypeId: this.selectedProcessingTypeId,
+      quantity: this.quantity
     };
 
-    this.availabilityService.checkAvailability(request).subscribe({
+    this.availabilityService.checkAvailabilityByComponent(request).subscribe({
       next: (result: any) => {
         // Map BE response to frontend interface
         this.availabilityResult = {
           overallStatus: result.overallStatus,
-          purchaseOrderId: result.purchaseOrderId,
-          plannedQuantity: result.plannedQuantity,
+          partId: result.partId,
+          processingTypeId: result.processingTypeId,
+          quantity: result.quantity,
           checkDate: result.checkedAt ? new Date(result.checkedAt) : new Date(),
           partResults: result.partDetails?.map((p: any) => ({
             partId: p.partId,
@@ -84,7 +106,7 @@ export class AvailabilityCheckComponent implements OnInit {
             partName: p.partName,
             processingType: p.processingType,
             processingTypeName: p.processingTypeName,
-            requiredQty: p.requiredQuantity,
+            requiredQty: p.requiredQuantity || result.quantity,
             canProduce: p.canProduce,
             severity: p.severity,
             bomVersion: p.bomVersion,
@@ -98,21 +120,21 @@ export class AvailabilityCheckComponent implements OnInit {
           this.messageService.add({
             severity: 'success',
             summary: 'Kiểm tra thành công',
-            detail: 'Tất cả linh kiện có thể sản xuất',
+            detail: 'Linh kiện có thể sản xuất',
             life: 3000
           });
         } else if (result.overallStatus === 'FAIL') {
           this.messageService.add({
             severity: 'error',
             summary: 'Kiểm tra thất bại',
-            detail: 'Có linh kiện không thể sản xuất. Vui lòng kiểm tra BOM.',
+            detail: 'Linh kiện không thể sản xuất. Vui lòng kiểm tra BOM.',
             life: 5000
           });
         } else {
           this.messageService.add({
             severity: 'warn',
             summary: 'Cảnh báo',
-            detail: 'Có linh kiện cần kiểm tra.',
+            detail: 'Linh kiện cần kiểm tra.',
             life: 4000
           });
         }
@@ -130,20 +152,29 @@ export class AvailabilityCheckComponent implements OnInit {
   }
 
   validateForm(): boolean {
-    if (!this.selectedPOId) {
+    if (!this.selectedPartId) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Cảnh báo',
-        detail: 'Vui lòng chọn PO'
+        detail: 'Vui lòng chọn linh kiện'
       });
       return false;
     }
 
-    if (!this.plannedQuantity || this.plannedQuantity <= 0) {
+    if (!this.selectedProcessingTypeId) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Cảnh báo',
-        detail: 'Vui lòng nhập số lượng kế hoạch sản xuất'
+        detail: 'Vui lòng chọn loại gia công'
+      });
+      return false;
+    }
+
+    if (!this.quantity || this.quantity <= 0) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Cảnh báo',
+        detail: 'Vui lòng nhập số lượng'
       });
       return false;
     }
@@ -152,8 +183,9 @@ export class AvailabilityCheckComponent implements OnInit {
   }
 
   resetForm(): void {
-    this.selectedPOId = '';
-    this.plannedQuantity = 0;
+    this.selectedPartId = '';
+    this.selectedProcessingTypeId = '';
+    this.quantity = 0;
     this.availabilityResult = null;
   }
 

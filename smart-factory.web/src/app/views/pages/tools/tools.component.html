@@ -192,18 +192,19 @@
   <div class="p-fluid">
     <div class="field">
       <label>Mã <span class="text-red-500">*</span></label>
-      <input pInputText type="text" [(ngModel)]="itemForm.code" placeholder="Nhập mã" />
+      <input pInputText type="text" [(ngModel)]="itemForm.code" name="itemCode" placeholder="Nhập mã" />
     </div>
 
     <div class="field">
       <label>Tên <span class="text-red-500">*</span></label>
-      <input pInputText type="text" [(ngModel)]="itemForm.name" placeholder="Nhập tên" />
+      <input pInputText type="text" [(ngModel)]="itemForm.name" name="itemName" placeholder="Nhập tên" />
     </div>
 
     <div class="field">
       <label>Loại <span class="text-red-500">*</span></label>
       <p-dropdown
         [(ngModel)]="itemForm.type"
+        name="itemType"
         [options]="typeOptions"
         optionLabel="label"
         optionValue="value"
@@ -214,7 +215,7 @@
 
     <div class="field">
       <label>Đơn vị <span class="text-red-500">*</span></label>
-      <input pInputText type="text" [(ngModel)]="itemForm.unit" placeholder="VD: kg, L, pcs" />
+      <input pInputText type="text" [(ngModel)]="itemForm.unit" name="itemUnit" placeholder="VD: kg, L, pcs" />
     </div>
 
     <div class="grid">
@@ -222,6 +223,7 @@
         <label>Số lượng hiện tại</label>
         <p-inputNumber
           [(ngModel)]="itemForm.currentStock"
+          name="currentStock"
           [min]="0"
           [style]="{'width': '100%'}">
         </p-inputNumber>
@@ -230,6 +232,7 @@
         <label>Số lượng tối thiểu</label>
         <p-inputNumber
           [(ngModel)]="itemForm.minStock"
+          name="minStock"
           [min]="0"
           [style]="{'width': '100%'}">
         </p-inputNumber>
@@ -238,17 +241,17 @@
 
     <div class="field">
       <label>Nhà cung cấp</label>
-      <input pInputText type="text" [(ngModel)]="itemForm.supplier" placeholder="Nhập tên nhà cung cấp" />
+      <input pInputText type="text" [(ngModel)]="itemForm.supplier" name="itemSupplier" placeholder="Nhập tên nhà cung cấp" />
     </div>
 
     <div class="field">
       <label>Mô tả</label>
-      <textarea pInputTextarea [(ngModel)]="itemForm.description" rows="3" placeholder="Nhập mô tả"></textarea>
+      <textarea pInputTextarea [(ngModel)]="itemForm.description" name="itemDescription" rows="3" placeholder="Nhập mô tả"></textarea>
     </div>
 
     <div class="field" *ngIf="isEdit">
       <label>Trạng thái</label>
-      <p-checkbox [(ngModel)]="itemForm.isActive" [binary]="true" label="Hoạt động"></p-checkbox>
+      <p-checkbox [(ngModel)]="itemForm.isActive" name="itemIsActive" [binary]="true" label="Hoạt động"></p-checkbox>
     </div>
   </div>
 

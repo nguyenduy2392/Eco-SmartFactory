@@ -34,7 +34,6 @@ export class MaterialsComponent implements OnInit {
     unit: 'kg',
     currentStock: 0,
     minStock: 0,
-    unitCost: 0,
     description: '',
     isActive: true,
     customerId: '' // Bắt buộc - Material phải gắn với chủ hàng
@@ -130,7 +129,6 @@ export class MaterialsComponent implements OnInit {
       unit: material.unit,
       currentStock: material.currentStock,
       minStock: material.minStock,
-      unitCost: material.unitCost || 0,
       description: material.description || '',
       isActive: material.isActive,
       customerId: material.customerId // Giữ nguyên customerId

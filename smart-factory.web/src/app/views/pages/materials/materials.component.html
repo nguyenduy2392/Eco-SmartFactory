@@ -7,6 +7,7 @@
           <p-dropdown 
             [options]="customers" 
             [(ngModel)]="selectedCustomerId"
+            name="selectedCustomerId"
             optionLabel="name" 
             optionValue="id"
             placeholder="Tất cả chủ hàng"
@@ -89,6 +90,7 @@
           id="customerId"
           [options]="customers" 
           [(ngModel)]="materialForm.customerId"
+          name="customerId"
           optionLabel="name" 
           optionValue="id"
           placeholder="Chọn chủ hàng"
@@ -168,20 +170,6 @@
       <div class="col-6">
         <label for="supplier" class="block mb-2">Nhà cung cấp</label>
         <input pInputText id="supplier" [(ngModel)]="materialForm.supplier" name="supplier" class="w-full" />
-      </div>
-
-      <div class="col-6">
-        <label for="unitCost" class="block mb-2">Đơn giá</label>
-        <p-inputNumber 
-          id="unitCost"
-          [(ngModel)]="materialForm.unitCost" 
-          name="unitCost"
-          [min]="0"
-          [useGrouping]="false"
-          mode="decimal"
-          [minFractionDigits]="2"
-          styleClass="w-full">
-        </p-inputNumber>
       </div>
 
       <div class="col-6">

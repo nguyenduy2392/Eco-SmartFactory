@@ -36,18 +36,44 @@ export const routes: Routes = [
         loadChildren: () => import('./views/pages/systems/system-route').then((m) => m.routes)
       },
       {
+        path: 'customers',
+        data: {
+          title: 'Quản lý chủ hàng',
+          breadcrumb: 'Chủ hàng',
+          icon: 'pi pi-building'
+        },
+        children: [
+          {
+            path: '',
+            loadComponent: () => import('./views/pages/customers/customers.component').then(m => m.CustomersComponent),
+            data: {
+              title: 'Danh sách chủ hàng',
+              breadcrumb: 'Danh sách'
+            }
+          },
+          {
+            path: ':id',
+            loadComponent: () => import('./views/pages/customers/customer-detail/customer-detail.component').then(m => m.CustomerDetailComponent),
+            data: {
+              title: 'Chi tiết chủ hàng',
+              breadcrumb: 'Chi tiết'
+            }
+          }
+        ]
+      },
+      {
         path: 'processing-po',
         data: {
-          title: 'Quản lý Processing PO',
-          breadcrumb: 'Processing PO',
-          icon: 'pi pi-file-import'
+          title: 'Quản lý đơn hàng gia công',
+          breadcrumb: 'Đơn hàng gia công',
+          icon: 'pi pi-shopping-cart'
         },
         children: [
           {
             path: '',
             loadComponent: () => import('./components/processing-po/po-list/po-list.component').then(m => m.POListComponent),
             data: {
-              title: 'Danh sách Processing PO',
+              title: 'Danh sách đơn hàng',
               breadcrumb: 'Danh sách'
             }
           },
@@ -55,63 +81,18 @@ export const routes: Routes = [
             path: ':id',
             loadComponent: () => import('./components/processing-po/po-detail/po-detail.component').then(m => m.PODetailComponent),
             data: {
-              title: 'Chi tiết PO',
+              title: 'Chi tiết đơn hàng',
               breadcrumb: 'Chi tiết'
             }
           }
         ]
       },
       {
-        path: 'process-bom',
-        loadComponent: () => import('./components/process-bom/process-bom.component').then(m => m.ProcessBOMComponent),
+        path: 'warehouse',
+        loadComponent: () => import('./views/pages/warehouse/warehouse.component').then(m => m.WarehouseComponent),
         data: {
-          title: 'Quản lý Process BOM',
-          breadcrumb: 'Process BOM',
-          icon: 'pi pi-sitemap'
-        }
-      },
-      {
-        path: 'availability-check',
-        loadComponent: () => import('./components/availability-check/availability-check.component').then(m => m.AvailabilityCheckComponent),
-        data: {
-          title: 'Kiểm tra khả dụng linh kiện',
-          breadcrumb: 'Availability Check',
-          icon: 'pi pi-check-circle'
-        }
-      },
-      {
-        path: 'customers',
-        loadComponent: () => import('./views/pages/customers/customers.component').then(m => m.CustomersComponent),
-        data: {
-          title: 'Quản lý chủ hàng',
-          breadcrumb: 'Chủ hàng',
-          icon: 'pi pi-building'
-        }
-      },
-      {
-        path: 'materials',
-        loadComponent: () => import('./views/pages/materials/materials.component').then(m => m.MaterialsComponent),
-        data: {
-          title: 'Quản lý vật tư',
-          breadcrumb: 'Vật tư',
-          icon: 'pi pi-box'
-        }
-      },
-      {
-        path: 'tools',
-        loadComponent: () => import('./views/pages/tools/tools.component').then(m => m.ToolsComponent),
-        data: {
-          title: 'Quản lý Tool & Khuôn',
-          breadcrumb: 'Tool & Khuôn',
-          icon: 'pi pi-wrench'
-        }
-      },
-      {
-        path: 'products',
-        loadComponent: () => import('./views/pages/products/products.component').then(m => m.ProductsComponent),
-        data: {
-          title: 'Quản lý sản phẩm',
-          breadcrumb: 'Sản phẩm',
+          title: 'Quản lý kho nguyên vật liệu',
+          breadcrumb: 'Kho nguyên vật liệu',
           icon: 'pi pi-box'
         }
       },

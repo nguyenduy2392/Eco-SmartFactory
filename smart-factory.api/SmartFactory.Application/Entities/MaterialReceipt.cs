@@ -20,9 +20,9 @@ public class MaterialReceipt
     public Guid MaterialId { get; set; }
     
     /// <summary>
-    /// Mã kho (ví dụ: RAW, FINISHED, WIP)
+    /// Kho nhập
     /// </summary>
-    public string WarehouseCode { get; set; } = string.Empty;
+    public Guid WarehouseId { get; set; }
     
     /// <summary>
     /// Số lượng nhập
@@ -35,9 +35,9 @@ public class MaterialReceipt
     public string Unit { get; set; } = string.Empty;
     
     /// <summary>
-    /// Số lô (Batch Number)
+    /// Số lô (Batch Number) - BẮT BUỘC
     /// </summary>
-    public string? BatchNumber { get; set; }
+    public string BatchNumber { get; set; } = string.Empty;
     
     /// <summary>
     /// Ngày nhập kho
@@ -77,5 +77,6 @@ public class MaterialReceipt
     // Navigation properties
     public virtual Customer Customer { get; set; } = null!;
     public virtual Material Material { get; set; } = null!;
+    public virtual Warehouse Warehouse { get; set; } = null!;
 }
 

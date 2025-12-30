@@ -40,6 +40,12 @@ public class ApplicationDbContext : DbContext
     public DbSet<Machine> Machines { get; set; } = null!;
     public DbSet<ProductionOperationMaterial> ProductionOperationMaterials { get; set; } = null!;
     
+    // Warehouse Management System
+    public DbSet<Warehouse> Warehouses { get; set; } = null!;
+    public DbSet<MaterialIssue> MaterialIssues { get; set; } = null!;
+    public DbSet<MaterialAdjustment> MaterialAdjustments { get; set; } = null!;
+    public DbSet<MaterialTransactionHistory> MaterialTransactionHistories { get; set; } = null!;
+    
     // Phase 1: PO Material Baseline & Process BOM
     public DbSet<POMaterialBaseline> POMaterialBaselines { get; set; } = null!;
     public DbSet<ProcessBOM> ProcessBOMs { get; set; } = null!;
@@ -67,6 +73,12 @@ public class ApplicationDbContext : DbContext
         ConfigureMachineEntity(modelBuilder);
         ConfigureProductionOperationMaterialEntity(modelBuilder);
         ConfigureExcelMappingEntity(modelBuilder);
+        
+        // Warehouse Management System configurations
+        ConfigureWarehouseEntity(modelBuilder);
+        ConfigureMaterialIssueEntity(modelBuilder);
+        ConfigureMaterialAdjustmentEntity(modelBuilder);
+        ConfigureMaterialTransactionHistoryEntity(modelBuilder);
         
         // Phase 1 configurations
         ConfigurePOMaterialBaselineEntity(modelBuilder);
@@ -368,7 +380,6 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Unit).IsRequired().HasMaxLength(20);
             entity.Property(e => e.CurrentStock).HasColumnType("decimal(18,3)");
             entity.Property(e => e.MinStock).HasColumnType("decimal(18,3)");
-            entity.Property(e => e.UnitCost).HasColumnType("decimal(18,2)");
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
 
             entity.HasOne(e => e.Customer)
@@ -385,10 +396,9 @@ public class ApplicationDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Id).ValueGeneratedOnAdd();
             entity.HasIndex(e => e.ReceiptNumber).IsUnique();
-            entity.Property(e => e.WarehouseCode).IsRequired().HasMaxLength(50);
             entity.Property(e => e.Quantity).HasColumnType("decimal(18,3)");
             entity.Property(e => e.Unit).IsRequired().HasMaxLength(20);
-            entity.Property(e => e.BatchNumber).HasMaxLength(100);
+            entity.Property(e => e.BatchNumber).IsRequired().HasMaxLength(100);
             entity.Property(e => e.SupplierCode).HasMaxLength(100);
             entity.Property(e => e.PurchasePOCode).HasMaxLength(100);
             entity.Property(e => e.ReceiptNumber).IsRequired().HasMaxLength(100);
@@ -404,6 +414,11 @@ public class ApplicationDbContext : DbContext
             entity.HasOne(e => e.Material)
                 .WithMany(m => m.MaterialReceipts)
                 .HasForeignKey(e => e.MaterialId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne(e => e.Warehouse)
+                .WithMany(w => w.MaterialReceipts)
+                .HasForeignKey(e => e.WarehouseId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }
@@ -557,6 +572,129 @@ public class ApplicationDbContext : DbContext
                 .WithMany(p => p.BOMDetails)
                 .HasForeignKey(e => e.ProcessBOMId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+    
+    // Warehouse Management System Entity Configurations
+    
+    private void ConfigureWarehouseEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<Warehouse>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.Address).HasMaxLength(500);
+            entity.Property(e => e.Description).HasMaxLength(1000);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+        });
+    }
+    
+    private void ConfigureMaterialIssueEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<MaterialIssue>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.HasIndex(e => e.IssueNumber).IsUnique();
+            entity.Property(e => e.BatchNumber).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Quantity).HasColumnType("decimal(18,3)");
+            entity.Property(e => e.Unit).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Reason).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.IssueNumber).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Notes).HasMaxLength(500);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(e => e.Customer)
+                .WithMany()
+                .HasForeignKey(e => e.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Material)
+                .WithMany()
+                .HasForeignKey(e => e.MaterialId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne(e => e.Warehouse)
+                .WithMany(w => w.MaterialIssues)
+                .HasForeignKey(e => e.WarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+    
+    private void ConfigureMaterialAdjustmentEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<MaterialAdjustment>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.HasIndex(e => e.AdjustmentNumber).IsUnique();
+            entity.Property(e => e.BatchNumber).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.AdjustmentQuantity).HasColumnType("decimal(18,3)");
+            entity.Property(e => e.Unit).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Reason).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.ResponsiblePerson).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.AdjustmentNumber).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(e => e.Customer)
+                .WithMany()
+                .HasForeignKey(e => e.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Material)
+                .WithMany()
+                .HasForeignKey(e => e.MaterialId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne(e => e.Warehouse)
+                .WithMany(w => w.MaterialAdjustments)
+                .HasForeignKey(e => e.WarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+    
+    private void ConfigureMaterialTransactionHistoryEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<MaterialTransactionHistory>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.BatchNumber).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.TransactionType).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.ReferenceNumber).HasMaxLength(100);
+            entity.Property(e => e.StockBefore).HasColumnType("decimal(18,3)");
+            entity.Property(e => e.QuantityChange).HasColumnType("decimal(18,3)");
+            entity.Property(e => e.StockAfter).HasColumnType("decimal(18,3)");
+            entity.Property(e => e.Unit).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+            entity.Property(e => e.CreatedBy).HasMaxLength(255);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            // Index for faster queries
+            entity.HasIndex(e => new { e.MaterialId, e.TransactionDate });
+            entity.HasIndex(e => new { e.BatchNumber, e.MaterialId });
+            entity.HasIndex(e => e.ReferenceId);
+
+            entity.HasOne(e => e.Customer)
+                .WithMany()
+                .HasForeignKey(e => e.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(e => e.Material)
+                .WithMany()
+                .HasForeignKey(e => e.MaterialId)
+                .OnDelete(DeleteBehavior.Restrict);
+                
+            entity.HasOne(e => e.Warehouse)
+                .WithMany()
+                .HasForeignKey(e => e.WarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }

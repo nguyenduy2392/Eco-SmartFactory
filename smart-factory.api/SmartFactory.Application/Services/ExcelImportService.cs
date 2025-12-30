@@ -444,7 +444,11 @@ public class ExcelImportService
             {
                 var value = GetStringValue(worksheet, row, col).ToLower();
                 if (value.Contains("mã") || value.Contains("tên") || value.Contains("số lượng") || 
-                    value.Contains("đơn giá") || value.Contains("零件") || value.Contains("产品"))
+                    value.Contains("đơn giá") || value.Contains("零件") || value.Contains("产品") ||
+                    value.Contains("nguyên vật liệu") || value.Contains("vật liệu") || 
+                    value.Contains("số lô") || value.Contains("ngày nhập") || value.Contains("phiếu nhập") ||
+                    value.Contains("原料") || value.Contains("材料") || value.Contains("批次") ||
+                    value.Contains("入库"))
                 {
                     return row;
                 }
@@ -583,6 +587,17 @@ public class ExcelImportService
                 columnMap["Quantity"] = col;
             }
             
+            // Đơn vị tính / Unit
+            if (headerLower.Contains("đơn vị tính") || headerLower.Contains("đơn vị") ||
+                headerLower.Contains("单位") || headerLower == "unit" ||
+                headerLower.Contains("unit of measure") || headerLower.Contains("uom"))
+            {
+                if (!columnMap.ContainsKey("Unit"))
+                {
+                    columnMap["Unit"] = col;
+                }
+            }
+            
             // Đơn giá / Unit Price
             if (headerLower.Contains("đơn giá") || headerLower.Contains("单价") || 
                 headerLower.Contains("unit price") || headerLower.Contains("unitprice"))
@@ -693,6 +708,133 @@ public class ExcelImportService
                 headerLower == "no" || headerLower.Contains("sequence"))
             {
                 columnMap["SequenceOrder"] = col;
+            }
+            
+            // ========== Material Receipt Columns (NHAP_NGUYEN_VAT_LIEU) ==========
+            
+            // Mã nguyên vật liệu / Material Code
+            if (headerLower.Contains("mã nguyên vật liệu") || headerLower.Contains("mã vật liệu") ||
+                headerLower.Contains("原料代码") || headerLower.Contains("材料代码") ||
+                headerLower == "material code" || headerLower.Contains("materialcode") ||
+                headerLower.Contains("material_code"))
+            {
+                if (!columnMap.ContainsKey("MaterialCode"))
+                {
+                    columnMap["MaterialCode"] = col;
+                }
+            }
+            
+            // Tên nguyên vật liệu / Material Name
+            if (headerLower.Contains("tên nguyên vật liệu") || headerLower.Contains("tên vật liệu") ||
+                headerLower.Contains("原料名称") || headerLower.Contains("材料名称") ||
+                headerLower == "material name" || headerLower.Contains("materialname") ||
+                headerLower.Contains("material_name"))
+            {
+                if (!columnMap.ContainsKey("MaterialName"))
+                {
+                    columnMap["MaterialName"] = col;
+                }
+            }
+            
+            // Loại nguyên vật liệu / Material Type
+            if (headerLower.Contains("loại nguyên vật liệu") || headerLower.Contains("loại vật liệu") ||
+                headerLower.Contains("材料类型") || headerLower.Contains("原料类型") ||
+                headerLower == "material type" || headerLower.Contains("materialtype") ||
+                headerLower.Contains("material_type"))
+            {
+                if (!columnMap.ContainsKey("MaterialType"))
+                {
+                    columnMap["MaterialType"] = col;
+                }
+            }
+            
+            // Mã kho / Warehouse Code
+            if (headerLower.Contains("mã kho") || headerLower.Contains("仓库代码") ||
+                headerLower == "warehouse code" || headerLower.Contains("warehousecode") ||
+                headerLower.Contains("warehouse_code"))
+            {
+                if (!columnMap.ContainsKey("WarehouseCode"))
+                {
+                    columnMap["WarehouseCode"] = col;
+                }
+            }
+            
+            // Số lượng nhập / Receipt Quantity (chỉ map nếu chưa có Quantity từ cột "Số lượng" thông thường)
+            // Ưu tiên "Số lượng nhập" cho material receipt sheet
+            if (headerLower.Contains("số lượng nhập") || headerLower.Contains("入库数量") ||
+                headerLower.Contains("receipt quantity") || headerLower.Contains("receiptquantity"))
+            {
+                // Map vào Quantity nếu chưa có, hoặc nếu đã có thì giữ nguyên (cột "Số lượng" thông thường)
+                if (!columnMap.ContainsKey("Quantity"))
+                {
+                    columnMap["Quantity"] = col;
+                }
+            }
+            
+            // Số lô / Batch Number
+            if (headerLower.Contains("số lô") || headerLower.Contains("批次号") ||
+                headerLower == "batch number" || headerLower.Contains("batchnumber") ||
+                headerLower.Contains("batch_number") || headerLower.Contains("batch"))
+            {
+                if (!columnMap.ContainsKey("BatchNumber"))
+                {
+                    columnMap["BatchNumber"] = col;
+                }
+            }
+            
+            // Ngày nhập kho / Receipt Date
+            if (headerLower.Contains("ngày nhập kho") || headerLower.Contains("入库日期") ||
+                headerLower.Contains("receipt date") || headerLower.Contains("receiptdate") ||
+                headerLower.Contains("receipt_date"))
+            {
+                if (!columnMap.ContainsKey("ReceiptDate"))
+                {
+                    columnMap["ReceiptDate"] = col;
+                }
+            }
+            
+            // Mã nhà cung cấp / Supplier Code
+            if (headerLower.Contains("mã nhà cung cấp") || headerLower.Contains("供应商代码") ||
+                headerLower == "supplier code" || headerLower.Contains("suppliercode") ||
+                headerLower.Contains("supplier_code") || headerLower.Contains("supplier"))
+            {
+                if (!columnMap.ContainsKey("SupplierCode"))
+                {
+                    columnMap["SupplierCode"] = col;
+                }
+            }
+            
+            // Mã PO mua hàng / Purchase PO Code
+            if (headerLower.Contains("mã po mua hàng") || headerLower.Contains("采购订单代码") ||
+                headerLower.Contains("purchase po code") || headerLower.Contains("purchasepocode") ||
+                headerLower.Contains("purchase_po_code") || headerLower.Contains("purchase order"))
+            {
+                if (!columnMap.ContainsKey("PurchasePOCode"))
+                {
+                    columnMap["PurchasePOCode"] = col;
+                }
+            }
+            
+            // Số phiếu nhập / Receipt Number
+            if (headerLower.Contains("số phiếu nhập") || headerLower.Contains("入库单号") ||
+                headerLower.Contains("receipt number") || headerLower.Contains("receiptnumber") ||
+                headerLower.Contains("receipt_number"))
+            {
+                if (!columnMap.ContainsKey("ReceiptNumber"))
+                {
+                    columnMap["ReceiptNumber"] = col;
+                }
+            }
+            
+            // Nhập đầu kỳ tháng / Beginning Period Month
+            if (headerLower.Contains("nhập đầu kỳ tháng") || headerLower.Contains("期初月份") ||
+                headerLower.Contains("beginning period month") || headerLower.Contains("beginningperiodmonth") ||
+                headerLower.Contains("beginning_period_month"))
+            {
+                if (!columnMap.ContainsKey("BeginningPeriodMonth"))
+                {
+                    columnMap["BeginningPeriodMonth"] = col;
+                }
             }
         }
         

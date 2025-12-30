@@ -16,6 +16,18 @@ export interface PurchaseOrder {
   createdBy?: string;
   operations?: POOperation[]; // NHAP_PO sheet data
   materialBaseline?: POMaterialBaseline[]; // NHAP_NGUYEN_VAT_LIEU sheet data
+  products?: POProduct[]; // Products in this PO
+}
+
+export interface POProduct {
+  id: string;
+  purchaseOrderId: string;
+  productId: string;
+  productCode: string;
+  productName: string;
+  quantity: number;
+  unitPrice?: number;
+  totalAmount: number;
 }
 
 export interface PurchaseOrderList {
@@ -102,14 +114,22 @@ export interface POMaterialBaseline {
 }
 
 export interface AvailabilityCheckRequest {
-  purchaseOrderId: string;
-  plannedQuantity: number;
+  purchaseOrderId?: string;
+  plannedQuantity?: number;
+  // For component-based check (not PO-based)
+  partId?: string;
+  processingTypeId?: string;
+  quantity?: number;
 }
 
 export interface AvailabilityCheckResult {
   overallStatus: 'PASS' | 'FAIL' | 'WARNING';
-  purchaseOrderId: string;
-  plannedQuantity: number;
+  purchaseOrderId?: string;
+  plannedQuantity?: number;
+  // For component-based check
+  partId?: string;
+  processingTypeId?: string;
+  quantity?: number;
   checkDate: Date;
   partResults: PartAvailabilityResult[];
 }

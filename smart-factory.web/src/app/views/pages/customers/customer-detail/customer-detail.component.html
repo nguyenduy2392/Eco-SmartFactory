@@ -1,0 +1,138 @@
+<div class="card">
+  <div *ngIf="loading" class="flex justify-content-center align-items-center" style="min-height: 400px">
+    <p-progressSpinner></p-progressSpinner>
+  </div>
+
+  <div *ngIf="!loading && customer">
+    <!-- Header -->
+    <div class="flex justify-content-between align-items-start mb-4">
+      <div>
+        <div class="flex align-items-center gap-2 mb-2">
+          <p-button
+            icon="pi pi-arrow-left"
+            [rounded]="true"
+            [text]="true"
+            (onClick)="goBack()"
+            pTooltip="Quay lại"
+            tooltipPosition="bottom">
+          </p-button>
+          <h2 class="text-2xl font-bold m-0">
+            {{ customer.name }}
+          </h2>
+          <p-tag
+            [value]="customer.code"
+            [severity]="'info'"
+            [style]="{'font-size': '1rem', 'padding': '0.5rem 1rem'}">
+          </p-tag>
+          <p-tag
+            [value]="customer.isActive ? 'Hoạt động' : 'Ngừng hoạt động'"
+            [severity]="customer.isActive ? 'success' : 'danger'"
+            [style]="{'font-size': '1rem', 'padding': '0.5rem 1rem'}">
+          </p-tag>
+        </div>
+        <div class="text-500">
+          <i class="pi pi-building mr-2"></i>
+          {{ customer.address || 'Chưa có địa chỉ' }}
+        </div>
+      </div>
+    </div>
+
+    <!-- Customer Information -->
+    <p-tabView [(activeIndex)]="activeTabIndex">
+      <!-- Tab 1: Danh sách PO -->
+      <p-tabPanel header="Danh sách PO" leftIcon="pi pi-receipt">
+        <p-message severity="info" text="Danh sách tất cả đơn hàng của chủ hàng này." class="mb-3"></p-message>
+        <app-po-list 
+          [customerId]="customerId || undefined" 
+          [hideHeader]="true">
+        </app-po-list>
+      </p-tabPanel>
+
+      <!-- Tab 2: Nguyên vật liệu kho -->
+      <p-tabPanel header="Nguyên vật liệu kho" leftIcon="pi pi-box">
+        <p-message severity="info" text="Danh sách nguyên vật liệu trong kho của chủ hàng này." class="mb-3"></p-message>
+
+        <!-- Filter -->
+        <div class="mb-3">
+          <p-dropdown 
+            [options]="materialOptions" 
+            [(ngModel)]="selectedMaterialId"
+            name="selectedMaterialId"
+            optionLabel="label" 
+            optionValue="value"
+            placeholder="Chọn nguyên vật liệu"
+            [showClear]="true"
+            styleClass="w-12rem"
+            (onChange)="onMaterialFilterChange()">
+          </p-dropdown>
+        </div>
+
+        <p-table
+          [value]="filteredMaterials"
+          [loading]="materialsLoading"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 25, 50]"
+          styleClass="p-datatable-gridlines p-datatable-sm"
+          [tableStyle]="{'min-width': '50rem'}">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>Mã VT</th>
+              <th>Tên vật tư</th>
+              <th>Loại</th>
+              <th class="text-right">Tồn kho</th>
+              <th class="text-right">Tồn tối thiểu</th>
+              <th>Đơn vị</th>
+              <th>Trạng thái</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-material>
+            <tr>
+              <td><code>{{ material.code }}</code></td>
+              <td>{{ material.name }}</td>
+              <td>{{ material.type }}</td>
+              <td class="text-right">
+                <strong [class.text-red-500]="material.currentStock < material.minStock">
+                  {{ material.currentStock | number:'1.0-3' }}
+                </strong>
+              </td>
+              <td class="text-right">{{ material.minStock | number:'1.0-3' }}</td>
+              <td>{{ material.unit }}</td>
+              <td>
+                <p-tag
+                  [value]="material.isActive ? 'Hoạt động' : 'Ngừng hoạt động'"
+                  [severity]="material.isActive ? 'success' : 'danger'">
+                </p-tag>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="7" class="text-center">
+                <div class="p-4">
+                  <i class="pi pi-inbox text-4xl text-400"></i>
+                  <p class="text-xl text-500 mt-3">Không có nguyên vật liệu nào</p>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+
+      <!-- Tab 3: Process BOM -->
+      <p-tabPanel header="Process BOM" leftIcon="pi pi-sitemap">
+        <app-process-bom></app-process-bom>
+      </p-tabPanel>
+
+      <!-- Tab 4: Kiểm tra tính khả dụng linh kiện -->
+      <p-tabPanel header="Kiểm tra tính khả dụng linh kiện" leftIcon="pi pi-check-circle">
+        <app-availability-check></app-availability-check>
+      </p-tabPanel>
+    </p-tabView>
+  </div>
+</div>
+
+<p-toast></p-toast>
+

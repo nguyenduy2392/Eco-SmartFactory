@@ -2,7 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { ProcessBOMService } from '../../services/process-bom.service';
 import { PartService, PartDetail } from '../../services/part.service';
 import { ProcessingTypeService } from '../../services/processing-type.service';
+import { MaterialService } from '../../services/material.service';
 import { ProcessingType } from '../../models/processing-type.interface';
+import { Material } from '../../models/material.interface';
 import {
   ProcessBOM,
   ProcessBOMList,
@@ -63,6 +65,8 @@ export class ProcessBOMComponent implements OnInit {
 
   // Options
   processingTypeOptions: { label: string; value: string; id: string }[] = [];
+  materials: Material[] = [];
+  materialOptions: { label: string; value: string; code: string; unit?: string }[] = [];
 
   statusOptions = [
     { label: 'Tất cả', value: undefined },
@@ -82,6 +86,7 @@ export class ProcessBOMComponent implements OnInit {
     private bomService: ProcessBOMService,
     private partService: PartService,
     private processingTypeService: ProcessingTypeService,
+    private materialService: MaterialService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) { }
@@ -89,6 +94,7 @@ export class ProcessBOMComponent implements OnInit {
   ngOnInit(): void {
     this.loadProcessingTypes();
     this.loadParts();
+    this.loadMaterials();
     this.loadBOMList();
   }
 
@@ -127,6 +133,28 @@ export class ProcessBOMComponent implements OnInit {
           severity: 'error',
           summary: 'Lỗi',
           detail: 'Không thể tải danh sách linh kiện'
+        });
+      }
+    });
+  }
+
+  loadMaterials(): void {
+    this.materialService.getAll(true).subscribe({
+      next: (materials) => {
+        this.materials = materials;
+        this.materialOptions = materials.map(m => ({
+          label: `${m.code} - ${m.name}`,
+          value: m.code,
+          code: m.code,
+          unit: m.unit
+        }));
+      },
+      error: (error) => {
+        console.error('Error loading materials:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: 'Không thể tải danh sách nguyên vật liệu'
         });
       }
     });
@@ -259,6 +287,29 @@ export class ProcessBOMComponent implements OnInit {
         summary: 'Cảnh báo',
         detail: 'BOM phải có ít nhất một dòng nguyên vật liệu'
       });
+    }
+  }
+
+  onMaterialCodeChange(index: number): void {
+    const detail = this.bomDetailsForm[index];
+    if (detail.materialCode) {
+      const material = this.materials.find(m => m.code === detail.materialCode);
+      if (material) {
+        detail.materialName = material.name;
+        // Tự động set unit nếu có
+        if (material.unit && !detail.uom) {
+          // Map unit từ material sang uom format
+          const unitMap: { [key: string]: string } = {
+            'kg': 'KG',
+            'l': 'L',
+            'pcs': 'PCS',
+            'm': 'M',
+            'm2': 'M2',
+            'm3': 'M3'
+          };
+          detail.uom = unitMap[material.unit.toLowerCase()] || material.unit.toUpperCase();
+        }
+      }
     }
   }
 

@@ -20,6 +20,7 @@
         id="part"
         [options]="parts"
         [(ngModel)]="selectedPartId"
+        name="selectedPartId"
         optionLabel="code"
         optionValue="id"
         placeholder="Chọn linh kiện"
@@ -41,6 +42,7 @@
         id="processingType"
         [options]="processingTypeOptions"
         [(ngModel)]="selectedProcessingType"
+        name="selectedProcessingType"
         optionLabel="label"
         optionValue="value"
         placeholder="Chọn loại gia công"
@@ -55,6 +57,7 @@
         id="status"
         [options]="statusOptions"
         [(ngModel)]="selectedStatus"
+        name="selectedStatus"
         optionLabel="label"
         optionValue="value"
         placeholder="Chọn trạng thái"
@@ -250,6 +253,7 @@
             id="bomPart"
             [options]="parts"
             [(ngModel)]="createBOMForm.partId"
+            name="bomPartId"
             optionLabel="code"
             optionValue="id"
             placeholder="Chọn linh kiện"
@@ -270,6 +274,7 @@
             id="bomProcessingType"
             [options]="processingTypeOptions"
             [(ngModel)]="createBOMForm.processingType"
+            name="bomProcessingType"
             optionLabel="label"
             optionValue="value"
             placeholder="Chọn loại gia công"
@@ -284,6 +289,7 @@
           <p-calendar
             id="effectiveDate"
             [(ngModel)]="createBOMForm.effectiveDate"
+            name="effectiveDate"
             dateFormat="dd/mm/yy"
             [showIcon]="true"
             [style]="{'width': '100%'}">
@@ -294,7 +300,7 @@
       <div class="col-12">
         <div class="field">
           <label for="bomNotes">Ghi chú</label>
-          <textarea pInputTextarea id="bomNotes" [(ngModel)]="createBOMForm.notes" rows="2"></textarea>
+          <textarea pInputTextarea id="bomNotes" [(ngModel)]="createBOMForm.notes" name="bomNotes" rows="2"></textarea>
         </div>
       </div>
     </div>
@@ -311,23 +317,34 @@
         <div class="grid">
           <div class="col-3">
             <label class="text-xs">Mã NVL <span class="text-red-500">*</span></label>
-            <input pInputText [(ngModel)]="detail.materialCode" placeholder="Nhập mã NVL">
+            <p-dropdown 
+              [options]="materialOptions" 
+              [(ngModel)]="detail.materialCode"
+              name="materialCode_{{i}}"
+              optionLabel="label" 
+              optionValue="value"
+              placeholder="Chọn nguyên vật liệu"
+              [filter]="true"
+              filterBy="label,code"
+              [style]="{'width': '100%'}"
+              (onChange)="onMaterialCodeChange(i)">
+            </p-dropdown>
           </div>
           <div class="col-2">
             <label class="text-xs">Số lượng/PCS <span class="text-red-500">*</span></label>
-            <p-inputNumber [(ngModel)]="detail.qtyPerUnit" [min]="0" [maxFractionDigits]="4"></p-inputNumber>
+            <p-inputNumber [(ngModel)]="detail.qtyPerUnit" name="qtyPerUnit_{{i}}" [min]="0" [maxFractionDigits]="4"></p-inputNumber>
           </div>
           <div class="col-2">
             <label class="text-xs">Hao hụt (%) <span class="text-red-500">*</span></label>
-            <p-inputNumber [(ngModel)]="detail.scrapRate" [min]="0" [max]="100" [maxFractionDigits]="2" suffix="%"></p-inputNumber>
+            <p-inputNumber [(ngModel)]="detail.scrapRate" name="scrapRate_{{i}}" [min]="0" [max]="100" [maxFractionDigits]="2" suffix="%"></p-inputNumber>
           </div>
           <div class="col-2">
             <label class="text-xs">ĐVT <span class="text-red-500">*</span></label>
-            <p-dropdown [options]="uomOptions" [(ngModel)]="detail.uom" optionLabel="label" optionValue="value" [style]="{'width': '100%'}"></p-dropdown>
+            <p-dropdown [options]="uomOptions" [(ngModel)]="detail.uom" name="uom_{{i}}" optionLabel="label" optionValue="value" [style]="{'width': '100%'}"></p-dropdown>
           </div>
           <div class="col-2">
             <label class="text-xs">Công đoạn</label>
-            <input pInputText [(ngModel)]="detail.processStep" placeholder="Công đoạn">
+            <input pInputText [(ngModel)]="detail.processStep" name="processStep_{{i}}" placeholder="Công đoạn">
           </div>
           <div class="col-1 flex align-items-end">
             <p-button icon="pi pi-trash" severity="danger" [outlined]="true" (onClick)="removeBOMDetailRow(i)" [disabled]="bomDetailsForm.length === 1"></p-button>

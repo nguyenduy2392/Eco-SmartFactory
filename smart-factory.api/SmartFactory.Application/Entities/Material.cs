@@ -56,11 +56,6 @@ public class Material
     public decimal MinStock { get; set; }
     
     /// <summary>
-    /// Đơn giá (để tính chi phí)
-    /// </summary>
-    public decimal? UnitCost { get; set; }
-    
-    /// <summary>
     /// Mô tả
     /// </summary>
     public string? Description { get; set; }

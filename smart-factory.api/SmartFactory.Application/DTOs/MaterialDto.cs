@@ -11,10 +11,12 @@ public class MaterialDto
     public string Unit { get; set; } = "kg";
     public decimal CurrentStock { get; set; }
     public decimal MinStock { get; set; }
-    public decimal? UnitCost { get; set; }
     public string? Description { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
+    public Guid CustomerId { get; set; }
+    public string? CustomerCode { get; set; }
+    public string? CustomerName { get; set; }
 }
 
 public class CreateMaterialRequest
@@ -27,8 +29,8 @@ public class CreateMaterialRequest
     public string Unit { get; set; } = "kg";
     public decimal CurrentStock { get; set; }
     public decimal MinStock { get; set; }
-    public decimal? UnitCost { get; set; }
     public string? Description { get; set; }
+    public Guid CustomerId { get; set; }
 }
 
 public class UpdateMaterialRequest
@@ -41,7 +43,6 @@ public class UpdateMaterialRequest
     public string Unit { get; set; } = "kg";
     public decimal CurrentStock { get; set; }
     public decimal MinStock { get; set; }
-    public decimal? UnitCost { get; set; }
     public string? Description { get; set; }
     public bool IsActive { get; set; }
 }

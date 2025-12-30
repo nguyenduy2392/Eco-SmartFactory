@@ -410,18 +410,51 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
                 material.UpdatedAt = DateTime.UtcNow;
             }
 
+            // Tìm Warehouse theo Code
+            var warehouse = await _context.Warehouses
+                .FirstOrDefaultAsync(w => w.Code == receiptData.WarehouseCode, cancellationToken);
+            
+            if (warehouse == null)
+            {
+                // Tạo warehouse mặc định nếu chưa có
+                warehouse = new Entities.Warehouse
+                {
+                    Code = receiptData.WarehouseCode,
+                    Name = $"Kho {receiptData.WarehouseCode}",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _context.Warehouses.Add(warehouse);
+                await _context.SaveChangesAsync(cancellationToken);
+                _logger.LogInformation("Created new Warehouse: {WarehouseCode}", warehouse.Code);
+            }
+
+            // Validate BatchNumber
+            if (string.IsNullOrWhiteSpace(receiptData.BatchNumber))
+            {
+                throw new Exception($"BatchNumber is required for MaterialReceipt {receiptData.ReceiptNumber}");
+            }
+
+            // Get current stock before transaction
+            var stockBefore = material.CurrentStock;
+
+            // Chủ hàng chính là nhà cung cấp, tự động set SupplierCode = Customer.Code
+            var supplierCode = !string.IsNullOrWhiteSpace(receiptData.SupplierCode)
+                ? receiptData.SupplierCode
+                : customer.Code;
+
             // Tạo MaterialReceipt
             var materialReceipt = new MaterialReceipt
             {
                 CustomerId = customerId,
                 MaterialId = material.Id,
-                WarehouseCode = receiptData.WarehouseCode,
+                WarehouseId = warehouse.Id,
                 Quantity = receiptData.Quantity,
                 Unit = receiptData.Unit,
                 BatchNumber = receiptData.BatchNumber,
                 ReceiptDate = receiptData.ReceiptDate,
-                SupplierCode = receiptData.SupplierCode,
-                PurchasePOCode = receiptData.PurchasePOCode,
+                SupplierCode = supplierCode, // Tự động set từ Customer.Code
+                PurchasePOCode = null, // Không cần PO mua hàng
                 ReceiptNumber = receiptData.ReceiptNumber,
                 Notes = receiptData.Notes,
                 Status = "RECEIVED", // Tự động xác nhận khi import
@@ -432,6 +465,28 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
             // Cập nhật CurrentStock của Material
             material.CurrentStock += receiptData.Quantity;
             material.UpdatedAt = DateTime.UtcNow;
+
+            var stockAfter = material.CurrentStock;
+
+            // Tạo transaction history
+            var history = new Entities.MaterialTransactionHistory
+            {
+                CustomerId = customerId,
+                MaterialId = material.Id,
+                WarehouseId = warehouse.Id,
+                BatchNumber = receiptData.BatchNumber,
+                TransactionType = "RECEIPT",
+                ReferenceId = materialReceipt.Id,
+                ReferenceNumber = receiptData.ReceiptNumber,
+                StockBefore = stockBefore,
+                QuantityChange = receiptData.Quantity,
+                StockAfter = stockAfter,
+                Unit = receiptData.Unit,
+                TransactionDate = receiptData.ReceiptDate,
+                Notes = receiptData.Notes,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.MaterialTransactionHistories.Add(history);
 
             _logger.LogDebug("Created MaterialReceipt: {ReceiptNumber} - {MaterialCode} - {Quantity} {Unit}",
                 materialReceipt.ReceiptNumber, material.Code, receiptData.Quantity, receiptData.Unit);

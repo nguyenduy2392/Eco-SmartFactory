@@ -169,7 +169,90 @@
         <p-message severity="info" text="Dữ liệu PO được import từ Excel và chỉ có thể xem, không thể chỉnh sửa."></p-message>
       </p-tabPanel>
 
-      <!-- Tab 2: PO Operations (NHAP_PO sheet) -->
+      <!-- Tab 2: Products -->
+      <p-tabPanel header="Sản phẩm" leftIcon="pi pi-box">
+        <p-message severity="info" text="Danh sách sản phẩm trong PO này. Click vào sản phẩm để xem chi tiết linh kiện." class="mb-3"></p-message>
+
+        <p-table
+          [value]="products"
+          [paginator]="true"
+          [rows]="10"
+          [rowsPerPageOptions]="[10, 25, 50]"
+          styleClass="p-datatable-gridlines p-datatable-sm"
+          [tableStyle]="{'min-width': '50rem'}">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>#</th>
+              <th pSortableColumn="productCode">
+                Mã sản phẩm
+                <p-sortIcon field="productCode"></p-sortIcon>
+              </th>
+              <th pSortableColumn="productName">
+                Tên sản phẩm
+                <p-sortIcon field="productName"></p-sortIcon>
+              </th>
+              <th pSortableColumn="quantity" class="text-right">
+                Số lượng
+                <p-sortIcon field="quantity"></p-sortIcon>
+              </th>
+              <th pSortableColumn="unitPrice" class="text-right">
+                Đơn giá
+                <p-sortIcon field="unitPrice"></p-sortIcon>
+              </th>
+              <th pSortableColumn="totalAmount" class="text-right">
+                Thành tiền
+                <p-sortIcon field="totalAmount"></p-sortIcon>
+              </th>
+              <th class="text-center">Thao tác</th>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="body" let-product let-rowIndex="rowIndex">
+            <tr>
+              <td>{{ rowIndex + 1 }}</td>
+              <td>
+                <code class="text-primary cursor-pointer" (click)="openProductDetail(product)">
+                  {{ product.productCode }}
+                </code>
+              </td>
+              <td>{{ product.productName }}</td>
+              <td class="text-right">
+                <strong>{{ product.quantity | number }}</strong>
+              </td>
+              <td class="text-right">
+                {{ product.unitPrice ? (product.unitPrice | currency:'VND':'symbol':'1.0-0') : '-' }}
+              </td>
+              <td class="text-right">
+                <strong class="text-primary">{{ product.totalAmount | currency:'VND':'symbol':'1.0-0' }}</strong>
+              </td>
+              <td class="text-center">
+                <p-button
+                  icon="pi pi-eye"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="info"
+                  (onClick)="openProductDetail(product)"
+                  pTooltip="Xem linh kiện"
+                  tooltipPosition="top">
+                </p-button>
+              </td>
+            </tr>
+          </ng-template>
+
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="7" class="text-center">
+                <div class="p-4">
+                  <i class="pi pi-inbox text-4xl text-400"></i>
+                  <p class="text-xl text-500 mt-3">Không có sản phẩm nào</p>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabPanel>
+
+      <!-- Tab 3: PO Operations (NHAP_PO sheet) -->
       <p-tabPanel header="Thao tác PO (Tính phí)" leftIcon="pi pi-list">
         <p-message severity="info" text="Thông tin này đến từ sheet NHAP_PO - dùng để tính giá, doanh thu và thanh toán." class="mb-3"></p-message>
 
@@ -241,73 +324,6 @@
             <div class="flex justify-content-end">
               <strong class="text-xl">Tổng cộng: {{ purchaseOrder.totalAmount | currency:'VND':'symbol':'1.0-0' }}</strong>
             </div>
-          </ng-template>
-        </p-table>
-      </p-tabPanel>
-
-      <!-- Tab 3: Material Receipts (NHAP_NGUYEN_VAT_LIEU sheet - nhập kho thực tế) -->
-      <p-tabPanel header="Nguyên vật liệu nhập kho" leftIcon="pi pi-box">
-        <p-message severity="info" text="Thông tin này đến từ sheet NHAP_NGUYEN_VAT_LIEU - dữ liệu nhập kho thực tế. Nguyên vật liệu đã được nhập vào kho và cập nhật tồn kho." class="mb-3"></p-message>
-
-        <p-table
-          [value]="materialReceipts"
-          [paginator]="true"
-          [rows]="10"
-          [rowsPerPageOptions]="[10, 25, 50]"
-          [loading]="materialReceiptsLoading"
-          styleClass="p-datatable-gridlines p-datatable-sm"
-          [tableStyle]="{'min-width': '50rem'}">
-          <ng-template pTemplate="header">
-            <tr>
-              <th pSortableColumn="materialCode">
-                Mã NVL
-                <p-sortIcon field="materialCode"></p-sortIcon>
-              </th>
-              <th pSortableColumn="materialName">
-                Tên NVL
-                <p-sortIcon field="materialName"></p-sortIcon>
-              </th>
-              <th>Mã kho</th>
-              <th pSortableColumn="quantity" class="text-right">
-                Số lượng nhập
-                <p-sortIcon field="quantity"></p-sortIcon>
-              </th>
-              <th>ĐVT</th>
-              <th>Số lô</th>
-              <th pSortableColumn="receiptDate">
-                Ngày nhập kho
-                <p-sortIcon field="receiptDate"></p-sortIcon>
-              </th>
-              <th>Số phiếu nhập</th>
-              <th>Nhà cung cấp</th>
-            </tr>
-          </ng-template>
-
-          <ng-template pTemplate="body" let-receipt>
-            <tr>
-              <td><code>{{ receipt.materialCode }}</code></td>
-              <td>{{ receipt.materialName || '-' }}</td>
-              <td><span class="p-tag">{{ receipt.warehouseCode || '-' }}</span></td>
-              <td class="text-right">
-                <strong>{{ receipt.quantity | number:'1.0-3' }}</strong>
-              </td>
-              <td>{{ receipt.unit || '-' }}</td>
-              <td>{{ receipt.batchNumber || '-' }}</td>
-              <td>{{ formatDate(receipt.receiptDate) }}</td>
-              <td><code>{{ receipt.receiptNumber }}</code></td>
-              <td>{{ receipt.supplierCode || '-' }}</td>
-            </tr>
-          </ng-template>
-
-          <ng-template pTemplate="emptymessage">
-            <tr>
-              <td colspan="9" class="text-center">
-                <div class="p-4">
-                  <i class="pi pi-inbox text-4xl text-400"></i>
-                  <p class="text-xl text-500 mt-3">Không có phiếu nhập kho nào</p>
-                </div>
-              </td>
-            </tr>
           </ng-template>
         </p-table>
       </p-tabPanel>
@@ -489,6 +505,127 @@
       (onClick)="closeAvailabilityDialog()"
       styleClass="p-button-text">
     </p-button>
+  </ng-template>
+</p-dialog>
+
+<!-- Product Detail Dialog -->
+<p-dialog
+  header="Chi tiết linh kiện"
+  [(visible)]="showProductDetailDialog"
+  [modal]="true"
+  [style]="{width: '900px'}"
+  [draggable]="false"
+  [resizable]="false">
+  <div *ngIf="selectedProduct">
+    <div class="mb-4">
+      <p-card>
+        <div class="grid">
+          <div class="col-12 md:col-6">
+            <div class="field">
+              <label class="font-semibold">Mã sản phẩm</label>
+              <div class="p-inputgroup">
+                <span class="p-inputgroup-addon"><i class="pi pi-hashtag"></i></span>
+                <input pInputText [value]="selectedProduct.productCode" readonly class="font-bold">
+              </div>
+            </div>
+          </div>
+          <div class="col-12 md:col-6">
+            <div class="field">
+              <label class="font-semibold">Tên sản phẩm</label>
+              <div class="p-inputgroup">
+                <span class="p-inputgroup-addon"><i class="pi pi-box"></i></span>
+                <input pInputText [value]="selectedProduct.productName" readonly>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 md:col-6">
+            <div class="field">
+              <label class="font-semibold">Số lượng</label>
+              <div class="p-inputgroup">
+                <span class="p-inputgroup-addon"><i class="pi pi-sort-numeric-up"></i></span>
+                <input pInputText [value]="selectedProduct.quantity | number" readonly>
+              </div>
+            </div>
+          </div>
+          <div class="col-12 md:col-6">
+            <div class="field">
+              <label class="font-semibold">Thành tiền</label>
+              <div class="p-inputgroup">
+                <span class="p-inputgroup-addon"><i class="pi pi-dollar"></i></span>
+                <input pInputText [value]="selectedProduct.totalAmount | currency:'VND':'symbol':'1.0-0'" readonly class="font-bold text-primary">
+              </div>
+            </div>
+          </div>
+        </div>
+      </p-card>
+    </div>
+
+    <p-divider></p-divider>
+
+    <h3 class="text-xl font-semibold mb-3">Danh sách linh kiện</h3>
+
+    <div *ngIf="productDetailLoading" class="flex justify-content-center align-items-center" style="min-height: 200px">
+      <p-progressSpinner></p-progressSpinner>
+    </div>
+
+    <p-table
+      *ngIf="!productDetailLoading"
+      [value]="productParts"
+      [paginator]="true"
+      [rows]="10"
+      [rowsPerPageOptions]="[10, 25, 50]"
+      styleClass="p-datatable-gridlines p-datatable-sm">
+      <ng-template pTemplate="header">
+        <tr>
+          <th>Mã linh kiện</th>
+          <th>Tên linh kiện</th>
+          <th>Chất liệu</th>
+          <th class="text-right">Số lượng cần</th>
+          <th>Trạng thái</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-part>
+        <tr>
+          <td>
+            <code>{{ part.partId }}</code>
+          </td>
+          <td>{{ part.componentName }}</td>
+          <td>{{ part.material || '-' }}</td>
+          <td class="text-right">
+            <strong>{{ part.quantityRequired }}</strong>
+          </td>
+          <td>
+            <p-tag
+              [value]="part.status"
+              [severity]="part.status === 'Pending' ? 'warning' : 'success'">
+            </p-tag>
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="5" class="text-center">
+            <div class="p-4">
+              <i class="pi pi-inbox text-4xl text-400"></i>
+              <p class="text-xl text-500 mt-3">Không có linh kiện nào</p>
+            </div>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="flex justify-content-end">
+      <p-button
+        label="Đóng"
+        icon="pi pi-times"
+        (onClick)="closeProductDetailDialog()"
+        styleClass="p-button-text">
+      </p-button>
+    </div>
   </ng-template>
 </p-dialog>
 

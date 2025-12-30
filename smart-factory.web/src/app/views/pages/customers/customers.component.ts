@@ -249,13 +249,11 @@ export class CustomersComponent implements OnInit {
   }
 
   /**
-   * View purchase orders for customer
+   * View customer detail page
    */
   viewPurchaseOrders(customer: Customer): void {
-    // Navigate to Processing PO list filtered by customer
-    this.router.navigate(['/processing-po'], { 
-      queryParams: { customerId: customer.id } 
-    });
+    // Navigate to customer detail page
+    this.router.navigate(['/customers', customer.id]);
   }
 
   /**

@@ -16,7 +16,7 @@ export class AvailabilityCheckService {
   constructor(private http: HttpClient) { }
 
   /**
-   * Kiểm tra khả dụng linh kiện
+   * Kiểm tra khả dụng linh kiện theo PO
    * 
    * Input:
    * - PO ID (must be APPROVED version)
@@ -38,6 +38,25 @@ export class AvailabilityCheckService {
    */
   checkAvailability(request: AvailabilityCheckRequest): Observable<AvailabilityCheckResult> {
     return this.http.post<AvailabilityCheckResult>(`${this.apiUrl}/check`, request);
+  }
+
+  /**
+   * Kiểm tra khả dụng linh kiện theo component (không cần PO)
+   * 
+   * Input:
+   * - Part ID
+   * - Processing Type ID
+   * - Quantity
+   * 
+   * Calculation:
+   * CanProduce = Has ACTIVE BOM for (Part + ProcessingType)
+   * 
+   * Result:
+   * - No ACTIVE BOM → FAIL (CRITICAL)
+   * - Has ACTIVE BOM → PASS
+   */
+  checkAvailabilityByComponent(request: AvailabilityCheckRequest): Observable<AvailabilityCheckResult> {
+    return this.http.post<AvailabilityCheckResult>(`${this.apiUrl}/check-by-component`, request);
   }
 }
 

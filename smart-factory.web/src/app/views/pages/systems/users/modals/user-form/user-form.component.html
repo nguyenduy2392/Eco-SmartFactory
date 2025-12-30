@@ -6,7 +6,7 @@
         <label class="block text-900 font-medium mb-2">
           Họ tên <span class="text-red-500">*</span>
         </label>
-        <input [(ngModel)]="formData.fullName" type="text" pInputText class="w-full" 
+        <input [(ngModel)]="formData.fullName" name="fullName" type="text" pInputText class="w-full" 
           placeholder="Nhập họ tên người dùng" />
       </div>
 
@@ -15,14 +15,14 @@
         <label class="block text-900 font-medium mb-2">
           Email <span class="text-red-500">*</span>
         </label>
-        <input [(ngModel)]="formData.email" type="email" pInputText class="w-full" 
+        <input [(ngModel)]="formData.email" name="email" type="email" pInputText class="w-full" 
           placeholder="Nhập email" [disabled]="isUpdate" />
       </div>
 
       <!-- Số điện thoại -->
       <div class="col-6">
         <label class="block text-900 font-medium mb-2">Số điện thoại</label>
-        <input [(ngModel)]="formData.phoneNumber" type="text" pInputText class="w-full" 
+        <input [(ngModel)]="formData.phoneNumber" name="phoneNumber" type="text" pInputText class="w-full" 
           placeholder="Nhập số điện thoại" />
       </div>
 
@@ -33,14 +33,14 @@
           <span class="text-red-500" *ngIf="!isUpdate">*</span>
           <span class="text-500 text-sm" *ngIf="isUpdate">(Để trống nếu không đổi)</span>
         </label>
-        <p-password [(ngModel)]="formData.password" [feedback]="false" class="w-full" 
+        <p-password [(ngModel)]="formData.password" name="password" [feedback]="false" class="w-full" 
           styleClass="w-full" inputStyleClass="w-full" placeholder="Nhập mật khẩu" [toggleMask]="true" />
       </div>
 
       <!-- Trạng thái (chỉ hiển thị khi cập nhật) -->
       <div class="col-6" *ngIf="isUpdate">
         <label class="block text-900 font-medium mb-2">Trạng thái</label>
-        <p-dropdown [(ngModel)]="formData.isActive" [options]="[
+        <p-dropdown [(ngModel)]="formData.isActive" name="isActive" [options]="[
           { label: 'Đang hoạt động', value: true },
           { label: 'Đã khóa', value: false }
         ]" optionLabel="label" optionValue="value" [style]="{ width: '100%' }" />

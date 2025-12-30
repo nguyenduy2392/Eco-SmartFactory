@@ -4,10 +4,12 @@ import { Location } from '@angular/common';
 import { PurchaseOrderService } from '../../../services/purchase-order.service';
 import { AvailabilityCheckService } from '../../../services/availability-check.service';
 import { MaterialReceiptService } from '../../../services/material-receipt.service';
+import { ProductService } from '../../../services/system/product.service';
 import {
   PurchaseOrder,
   POOperation,
   POMaterialBaseline,
+  POProduct,
   AvailabilityCheckRequest,
   AvailabilityCheckResult
 } from '../../../models/purchase-order.interface';
@@ -50,6 +52,12 @@ export class PODetailComponent implements OnInit {
   cloneLoading = false;
   cloneNotes: string = '';
 
+  // Product Detail Dialog
+  showProductDetailDialog = false;
+  selectedProduct: POProduct | null = null;
+  productParts: any[] = [];
+  productDetailLoading = false;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -57,6 +65,7 @@ export class PODetailComponent implements OnInit {
     private poService: PurchaseOrderService,
     private availabilityService: AvailabilityCheckService,
     private materialReceiptService: MaterialReceiptService,
+    private productService: ProductService,
     private messageService: MessageService,
     private confirmationService: ConfirmationService
   ) { }
@@ -380,6 +389,43 @@ export class PODetailComponent implements OnInit {
 
   get materialBaseline(): POMaterialBaseline[] {
     return this.purchaseOrder?.materialBaseline || [];
+  }
+
+  get products(): POProduct[] {
+    return this.purchaseOrder?.products || [];
+  }
+
+  openProductDetail(product: POProduct): void {
+    this.selectedProduct = product;
+    this.showProductDetailDialog = true;
+    this.loadProductParts(product.productId);
+  }
+
+  closeProductDetailDialog(): void {
+    this.showProductDetailDialog = false;
+    this.selectedProduct = null;
+    this.productParts = [];
+  }
+
+  loadProductParts(productId: string): void {
+    if (!this.poId || !productId) return;
+
+    this.productDetailLoading = true;
+    this.productService.getDetailByPO(productId, this.poId).subscribe({
+      next: (detail: any) => {
+        this.productParts = detail.components || [];
+        this.productDetailLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading product parts:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: 'Không thể tải danh sách linh kiện'
+        });
+        this.productDetailLoading = false;
+      }
+    });
   }
 
   // Format date for display

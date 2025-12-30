@@ -8,7 +8,6 @@ export interface Material {
   unit: string;
   currentStock: number;
   minStock: number;
-  unitCost?: number;
   description?: string;
   isActive: boolean;
   createdAt: Date;
@@ -27,7 +26,6 @@ export interface CreateMaterialRequest {
   unit: string;
   currentStock: number;
   minStock: number;
-  unitCost?: number;
   description?: string;
   customerId: string; // Bắt buộc - Material phải gắn với chủ hàng
 }
@@ -41,7 +39,6 @@ export interface UpdateMaterialRequest {
   unit: string;
   currentStock: number;
   minStock: number;
-  unitCost?: number;
   description?: string;
   isActive: boolean;
   customerId: string; // Bắt buộc - Material phải gắn với chủ hàng

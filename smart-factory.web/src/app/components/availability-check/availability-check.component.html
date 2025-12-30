@@ -8,7 +8,7 @@
 
   <p-message 
     severity="info" 
-    text="Kiểm tra xem linh kiện có thể sản xuất được hay không. Chỉ có thể kiểm tra với PO đã được phê duyệt cho PMC."
+    text="Kiểm tra xem linh kiện có thể sản xuất được hay không. Chọn linh kiện và loại gia công để kiểm tra."
     class="mb-4">
   </p-message>
 
@@ -16,36 +16,33 @@
   <p-card class="mb-4">
     <div class="p-fluid">
       <div class="grid">
-        <div class="col-12 md:col-6">
+        <div class="col-12 md:col-4">
           <div class="field">
-            <label for="po">Chọn PO đã phê duyệt <span class="text-red-500">*</span></label>
+            <label for="part">Chọn linh kiện <span class="text-red-500">*</span></label>
             <p-dropdown
-              id="po"
-              [options]="purchaseOrders"
-              [(ngModel)]="selectedPOId"
-              optionLabel="poNumber"
+              id="part"
+              [options]="parts"
+              [(ngModel)]="selectedPartId"
+              optionLabel="code"
               optionValue="id"
-              placeholder="Chọn PO..."
+              placeholder="Chọn linh kiện..."
               [filter]="true"
-              filterBy="poNumber,customerName"
+              filterBy="code,name"
               [style]="{'width': '100%'}"
               [loading]="loading"
-              emptyMessage="Không có PO đã phê duyệt"
+              emptyMessage="Không có linh kiện"
               [showClear]="true">
-              <ng-template let-po pTemplate="item">
+              <ng-template let-part pTemplate="item">
                 <div class="flex justify-content-between align-items-center">
                   <div>
-                    <strong>{{ po.poNumber }}</strong>
-                    <div class="text-sm text-500">{{ po.customerName }}</div>
-                  </div>
-                  <div class="text-right">
-                    <p-tag [value]="po.version" severity="info" styleClass="text-xs"></p-tag>
+                    <strong>{{ part.code }}</strong>
+                    <div class="text-sm text-500">{{ part.name }}</div>
                   </div>
                 </div>
               </ng-template>
-              <ng-template let-po pTemplate="selectedItem">
+              <ng-template let-part pTemplate="selectedItem">
                 <div>
-                  <strong>{{ po.poNumber }}</strong> - {{ po.customerName }} ({{ po.version }})
+                  <strong>{{ part.code }}</strong> - {{ part.name }}
                 </div>
               </ng-template>
             </p-dropdown>
@@ -54,10 +51,40 @@
 
         <div class="col-12 md:col-4">
           <div class="field">
-            <label for="plannedQty">Số lượng kế hoạch sản xuất <span class="text-red-500">*</span></label>
+            <label for="processingType">Chọn loại gia công <span class="text-red-500">*</span></label>
+            <p-dropdown
+              id="processingType"
+              [options]="processingTypes"
+              [(ngModel)]="selectedProcessingTypeId"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Chọn loại gia công..."
+              [filter]="true"
+              filterBy="name,code"
+              [style]="{'width': '100%'}"
+              emptyMessage="Không có loại gia công"
+              [showClear]="true">
+              <ng-template let-type pTemplate="item">
+                <div>
+                  <strong>{{ type.name }}</strong>
+                  <div class="text-sm text-500">{{ type.code }}</div>
+                </div>
+              </ng-template>
+              <ng-template let-type pTemplate="selectedItem">
+                <div>
+                  <strong>{{ type.name }}</strong>
+                </div>
+              </ng-template>
+            </p-dropdown>
+          </div>
+        </div>
+
+        <div class="col-12 md:col-4">
+          <div class="field">
+            <label for="quantity">Số lượng <span class="text-red-500">*</span></label>
             <p-inputNumber
-              id="plannedQty"
-              [(ngModel)]="plannedQuantity"
+              id="quantity"
+              [(ngModel)]="quantity"
               [min]="1"
               [showButtons]="true"
               buttonLayout="horizontal"
@@ -69,21 +96,16 @@
           </div>
         </div>
 
-        <div class="col-12 md:col-2 flex align-items-end">
-          <div class="field w-full">
-            <p-button
-              label="Kiểm tra"
-              icon="pi pi-search"
-              (onClick)="checkAvailability()"
-              [loading]="checkLoading"
-              styleClass="w-full"
-              severity="success">
-            </p-button>
-          </div>
-        </div>
       </div>
 
-      <div class="flex gap-2">
+      <div class="flex gap-2 mt-3">
+        <p-button
+          label="Kiểm tra"
+          icon="pi pi-search"
+          (onClick)="checkAvailability()"
+          [loading]="checkLoading"
+          severity="success">
+        </p-button>
         <p-button
           label="Làm mới"
           icon="pi pi-refresh"
@@ -292,7 +314,7 @@
 
   <div *ngIf="!availabilityResult" class="text-center p-5">
     <i class="pi pi-info-circle text-5xl text-400 mb-3"></i>
-    <p class="text-xl text-500">Chọn PO và nhập số lượng để kiểm tra khả dụng linh kiện</p>
+    <p class="text-xl text-500">Chọn linh kiện, loại gia công và nhập số lượng để kiểm tra khả dụng</p>
   </div>
 </div>
 

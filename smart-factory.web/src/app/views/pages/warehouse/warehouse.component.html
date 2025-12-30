@@ -1,0 +1,845 @@
+<div class="grid">
+  <div class="col-12">
+    <div class="card">
+      <div class="flex justify-content-between align-items-center mb-4">
+        <h5 class="m-0">Quản lý kho nguyên vật liệu</h5>
+        <div class="flex align-items-center gap-2">
+          <p-dropdown 
+            [options]="customers" 
+            [(ngModel)]="selectedCustomerId"
+            optionLabel="name" 
+            optionValue="id"
+            placeholder="Tất cả chủ hàng"
+            [showClear]="true"
+            styleClass="w-12rem"
+            (onChange)="onCustomerFilterChange()">
+          </p-dropdown>
+        </div>
+      </div>
+
+      <p-message severity="info" 
+                text="Kho nguyên vật liệu chỉ ghi nhận 'đã nhận – đã dùng – còn lại', không can thiệp giá, không can thiệp kế hoạch." 
+                class="mb-3"></p-message>
+
+      <p-tabView [(activeIndex)]="activeTabIndex" (onChange)="onHistoryTabChange()">
+        <!-- Tab Nhập kho -->
+        <p-tabPanel header="Nhập kho">
+          <div class="mb-3 flex gap-2">
+            <button pButton type="button" label="Nhập kho" icon="pi pi-plus" 
+                    class="p-button-primary" (click)="openReceiptDialog()"></button>
+            <p-fileUpload 
+              mode="basic" 
+              accept=".xlsx,.xls"
+              [auto]="false"
+              chooseLabel="Import Excel"
+              chooseIcon="pi pi-upload"
+              styleClass="p-button-outlined"
+              (onSelect)="onFileSelected($event)"
+              [disabled]="!selectedCustomerId">
+            </p-fileUpload>
+          </div>
+
+          <p-table [value]="receipts" [loading]="loading" [paginator]="true" [rows]="10"
+                   styleClass="p-datatable-striped">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Số phiếu</th>
+                <th>Ngày nhập</th>
+                <th>Nguyên vật liệu</th>
+                <th>Số lô</th>
+                <th>Số lượng</th>
+                <th>Đơn vị</th>
+                <th>Kho</th>
+                <th>Trạng thái</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-receipt>
+              <tr>
+                <td>{{ receipt.receiptNumber }}</td>
+                <td>{{ receipt.receiptDate | date:'dd/MM/yyyy' }}</td>
+                <td>{{ receipt.materialName }}</td>
+                <td>{{ receipt.batchNumber }}</td>
+                <td>{{ receipt.quantity }}</td>
+                <td>{{ receipt.unit }}</td>
+                <td>{{ receipt.warehouseCode }}</td>
+                <td>
+                  <p-tag [value]="receipt.status" 
+                         [severity]="receipt.status === 'RECEIVED' ? 'success' : 'warning'"></p-tag>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="8" class="text-center py-4">
+                  <i class="pi pi-inbox text-4xl text-gray-300 mb-2 block"></i>
+                  <p class="text-gray-500">Chưa có phiếu nhập kho nào</p>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabPanel>
+
+        <!-- Tab Xuất kho -->
+        <p-tabPanel header="Xuất kho">
+          <div class="mb-3">
+            <button pButton type="button" label="Xuất kho" icon="pi pi-minus" 
+                    class="p-button-warning" (click)="openIssueDialog()"></button>
+          </div>
+
+          <p-table [value]="issues" [loading]="loading" [paginator]="true" [rows]="10"
+                   styleClass="p-datatable-striped">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Số phiếu</th>
+                <th>Ngày xuất</th>
+                <th>Nguyên vật liệu</th>
+                <th>Số lô</th>
+                <th>Số lượng</th>
+                <th>Lý do</th>
+                <th>Kho</th>
+                <th>Trạng thái</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-issue>
+              <tr>
+                <td>{{ issue.issueNumber }}</td>
+                <td>{{ issue.issueDate | date:'dd/MM/yyyy' }}</td>
+                <td>{{ issue.materialName }}</td>
+                <td>{{ issue.batchNumber }}</td>
+                <td>{{ issue.quantity }}</td>
+                <td>{{ issue.reason }}</td>
+                <td>{{ issue.warehouseCode }}</td>
+                <td>
+                  <p-tag [value]="issue.status" 
+                         [severity]="issue.status === 'ISSUED' ? 'success' : 'warning'"></p-tag>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="8" class="text-center py-4">
+                  <i class="pi pi-inbox text-4xl text-gray-300 mb-2 block"></i>
+                  <p class="text-gray-500">Chưa có phiếu xuất kho nào</p>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabPanel>
+
+        <!-- Tab Điều chỉnh -->
+        <p-tabPanel header="Điều chỉnh">
+          <div class="mb-3">
+            <button pButton type="button" label="Điều chỉnh kho" icon="pi pi-cog" 
+                    class="p-button-info" (click)="openAdjustmentDialog()"></button>
+          </div>
+
+          <p-table [value]="adjustments" [loading]="loading" [paginator]="true" [rows]="10"
+                   styleClass="p-datatable-striped">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Số phiếu</th>
+                <th>Ngày điều chỉnh</th>
+                <th>Nguyên vật liệu</th>
+                <th>Số lô</th>
+                <th>Số lượng</th>
+                <th>Lý do</th>
+                <th>Người chịu trách nhiệm</th>
+                <th>Trạng thái</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-adjustment>
+              <tr>
+                <td>{{ adjustment.adjustmentNumber }}</td>
+                <td>{{ adjustment.adjustmentDate | date:'dd/MM/yyyy' }}</td>
+                <td>{{ adjustment.materialName }}</td>
+                <td>{{ adjustment.batchNumber }}</td>
+                <td>
+                  <span [class]="adjustment.adjustmentQuantity > 0 ? 'text-green-600' : 'text-red-600'">
+                    {{ adjustment.adjustmentQuantity > 0 ? '+' : '' }}{{ adjustment.adjustmentQuantity }}
+                  </span>
+                </td>
+                <td>{{ adjustment.reason }}</td>
+                <td>{{ adjustment.responsiblePerson }}</td>
+                <td>
+                  <p-tag [value]="adjustment.status" 
+                         [severity]="adjustment.status === 'APPROVED' ? 'success' : 'warning'"></p-tag>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="8" class="text-center py-4">
+                  <i class="pi pi-inbox text-4xl text-gray-300 mb-2 block"></i>
+                  <p class="text-gray-500">Chưa có phiếu điều chỉnh nào</p>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabPanel>
+
+        <!-- Tab Lịch sử -->
+        <p-tabPanel header="Lịch sử kho">
+          <div class="mb-3 flex justify-content-end">
+            <button pButton type="button" label="Xuất Excel" icon="pi pi-download" 
+                    class="p-button-outlined" (click)="exportHistory()"></button>
+          </div>
+          <div class="grid mb-3">
+            <div class="col-12 md:col-3">
+              <label class="block mb-2">Nguyên vật liệu</label>
+              <p-dropdown 
+                [options]="materials" 
+                [(ngModel)]="historyFilters.materialId"
+                optionLabel="name" 
+                optionValue="id"
+                placeholder="Tất cả"
+                [showClear]="true"
+                styleClass="w-full"
+                (onChange)="loadHistory()">
+              </p-dropdown>
+            </div>
+            <div class="col-12 md:col-3">
+              <label class="block mb-2">Kho</label>
+              <p-dropdown 
+                [options]="warehouses" 
+                [(ngModel)]="historyFilters.warehouseId"
+                optionLabel="name" 
+                optionValue="id"
+                placeholder="Tất cả"
+                [showClear]="true"
+                styleClass="w-full"
+                (onChange)="loadHistory()">
+              </p-dropdown>
+            </div>
+            <div class="col-12 md:col-3">
+              <label class="block mb-2">Loại giao dịch</label>
+              <p-dropdown 
+                [options]="transactionTypes" 
+                [(ngModel)]="historyFilters.transactionType"
+                optionLabel="label" 
+                optionValue="value"
+                placeholder="Tất cả"
+                styleClass="w-full"
+                (onChange)="loadHistory()">
+              </p-dropdown>
+            </div>
+            <div class="col-12 md:col-3">
+              <label class="block mb-2">Số lô</label>
+              <input pInputText [(ngModel)]="historyFilters.batchNumber" 
+                     placeholder="Nhập số lô"
+                     class="w-full"
+                     (keyup.enter)="loadHistory()">
+            </div>
+            <div class="col-12 md:col-3">
+              <label class="block mb-2">Từ ngày</label>
+              <p-calendar [(ngModel)]="historyFilters.fromDate" 
+                          [showIcon]="true"
+                          dateFormat="dd/mm/yy"
+                          styleClass="w-full"
+                          (onSelect)="loadHistory()">
+              </p-calendar>
+            </div>
+            <div class="col-12 md:col-3">
+              <label class="block mb-2">Đến ngày</label>
+              <p-calendar [(ngModel)]="historyFilters.toDate" 
+                          [showIcon]="true"
+                          dateFormat="dd/mm/yy"
+                          styleClass="w-full"
+                          (onSelect)="loadHistory()">
+              </p-calendar>
+            </div>
+            <div class="col-12 md:col-6 flex align-items-end">
+              <button pButton type="button" label="Tải lại" icon="pi pi-refresh" 
+                      class="p-button-outlined" (click)="loadHistory()"></button>
+            </div>
+          </div>
+
+          <p-table [value]="history" [loading]="loading" [paginator]="true" [rows]="20"
+                   styleClass="p-datatable-striped">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Thời gian</th>
+                <th>Loại</th>
+                <th>Nguyên vật liệu</th>
+                <th>Số lô</th>
+                <th>Số phiếu</th>
+                <th>Tồn trước</th>
+                <th>Thay đổi</th>
+                <th>Tồn sau</th>
+                <th>Đơn vị</th>
+                <th>Ghi chú</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-h>
+              <tr>
+                <td>{{ h.transactionDate | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td>
+                  <p-tag [value]="getTransactionTypeLabel(h.transactionType)" 
+                         [severity]="getTransactionTypeSeverity(h.transactionType)"></p-tag>
+                </td>
+                <td>{{ h.materialName }}</td>
+                <td>{{ h.batchNumber }}</td>
+                <td>{{ h.referenceNumber }}</td>
+                <td>{{ h.stockBefore }}</td>
+                <td>
+                  <span [class]="h.quantityChange > 0 ? 'text-green-600' : 'text-red-600'">
+                    {{ h.quantityChange > 0 ? '+' : '' }}{{ h.quantityChange }}
+                  </span>
+                </td>
+                <td><strong>{{ h.stockAfter }}</strong></td>
+                <td>{{ h.unit }}</td>
+                <td>{{ h.notes }}</td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="10" class="text-center py-4">
+                  <i class="pi pi-inbox text-4xl text-gray-300 mb-2 block"></i>
+                  <p class="text-gray-500">Chưa có lịch sử giao dịch nào</p>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabPanel>
+
+        <!-- Tab Tồn kho -->
+        <p-tabPanel header="Tồn kho">
+          <div class="mb-3">
+            <p-dropdown 
+              [options]="materials" 
+              [(ngModel)]="selectedMaterialForStock"
+              optionLabel="name" 
+              placeholder="Chọn nguyên vật liệu"
+              [showClear]="true"
+              styleClass="w-20rem"
+              (onChange)="viewMaterialStock(selectedMaterialForStock!)">
+            </p-dropdown>
+          </div>
+
+          <p-table [value]="materials" [loading]="loading" [paginator]="true" [rows]="20"
+                   styleClass="p-datatable-striped">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Mã VT</th>
+                <th>Tên vật tư</th>
+                <th>Chủ hàng</th>
+                <th>Tồn kho</th>
+                <th>Tồn tối thiểu</th>
+                <th>Đơn vị</th>
+                <th>Trạng thái</th>
+                <th>Hành động</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-material>
+              <tr>
+                <td>{{ material.code }}</td>
+                <td>{{ material.name }}</td>
+                <td>{{ material.customerName }}</td>
+                <td>
+                  <p-tag 
+                    [value]="material.currentStock.toString()" 
+                    [severity]="getStockSeverity(material.currentStock, material.minStock)">
+                  </p-tag>
+                </td>
+                <td>{{ material.minStock }}</td>
+                <td>{{ material.unit }}</td>
+                <td>
+                  <p-tag 
+                    [value]="material.isActive ? 'Hoạt động' : 'Ngừng'" 
+                    [severity]="material.isActive ? 'success' : 'danger'">
+                  </p-tag>
+                </td>
+                <td>
+                  <button pButton type="button" icon="pi pi-eye" 
+                          class="p-button-rounded p-button-text"
+                          (click)="viewMaterialStock(material)"
+                          pTooltip="Xem chi tiết tồn kho"></button>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </p-tabPanel>
+      </p-tabView>
+    </div>
+  </div>
+</div>
+
+<!-- Dialog Nhập kho -->
+<p-dialog 
+  [(visible)]="showReceiptDialog" 
+  header="Nhập kho nguyên vật liệu"
+  [modal]="true" 
+  [style]="{width: '700px'}"
+  [closable]="true">
+  
+  <form>
+    <div class="grid">
+      <div class="col-12">
+        <label class="block mb-2">Chủ hàng <span class="text-red-500">*</span></label>
+        <p-dropdown 
+          [options]="customers" 
+          [(ngModel)]="receiptForm.customerId"
+          name="customerId"
+          optionLabel="name" 
+          optionValue="id"
+          placeholder="Chọn chủ hàng"
+          styleClass="w-full"
+          [required]="true">
+        </p-dropdown>
+      </div>
+
+      <div class="col-12">
+        <label class="block mb-2">Nguyên vật liệu <span class="text-red-500">*</span></label>
+        <p-dropdown 
+          [options]="materials" 
+          [(ngModel)]="receiptForm.materialId"
+          name="materialId"
+          optionLabel="name" 
+          optionValue="id"
+          placeholder="Chọn nguyên vật liệu"
+          styleClass="w-full"
+          (onChange)="onReceiptMaterialChange()"
+          [required]="true">
+        </p-dropdown>
+      </div>
+
+      <div class="col-6">
+        <label class="block mb-2">Kho <span class="text-red-500">*</span></label>
+        <p-dropdown 
+          [options]="warehouses" 
+          [(ngModel)]="receiptForm.warehouseId"
+          name="warehouseId"
+          optionLabel="name" 
+          optionValue="id"
+          placeholder="Chọn kho"
+          styleClass="w-full"
+          [required]="true">
+        </p-dropdown>
+      </div>
+
+      <div class="col-6">
+        <label class="block mb-2">Số lô <span class="text-red-500">*</span></label>
+        <input pInputText [(ngModel)]="receiptForm.batchNumber" 
+               name="batchNumber"
+               placeholder="Nhập số lô"
+               class="w-full"
+               [required]="true">
+      </div>
+
+      <div class="col-6">
+        <label class="block mb-2">Số lượng <span class="text-red-500">*</span></label>
+        <p-inputNumber 
+          [(ngModel)]="receiptForm.quantity" 
+          name="quantity"
+          [min]="0.001"
+          [useGrouping]="false"
+          styleClass="w-full"
+          [required]="true">
+        </p-inputNumber>
+      </div>
+
+      <div class="col-6">
+        <label class="block mb-2">Đơn vị <span class="text-red-500">*</span></label>
+        <p-dropdown 
+          [options]="units" 
+          [(ngModel)]="receiptForm.unit"
+          name="unit"
+          optionLabel="label" 
+          optionValue="value"
+          placeholder="Chọn đơn vị"
+          styleClass="w-full"
+          [required]="true">
+        </p-dropdown>
+      </div>
+
+      <div class="col-6">
+        <label class="block mb-2">Ngày nhập <span class="text-red-500">*</span></label>
+        <p-calendar [(ngModel)]="receiptForm.receiptDate" 
+                    [showIcon]="true"
+                    dateFormat="dd/mm/yy"
+                    styleClass="w-full"
+                    name="receiptDate"
+                    [required]="true">
+        </p-calendar>
+      </div>
+
+      <div class="col-6">
+        <label class="block mb-2">Số phiếu nhập <span class="text-red-500">*</span></label>
+        <input pInputText [(ngModel)]="receiptForm.receiptNumber" 
+               name="receiptNumber"
+               placeholder="PNK-2025-0001"
+               class="w-full"
+               [required]="true">
+      </div>
+
+      <div class="col-12">
+        <label class="block mb-2">Ghi chú</label>
+        <textarea pInputTextarea [(ngModel)]="receiptForm.notes" 
+                  name="notes"
+                  rows="3" 
+                  class="w-full"></textarea>
+      </div>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Hủy" icon="pi pi-times" 
+            class="p-button-text" (click)="showReceiptDialog = false"></button>
+    <button pButton type="button" label="Nhập kho" 
+            icon="pi pi-check" class="p-button-primary" (click)="saveReceipt()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog Xuất kho -->
+<p-dialog 
+  [(visible)]="showIssueDialog" 
+  header="Xuất kho nguyên vật liệu"
+  [modal]="true" 
+  [style]="{width: '700px'}"
+  [closable]="true">
+  
+  <form>
+    <div class="grid">
+      <div class="col-12">
+        <label class="block mb-2">Chủ hàng <span class="text-red-500">*</span></label>
+        <p-dropdown 
+          [options]="customers" 
+          [(ngModel)]="issueForm.customerId"
+          name="issueCustomerId"
+          optionLabel="name" 
+          optionValue="id"
+          placeholder="Chọn chủ hàng"
+          styleClass="w-full"
+          [required]="true">
+        </p-dropdown>
+      </div>
+
+      <div class="col-12">
+        <label class="block mb-2">Nguyên vật liệu <span class="text-red-500">*</span></label>
+        <p-dropdown 
+          [options]="materials" 
+          [(ngModel)]="issueForm.materialId"
+          name="issueMaterialId"
+          optionLabel="name" 
+          optionValue="id"
+          placeholder="Chọn nguyên vật liệu"
+          styleClass="w-full"
+          (onChange)="onIssueMaterialChange()"
+          [required]="true">
+        </p-dropdown>
+      </div>
+
+      <div class="col-6">
+        <label class="block mb-2">Kho <span class="text-red-500">*</span></label>
+        <p-dropdown 
+          [options]="warehouses" 
+          [(ngModel)]="issueForm.warehouseId"
+          name="issueWarehouseId"
+          optionLabel="name" 
+          optionValue="id"
+          placeholder="Chọn kho"
+          styleClass="w-full"
+          [required]="true">
+        </p-dropdown>
+      </div>
+
+      <div class="col-6">
+        <label class="block mb-2">Số lô <span class="text-red-500">*</span></label>
+        <input pInputText [(ngModel)]="issueForm.batchNumber" 
+               name="batchNumber"
+               placeholder="Nhập số lô"
+               class="w-full"
+               [required]="true">
+      </div>
+
+      <div class="col-6">
+        <label class="block mb-2">Số lượng <span class="text-red-500">*</span></label>
+        <p-inputNumber 
+          [(ngModel)]="issueForm.quantity" 
+          name="quantity"
+          [min]="0.001"
+          [useGrouping]="false"
+          styleClass="w-full"
+          [required]="true">
+        </p-inputNumber>
+      </div>
+
+      <div class="col-6">
+        <label class="block mb-2">Đơn vị <span class="text-red-500">*</span></label>
+        <p-dropdown 
+          [options]="units" 
+          [(ngModel)]="issueForm.unit"
+          name="unit"
+          optionLabel="label" 
+          optionValue="value"
+          placeholder="Chọn đơn vị"
+          styleClass="w-full"
+          [required]="true">
+        </p-dropdown>
+      </div>
+
+      <div class="col-6">
+        <label class="block mb-2">Ngày xuất <span class="text-red-500">*</span></label>
+        <p-calendar [(ngModel)]="issueForm.issueDate" 
+                    [showIcon]="true"
+                    dateFormat="dd/mm/yy"
+                    styleClass="w-full"
+                    name="issueDate"
+                    [required]="true">
+        </p-calendar>
+      </div>
+
+      <div class="col-6">
+        <label class="block mb-2">Số phiếu xuất <span class="text-red-500">*</span></label>
+        <input pInputText [(ngModel)]="issueForm.issueNumber" 
+               name="issueNumber"
+               placeholder="PXK-2025-0001"
+               class="w-full"
+               [required]="true">
+      </div>
+
+      <div class="col-12">
+        <label class="block mb-2">Lý do <span class="text-red-500">*</span></label>
+        <input pInputText [(ngModel)]="issueForm.reason" 
+               name="reason"
+               placeholder="Sản xuất, Hao hụt..."
+               class="w-full"
+               [required]="true">
+      </div>
+
+      <div class="col-12">
+        <label class="block mb-2">Ghi chú</label>
+        <textarea pInputTextarea [(ngModel)]="issueForm.notes" 
+                  name="notes"
+                  rows="3" 
+                  class="w-full"></textarea>
+      </div>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Hủy" icon="pi pi-times" 
+            class="p-button-text" (click)="showIssueDialog = false"></button>
+    <button pButton type="button" label="Xuất kho" 
+            icon="pi pi-check" class="p-button-warning" (click)="saveIssue()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog Điều chỉnh -->
+<p-dialog 
+  [(visible)]="showAdjustmentDialog" 
+  header="Điều chỉnh kho nguyên vật liệu"
+  [modal]="true" 
+  [style]="{width: '700px'}"
+  [closable]="true">
+  
+  <form>
+    <div class="grid">
+      <div class="col-12">
+        <label class="block mb-2">Chủ hàng <span class="text-red-500">*</span></label>
+        <p-dropdown 
+          [options]="customers" 
+          [(ngModel)]="adjustmentForm.customerId"
+          name="adjustmentCustomerId"
+          optionLabel="name" 
+          optionValue="id"
+          placeholder="Chọn chủ hàng"
+          styleClass="w-full"
+          [required]="true">
+        </p-dropdown>
+      </div>
+
+      <div class="col-12">
+        <label class="block mb-2">Nguyên vật liệu <span class="text-red-500">*</span></label>
+        <p-dropdown 
+          [options]="materials" 
+          [(ngModel)]="adjustmentForm.materialId"
+          name="adjustmentMaterialId"
+          optionLabel="name" 
+          optionValue="id"
+          placeholder="Chọn nguyên vật liệu"
+          styleClass="w-full"
+          (onChange)="onAdjustmentMaterialChange()"
+          [required]="true">
+        </p-dropdown>
+      </div>
+
+      <div class="col-6">
+        <label class="block mb-2">Kho <span class="text-red-500">*</span></label>
+        <p-dropdown 
+          [options]="warehouses" 
+          [(ngModel)]="adjustmentForm.warehouseId"
+          name="adjustmentWarehouseId"
+          optionLabel="name" 
+          optionValue="id"
+          placeholder="Chọn kho"
+          styleClass="w-full"
+          [required]="true">
+        </p-dropdown>
+      </div>
+
+      <div class="col-6">
+        <label class="block mb-2">Số lô <span class="text-red-500">*</span></label>
+        <input pInputText [(ngModel)]="adjustmentForm.batchNumber" 
+               name="batchNumber"
+               placeholder="Nhập số lô"
+               class="w-full"
+               [required]="true">
+      </div>
+
+      <div class="col-6">
+        <label class="block mb-2">Số lượng điều chỉnh <span class="text-red-500">*</span></label>
+        <p-inputNumber 
+          [(ngModel)]="adjustmentForm.adjustmentQuantity" 
+          name="adjustmentQuantity"
+          [useGrouping]="false"
+          styleClass="w-full"
+          [required]="true">
+        </p-inputNumber>
+        <small class="text-gray-500">Nhập số dương để tăng, số âm để giảm</small>
+      </div>
+
+      <div class="col-6">
+        <label class="block mb-2">Đơn vị <span class="text-red-500">*</span></label>
+        <p-dropdown 
+          [options]="units" 
+          [(ngModel)]="adjustmentForm.unit"
+          name="unit"
+          optionLabel="label" 
+          optionValue="value"
+          placeholder="Chọn đơn vị"
+          styleClass="w-full"
+          [required]="true">
+        </p-dropdown>
+      </div>
+
+      <div class="col-6">
+        <label class="block mb-2">Ngày điều chỉnh <span class="text-red-500">*</span></label>
+        <p-calendar [(ngModel)]="adjustmentForm.adjustmentDate" 
+                    [showIcon]="true"
+                    dateFormat="dd/mm/yy"
+                    styleClass="w-full"
+                    name="adjustmentDate"
+                    [required]="true">
+        </p-calendar>
+      </div>
+
+      <div class="col-6">
+        <label class="block mb-2">Số phiếu điều chỉnh <span class="text-red-500">*</span></label>
+        <input pInputText [(ngModel)]="adjustmentForm.adjustmentNumber" 
+               name="adjustmentNumber"
+               placeholder="DC-2025-0001"
+               class="w-full"
+               [required]="true">
+      </div>
+
+      <div class="col-12">
+        <label class="block mb-2">Lý do <span class="text-red-500">*</span></label>
+        <input pInputText [(ngModel)]="adjustmentForm.reason" 
+               name="reason"
+               placeholder="Nhập lý do điều chỉnh"
+               class="w-full"
+               [required]="true">
+      </div>
+
+      <div class="col-12">
+        <label class="block mb-2">Người chịu trách nhiệm <span class="text-red-500">*</span></label>
+        <input pInputText [(ngModel)]="adjustmentForm.responsiblePerson" 
+               name="responsiblePerson"
+               placeholder="Nhập tên người chịu trách nhiệm"
+               class="w-full"
+               [required]="true">
+      </div>
+
+      <div class="col-12">
+        <label class="block mb-2">Ghi chú</label>
+        <textarea pInputTextarea [(ngModel)]="adjustmentForm.notes" 
+                  name="notes"
+                  rows="3" 
+                  class="w-full"></textarea>
+      </div>
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Hủy" icon="pi pi-times" 
+            class="p-button-text" (click)="showAdjustmentDialog = false"></button>
+    <button pButton type="button" label="Điều chỉnh" 
+            icon="pi pi-check" class="p-button-info" (click)="saveAdjustment()"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog Chi tiết tồn kho -->
+<p-dialog 
+  [(visible)]="showStockDialog" 
+  [header]="'Chi tiết tồn kho - ' + (selectedMaterialForStock?.name || '')"
+  [modal]="true" 
+  [style]="{width: '900px'}"
+  [closable]="true">
+  
+  <div *ngIf="materialStock" class="grid">
+    <div class="col-12">
+      <div class="surface-card p-4 border-round mb-3">
+        <div class="grid">
+          <div class="col-6">
+            <p class="text-sm text-gray-500 mb-1">Mã vật tư</p>
+            <p class="text-lg font-bold">{{ materialStock.materialCode }}</p>
+          </div>
+          <div class="col-6">
+            <p class="text-sm text-gray-500 mb-1">Tên vật tư</p>
+            <p class="text-lg font-bold">{{ materialStock.materialName }}</p>
+          </div>
+          <div class="col-6">
+            <p class="text-sm text-gray-500 mb-1">Tồn kho hiện tại</p>
+            <p class="text-2xl font-bold text-primary">{{ materialStock.currentStock }} {{ materialStock.unit }}</p>
+          </div>
+          <div class="col-6">
+            <p class="text-sm text-gray-500 mb-1">Tồn kho tối thiểu</p>
+            <p class="text-lg font-bold">{{ materialStock.minStock }} {{ materialStock.unit }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-12">
+      <h6 class="mb-3">Chi tiết theo lô</h6>
+      <p-table [value]="materialStock.batchStocks" 
+               [paginator]="true" 
+               [rows]="10"
+               styleClass="p-datatable-striped">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>Số lô</th>
+            <th>Số lượng</th>
+            <th>Đơn vị</th>
+            <th>Ngày nhập cuối</th>
+            <th>Ngày xuất cuối</th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-batch>
+          <tr>
+            <td><strong>{{ batch.batchNumber }}</strong></td>
+            <td>{{ batch.quantity }}</td>
+            <td>{{ batch.unit }}</td>
+            <td>{{ batch.lastReceiptDate | date:'dd/MM/yyyy' }}</td>
+            <td>{{ batch.lastIssueDate | date:'dd/MM/yyyy' }}</td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="5" class="text-center py-4">
+              <p class="text-gray-500">Không có lô nào còn tồn</p>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Đóng" icon="pi pi-times" 
+            class="p-button-text" (click)="showStockDialog = false"></button>
+  </ng-template>
+</p-dialog>
+
+<p-toast></p-toast>
+

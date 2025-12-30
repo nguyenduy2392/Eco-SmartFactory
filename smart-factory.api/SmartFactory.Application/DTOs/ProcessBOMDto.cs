@@ -70,8 +70,14 @@ public class UpdateProcessBOMRequest
 /// </summary>
 public class AvailabilityCheckRequest
 {
-    public Guid PurchaseOrderId { get; set; }
-    public int PlannedQuantity { get; set; }
+    // For PO-based check
+    public Guid? PurchaseOrderId { get; set; }
+    public int? PlannedQuantity { get; set; }
+    
+    // For component-based check (not PO-based)
+    public Guid? PartId { get; set; }
+    public Guid? ProcessingTypeId { get; set; }
+    public int? Quantity { get; set; }
 }
 
 /// <summary>
@@ -85,14 +91,29 @@ public class AvailabilityCheckResult
     public string OverallStatus { get; set; } = "PASS";
     
     /// <summary>
-    /// PO ID being checked
+    /// PO ID being checked (for PO-based check)
     /// </summary>
-    public Guid PurchaseOrderId { get; set; }
+    public Guid? PurchaseOrderId { get; set; }
     
     /// <summary>
-    /// Planned quantity
+    /// Planned quantity (for PO-based check)
     /// </summary>
-    public int PlannedQuantity { get; set; }
+    public int? PlannedQuantity { get; set; }
+    
+    /// <summary>
+    /// Part ID (for component-based check)
+    /// </summary>
+    public Guid? PartId { get; set; }
+    
+    /// <summary>
+    /// Processing Type ID (for component-based check)
+    /// </summary>
+    public Guid? ProcessingTypeId { get; set; }
+    
+    /// <summary>
+    /// Quantity (for component-based check)
+    /// </summary>
+    public int? Quantity { get; set; }
     
     /// <summary>
     /// Part-level results

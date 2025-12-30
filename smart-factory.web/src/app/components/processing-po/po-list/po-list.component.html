@@ -1,9 +1,19 @@
 <div class="card">
-  <div class="flex justify-content-between align-items-center mb-4">
+  <div *ngIf="!hideHeader" class="flex justify-content-between align-items-center mb-4">
     <h2 class="text-2xl font-bold m-0">
       <i class="pi pi-file-import mr-2"></i>
       Quản lý Processing PO
     </h2>
+    <p-button
+      label="Import PO từ Excel"
+      icon="pi pi-upload"
+      (onClick)="openImportDialog()"
+      styleClass="p-button-success">
+    </p-button>
+  </div>
+
+  <!-- Import Button when header is hidden -->
+  <div *ngIf="hideHeader" class="flex justify-content-end mb-4">
     <p-button
       label="Import PO từ Excel"
       icon="pi pi-upload"
@@ -42,7 +52,7 @@
       </p-dropdown>
     </div>
 
-    <div class="col-12 md:col-3">
+    <div class="col-12 md:col-3" *ngIf="!customerId">
       <label for="customer" class="block mb-2">Chủ hàng</label>
       <p-dropdown
         id="customer"
@@ -58,7 +68,7 @@
       </p-dropdown>
     </div>
 
-    <div class="col-12 md:col-3">
+    <div class="col-12" [class.md:col-3]="!customerId" [class.md:col-6]="customerId">
       <label for="search" class="block mb-2">Tìm kiếm</label>
       <span class="p-input-icon-left w-full">
         <i class="pi pi-search"></i>
@@ -105,7 +115,7 @@
           Số PO
           <p-sortIcon field="poNumber"></p-sortIcon>
         </th>
-        <th pSortableColumn="customerName">
+        <th *ngIf="!customerId" pSortableColumn="customerName">
           Chủ hàng
           <p-sortIcon field="customerName"></p-sortIcon>
         </th>
@@ -142,7 +152,7 @@
         <td>
           <strong>{{ po.poNumber }}</strong>
         </td>
-        <td>{{ po.customerName }}</td>
+        <td *ngIf="!customerId">{{ po.customerName }}</td>
         <td>
           <p-tag
             [value]="getProcessingTypeLabel(po.processingType)"
@@ -193,7 +203,7 @@
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="9" class="text-center">
+        <td [attr.colspan]="customerId ? 8 : 9" class="text-center">
           <div class="p-4">
             <i class="pi pi-inbox text-4xl text-400"></i>
             <p class="text-xl text-500 mt-3">Không có PO nào</p>
@@ -236,8 +246,13 @@
         [filter]="true"
         filterBy="name"
         [style]="{'width': '100%'}"
+        [disabled]="!!customerId"
         required>
       </p-dropdown>
+      <small *ngIf="customerId" class="text-500 block mt-2">
+        <i class="pi pi-info-circle mr-1"></i>
+        PO sẽ được import cho chủ hàng hiện tại
+      </small>
     </div>
 
     <div class="field">

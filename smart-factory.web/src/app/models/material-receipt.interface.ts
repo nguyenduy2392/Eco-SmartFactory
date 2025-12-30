@@ -10,10 +10,12 @@ export interface MaterialReceipt {
   materialId: string;
   materialCode?: string;
   materialName?: string;
-  warehouseCode: string;
+  warehouseId: string;
+  warehouseCode?: string;
+  warehouseName?: string;
   quantity: number;
   unit: string;
-  batchNumber?: string;
+  batchNumber: string;
   receiptDate: Date;
   supplierCode?: string;
   purchasePOCode?: string;
@@ -29,10 +31,10 @@ export interface MaterialReceipt {
 export interface CreateMaterialReceiptRequest {
   customerId: string;
   materialId: string;
-  warehouseCode: string;
+  warehouseId: string;
   quantity: number;
   unit: string;
-  batchNumber?: string;
+  batchNumber: string;
   receiptDate: Date;
   supplierCode?: string;
   purchasePOCode?: string;
@@ -41,7 +43,7 @@ export interface CreateMaterialReceiptRequest {
 }
 
 export interface UpdateMaterialReceiptRequest {
-  warehouseCode?: string;
+  warehouseId?: string;
   quantity?: number;
   unit?: string;
   batchNumber?: string;

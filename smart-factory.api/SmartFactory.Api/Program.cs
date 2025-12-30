@@ -132,6 +132,9 @@ try
 
     // Register ExcelImportService
     builder.Services.AddScoped<SmartFactory.Application.Services.ExcelImportService>();
+    
+    // Register WarehouseExcelService
+    builder.Services.AddScoped<SmartFactory.Application.Services.WarehouseExcelService>();
 
     // Add MediatR
     builder.Services.AddMediatR(cfg =>

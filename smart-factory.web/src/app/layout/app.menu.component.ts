@@ -30,39 +30,14 @@ export class AppMenuComponent implements OnInit {
                 icon: 'pi pi-fw pi-box',
                 items: [
                     {
-                        label: 'Processing PO',
-                        icon: 'pi pi-fw pi-file-import',
-                        routerLink: ['/processing-po']
-                    },
-                    {
-                        label: 'Process BOM',
-                        icon: 'pi pi-fw pi-sitemap',
-                        routerLink: ['/process-bom']
-                    },
-                    {
-                        label: 'Kiểm tra khả dụng linh kiện',
-                        icon: 'pi pi-fw pi-check-circle',
-                        routerLink: ['/availability-check']
-                    },
-                    {
-                        label: 'Sản phẩm',
-                        icon: 'pi pi-fw pi-box',
-                        routerLink: ['/products']
-                    },
-                    {
                         label: 'Chủ hàng',
                         icon: 'pi pi-fw pi-building',
                         routerLink: ['/customers']
                     },
                     {
-                        label: 'Vật tư',
+                        label: 'Kho nguyên vật liệu',
                         icon: 'pi pi-fw pi-box',
-                        routerLink: ['/materials']
-                    },
-                    {
-                        label: 'Tool & Khuôn',
-                        icon: 'pi pi-fw pi-wrench',
-                        routerLink: ['/tools']
+                        routerLink: ['/warehouse']
                     }
                 ]
             },

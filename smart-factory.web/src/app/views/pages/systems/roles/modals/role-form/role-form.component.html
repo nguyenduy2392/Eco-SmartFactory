@@ -8,13 +8,13 @@
               Tên vai trò <span class="text-red-400">*</span>
             </div>
             <div class="col-12">
-              <input [(ngModel)]="role.name" type="text" pInputText class="w-full" placeholder="Nhập tên vai trò" />
+              <input [(ngModel)]="role.name" name="roleName" type="text" pInputText class="w-full" placeholder="Nhập tên vai trò" />
             </div>
             <div class="col-12">
               Mô tả vai trò
             </div>
             <div class="col-12">
-              <textarea [(ngModel)]="role.description" pInputText rows="5" class="w-full"
+              <textarea [(ngModel)]="role.description" name="roleDescription" pInputText rows="5" class="w-full"
                 placeholder="Mô tả vai trò"></textarea>
             </div>
 
@@ -34,7 +34,7 @@
             </tr>
             <tr *ngIf="permission.id !== null" style="height: 40px !important;">
               <td style="width: 50px;">
-                <p-checkbox [(ngModel)]="permission.isHas" [binary]="true" inputId="binary" />
+                <p-checkbox [(ngModel)]="permission.isHas" name="permission_{{permission.id}}" [binary]="true" inputId="binary" />
               </td>
               <td>
                 {{permission.name}}
@@ -51,7 +51,7 @@
           <ng-template pTemplate="body" let-user let-columns="columns">
             <tr style="height: 40px !important;">
               <td style="width: 50px;">
-                <p-checkbox [(ngModel)]="user.isHas" [binary]="true" inputId="binary" />
+                <p-checkbox [(ngModel)]="user.isHas" name="user_{{user.id}}" [binary]="true" inputId="binary" />
               </td>
               <td>
                 {{user.userName}}

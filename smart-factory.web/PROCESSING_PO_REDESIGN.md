@@ -402,3 +402,4 @@ smart-factory.web/src/app/
 - Ready for backend integration
 
 
+
