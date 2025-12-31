@@ -88,15 +88,28 @@ export interface ApprovePORequest {
 export interface POOperation {
   id: string;
   purchaseOrderId: string;
-  productCode: string; // From Excel
-  partCode: string; // From Excel
+  partId: string;
+  partCode: string;
   partName?: string;
-  contractQty: number; // From Excel - contract_qty
-  unitPrice: number; // From Excel - unit_price
-  totalAmount: number; // Calculated: contractQty * unitPrice
-  uom?: string; // Unit of measure
+  productId?: string; // Product that contains this part
+  productCode?: string;
+  productName?: string;
+  processingTypeId: string;
+  processingTypeName?: string;
+  processMethodId?: string;
+  processMethodName?: string;
+  operationName: string; // Tên công đoạn
+  chargeCount: number; // Số lần (加工次数)
+  unitPrice: number; // Đơn giá (VND)
+  quantity: number; // Số lượng hợp đồng (SL HỢP ĐỒNG)
+  totalAmount: number; // Thành tiền
+  sprayPosition?: string;
+  printContent?: string;
+  cycleTime?: number;
+  assemblyContent?: string;
   notes?: string;
-  rowNumber: number; // For error tracking
+  completionDate?: Date; // Ngày hoàn thành
+  sequenceOrder: number;
 }
 
 // PO Material Baseline - from NHAP_NGUYEN_VAT_LIEU sheet
@@ -132,6 +145,20 @@ export interface AvailabilityCheckResult {
   quantity?: number;
   checkDate: Date;
   partResults: PartAvailabilityResult[];
+  totalRequired?: number;
+  totalAvailable?: number;
+  materialResults?: MaterialAvailabilityResult[];
+}
+
+export interface MaterialAvailabilityResult {
+  materialCode: string;
+  materialName: string;
+  requiredQty: number;
+  inventoryQty: number;
+  poBaselineQty: number;
+  availableQty: number;
+  shortage: number;
+  severity: 'OK' | 'WARNING' | 'CRITICAL';
 }
 
 export interface PartAvailabilityResult {

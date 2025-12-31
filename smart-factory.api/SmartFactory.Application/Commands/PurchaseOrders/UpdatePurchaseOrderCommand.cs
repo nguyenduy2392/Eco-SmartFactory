@@ -47,6 +47,12 @@ public class UpdatePurchaseOrderCommandHandler : IRequestHandler<UpdatePurchaseO
             throw new Exception($"Customer with ID {request.CustomerId} not found");
         }
 
+        // Only allow editing if status is DRAFT
+        if (po.Status != "DRAFT" && request.Status == "DRAFT")
+        {
+            throw new Exception("Chỉ có thể chỉnh sửa PO khi trạng thái là DRAFT");
+        }
+
         po.CustomerId = request.CustomerId;
         po.PODate = request.PODate;
         po.ExpectedDeliveryDate = request.ExpectedDeliveryDate;

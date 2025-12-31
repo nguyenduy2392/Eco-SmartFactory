@@ -157,5 +157,150 @@ public class PurchaseOrdersController : BaseApiController
             return BadRequest(new { error = ex.Message });
         }
     }
+
+    [HttpPut("{id}/general-info")]
+    public async Task<IActionResult> UpdateGeneralInfo(Guid id, [FromBody] UpdateGeneralInfoRequest request)
+    {
+        try
+        {
+            var command = new UpdatePurchaseOrderGeneralInfoCommand
+            {
+                Id = id,
+                PONumber = request.PONumber,
+                PODate = request.PODate,
+                ExpectedDeliveryDate = request.ExpectedDeliveryDate,
+                Notes = request.Notes
+            };
+            var result = await Mediator.Send(command);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [HttpGet("{id}/export-operations")]
+    public async Task<IActionResult> ExportOperations(Guid id)
+    {
+        try
+        {
+            var query = new GetPurchaseOrderByIdQuery { Id = id };
+            var po = await Mediator.Send(query);
+            
+            if (po == null)
+            {
+                return NotFound(new { error = "PO not found" });
+            }
+
+            // TODO: Implement Excel export service
+            // For now, return a simple response
+            return BadRequest(new { error = "Export functionality not yet implemented" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [HttpPost("{id}/operations")]
+    public async Task<IActionResult> CreateOperation(Guid id, [FromBody] CreatePOOperationRequest request)
+    {
+        try
+        {
+            var command = new CreatePOOperationCommand
+            {
+                PurchaseOrderId = id,
+                PartId = request.PartId,
+                ProcessingTypeId = request.ProcessingTypeId,
+                ProcessMethodId = request.ProcessMethodId,
+                OperationName = request.OperationName,
+                ChargeCount = request.ChargeCount,
+                UnitPrice = request.UnitPrice,
+                Quantity = request.Quantity,
+                SprayPosition = request.SprayPosition,
+                PrintContent = request.PrintContent,
+                CycleTime = request.CycleTime,
+                AssemblyContent = request.AssemblyContent,
+                CompletionDate = request.CompletionDate,
+                SequenceOrder = request.SequenceOrder
+            };
+            var result = await Mediator.Send(command);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [HttpPut("{id}/operations/{operationId}")]
+    public async Task<IActionResult> UpdateOperation(Guid id, Guid operationId, [FromBody] UpdatePOOperationRequest request)
+    {
+        try
+        {
+            var command = new UpdatePOOperationCommand
+            {
+                Id = operationId,
+                PurchaseOrderId = id,
+                OperationName = request.OperationName,
+                ChargeCount = request.ChargeCount,
+                UnitPrice = request.UnitPrice,
+                Quantity = request.Quantity,
+                SprayPosition = request.SprayPosition,
+                PrintContent = request.PrintContent,
+                CycleTime = request.CycleTime,
+                AssemblyContent = request.AssemblyContent,
+                CompletionDate = request.CompletionDate,
+                Notes = request.Notes
+            };
+            var result = await Mediator.Send(command);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id}/operations/{operationId}")]
+    public async Task<IActionResult> DeleteOperation(Guid id, Guid operationId)
+    {
+        try
+        {
+            var command = new DeletePOOperationCommand
+            {
+                Id = operationId,
+                PurchaseOrderId = id
+            };
+            await Mediator.Send(command);
+            return Ok(new { success = true, message = "Operation deleted successfully" });
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    [HttpPut("{id}/products/{productId}")]
+    public async Task<IActionResult> UpdateProduct(Guid id, Guid productId, [FromBody] UpdatePOProductRequest request)
+    {
+        try
+        {
+            var command = new UpdatePOProductCommand
+            {
+                Id = productId,
+                PurchaseOrderId = id,
+                Quantity = request.Quantity,
+                UnitPrice = request.UnitPrice
+            };
+            var result = await Mediator.Send(command);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
 }
 

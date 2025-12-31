@@ -91,8 +91,9 @@ public class ExcelImportService
     /// Parse template ÉP NHỰA
     /// Template mới có các cột:
     /// Mã sản phẩm, Tên sản phẩm, Mã khuôn/Model, Mã linh kiện, Tên linh kiện, 
-    /// Vật liệu, Mã màu, Màu sắc, Số lòng khuôn, Chu kỳ (s), Trọng lượng (g), 
-    /// Số lượng (PCS), Đơn giá (VND), Thành tiền (VND)
+    /// Vật liệu, Mã màu, Màu sắc, Số lòng khuôn, Bộ, Chu kỳ (s), Trọng lượng tịnh (g), 
+    /// Trọng lượng tổng, Số máy ép, Lượng nhựa cần, Lượng màu cần,
+    /// Số lượng (PCS), Số lần ép, Đơn giá (VND), Thành tiền (VND)
     /// Parse theo header động để hỗ trợ cả template cũ và mới
     /// </summary>
     private async Task<ExcelImportResult> ParseEpNhuaTemplate(ExcelWorksheet worksheet)
@@ -166,11 +167,17 @@ public class ExcelImportService
                     
                     // Thông tin kỹ thuật
                     NumberOfCavities = GetIntValueByColumn(worksheet, currentRow, columnMap, "NumberOfCavities", "Số lòng khuôn", "模腔数"),
+                    Set = GetIntValueByColumn(worksheet, currentRow, columnMap, "Set", "Bộ", "套"),
                     CycleTime = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "CycleTime", "Chu kỳ", "周期", "Chu kỳ (s)", "周期(s)"),
-                    Weight = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "Weight", "Trọng lượng", "重量", "Trọng lượng (g)", "重量(g)"),
+                    Weight = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "Weight", "Trọng lượng tịnh", "净重", "Trọng lượng (g)", "重量(g)", "Trọng lượng", "重量"),
+                    TotalWeight = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "TotalWeight", "Trọng lượng tổng", "总重量"),
+                    PressMachine = GetValueByColumn(worksheet, currentRow, columnMap, "PressMachine", "Số máy ép", "压机号", "Máy ép", "压机"),
+                    RequiredPlasticQuantity = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "RequiredPlasticQuantity", "Lượng nhựa cần", "所需塑料量", "Lượng nhựa", "塑料量"),
+                    RequiredColorQuantity = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "RequiredColorQuantity", "Lượng màu cần", "所需颜色量", "Lượng màu", "颜色量"),
                     
                     // Thông tin số lượng và giá
                     Quantity = GetIntValueByColumn(worksheet, currentRow, columnMap, "Quantity", "Số lượng", "数量", "Số lượng (PCS)", "数量(PCS)"),
+                    NumberOfPresses = GetIntValueByColumn(worksheet, currentRow, columnMap, "NumberOfPresses", "Số lần ép", "压次数", "Số lần", "次数"),
                     UnitPrice = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "UnitPrice", "Đơn giá", "单价", "Đơn giá (VND)", "单价(VND)"),
                     TotalAmount = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "TotalAmount", "Thành tiền", "总金额", "Thành tiền (VND)", "总金额(VND)"),
                     
@@ -566,6 +573,13 @@ public class ExcelImportService
                 columnMap["NumberOfCavities"] = col;
             }
             
+            // Bộ / Set/Kit
+            if (headerLower == "bộ" || headerLower.Contains("套") || 
+                headerLower == "set" || headerLower == "kit")
+            {
+                columnMap["Set"] = col;
+            }
+            
             // Chu kỳ / Cycle Time
             if (headerLower.Contains("chu kỳ") || headerLower.Contains("周期") || 
                 headerLower.Contains("cycle") || headerLower.Contains("cycle time"))
@@ -573,11 +587,58 @@ public class ExcelImportService
                 columnMap["CycleTime"] = col;
             }
             
-            // Trọng lượng / Weight
-            if (headerLower.Contains("trọng lượng") || headerLower.Contains("重量") || 
-                headerLower.Contains("weight"))
+            // Trọng lượng tịnh / Net Weight
+            if ((headerLower.Contains("trọng lượng tịnh") || headerLower.Contains("净重")) && 
+                !headerLower.Contains("trọng lượng tổng") && !headerLower.Contains("总重量"))
             {
                 columnMap["Weight"] = col;
+            }
+            
+            // Trọng lượng tổng / Total Weight
+            if (headerLower.Contains("trọng lượng tổng") || headerLower.Contains("总重量") ||
+                (headerLower.Contains("trọng lượng") && headerLower.Contains("tổng")) ||
+                (headerLower.Contains("重量") && headerLower.Contains("总")))
+            {
+                columnMap["TotalWeight"] = col;
+            }
+            
+            // Trọng lượng (chung, nếu không có trọng lượng tịnh)
+            if (headerLower.Contains("trọng lượng") && !columnMap.ContainsKey("Weight") && 
+                !headerLower.Contains("tổng") && !headerLower.Contains("总"))
+            {
+                columnMap["Weight"] = col;
+            }
+            
+            // Số máy ép / Press Machine
+            if (headerLower.Contains("số máy ép") || headerLower.Contains("máy ép") ||
+                headerLower.Contains("压机号") || headerLower.Contains("压机") ||
+                headerLower.Contains("press machine") || headerLower.Contains("pressmachine"))
+            {
+                columnMap["PressMachine"] = col;
+            }
+            
+            // Lượng nhựa cần / Required Plastic Quantity
+            if (headerLower.Contains("lượng nhựa cần") || headerLower.Contains("lượng nhựa") ||
+                headerLower.Contains("所需塑料量") || headerLower.Contains("塑料量") ||
+                headerLower.Contains("required plastic") || headerLower.Contains("plastic quantity"))
+            {
+                columnMap["RequiredPlasticQuantity"] = col;
+            }
+            
+            // Lượng màu cần / Required Color Quantity
+            if (headerLower.Contains("lượng màu cần") || headerLower.Contains("lượng màu") ||
+                headerLower.Contains("所需颜色量") || headerLower.Contains("颜色量") ||
+                headerLower.Contains("required color") || headerLower.Contains("color quantity"))
+            {
+                columnMap["RequiredColorQuantity"] = col;
+            }
+            
+            // Số lần ép / Number of Presses
+            if (headerLower.Contains("số lần ép") || headerLower.Contains("压次数") ||
+                (headerLower.Contains("số lần") && headerLower.Contains("ép")) ||
+                headerLower.Contains("number of presses") || headerLower.Contains("presses"))
+            {
+                columnMap["NumberOfPresses"] = col;
             }
             
             // Số lượng / Quantity
@@ -1349,8 +1410,14 @@ public class POOperationData
     public string? Material { get; set; }
     public string? ColorCode { get; set; }
     public string? Color { get; set; }
-    public decimal? Weight { get; set; }
+    public int? Set { get; set; } // Bộ
+    public decimal? Weight { get; set; } // Trọng lượng tịnh
+    public decimal? TotalWeight { get; set; } // Trọng lượng tổng
+    public string? PressMachine { get; set; } // Số máy ép
+    public decimal? RequiredPlasticQuantity { get; set; } // Lượng nhựa cần
+    public decimal? RequiredColorQuantity { get; set; } // Lượng màu cần
     public decimal? CycleTime { get; set; }
+    public int? NumberOfPresses { get; set; } // Số lần ép
     
     // LẮP RÁP fields
     public string? AssemblyContent { get; set; }

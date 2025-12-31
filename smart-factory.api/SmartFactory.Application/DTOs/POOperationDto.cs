@@ -7,6 +7,9 @@ public class POOperationDto
     public Guid PartId { get; set; }
     public string PartCode { get; set; } = string.Empty;
     public string PartName { get; set; } = string.Empty;
+    public Guid? ProductId { get; set; } // Product that contains this part
+    public string? ProductCode { get; set; }
+    public string? ProductName { get; set; }
     public Guid ProcessingTypeId { get; set; }
     public string ProcessingTypeName { get; set; } = string.Empty;
     public Guid? ProcessMethodId { get; set; }
@@ -21,6 +24,7 @@ public class POOperationDto
     public decimal? CycleTime { get; set; }
     public string? AssemblyContent { get; set; }
     public string? Notes { get; set; }
+    public DateTime? CompletionDate { get; set; }
     public int SequenceOrder { get; set; }
 }
 
@@ -37,6 +41,7 @@ public class CreatePOOperationRequest
     public string? PrintContent { get; set; }
     public decimal? CycleTime { get; set; }
     public string? AssemblyContent { get; set; }
+    public DateTime? CompletionDate { get; set; }
     public int SequenceOrder { get; set; }
 }
 

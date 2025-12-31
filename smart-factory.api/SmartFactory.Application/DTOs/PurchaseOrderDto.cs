@@ -73,6 +73,28 @@ public class UpdatePurchaseOrderRequest
     public string? Notes { get; set; }
 }
 
+public class UpdateGeneralInfoRequest
+{
+    public string? PONumber { get; set; }
+    public DateTime? PODate { get; set; }
+    public DateTime? ExpectedDeliveryDate { get; set; }
+    public string? Notes { get; set; }
+}
+
+public class UpdatePOOperationRequest
+{
+    public string OperationName { get; set; } = string.Empty;
+    public int ChargeCount { get; set; } = 1;
+    public decimal UnitPrice { get; set; }
+    public int Quantity { get; set; }
+    public string? SprayPosition { get; set; }
+    public string? PrintContent { get; set; }
+    public decimal? CycleTime { get; set; }
+    public string? AssemblyContent { get; set; }
+    public DateTime? CompletionDate { get; set; }
+    public string? Notes { get; set; }
+}
+
 public class ClonePOVersionRequest
 {
     public Guid OriginalPOId { get; set; }

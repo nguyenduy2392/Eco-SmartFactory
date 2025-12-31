@@ -6,351 +6,541 @@
   <div *ngIf="!loading && purchaseOrder">
     <!-- Header -->
     <div class="flex justify-content-between align-items-start mb-4">
-      <div>
-        <div class="flex align-items-center gap-2 mb-2">
+      <div class="flex align-items-center gap-2">
+        <p-button
+          icon="pi pi-arrow-left"
+          [rounded]="true"
+          [text]="true"
+          (onClick)="goBack()"
+          pTooltip="Quay lại"
+          tooltipPosition="bottom">
+        </p-button>
+        <h2 class="text-2xl font-bold m-0">
+          PO: {{ purchaseOrder.poNumber }}
+        </h2>
+        <p-tag
+          [value]="getStatusLabel(purchaseOrder.status)"
+          [severity]="getStatusSeverity(purchaseOrder.status)"
+          [style]="{'font-size': '1rem', 'padding': '0.5rem 1rem'}">
+        </p-tag>
+        <p-tag
+          *ngIf="purchaseOrder.status === 'DRAFT'"
+          value="Nháp"
+          severity="warning"
+          [style]="{'font-size': '1rem', 'padding': '0.5rem 1rem'}">
+        </p-tag>
+      </div>
+
+      <div class="flex flex-column gap-2 align-items-end">
+        <div class="flex gap-2">
           <p-button
-            icon="pi pi-arrow-left"
-            [rounded]="true"
-            [text]="true"
-            (onClick)="goBack()"
-            pTooltip="Quay lại"
-            tooltipPosition="bottom">
+            label="Tạo Version mới"
+            icon="pi pi-copy"
+            (onClick)="openCloneDialog()"
+            styleClass="p-button-outlined">
           </p-button>
-          <h2 class="text-2xl font-bold m-0">
-            PO: {{ purchaseOrder.poNumber }}
-          </h2>
-          <p-tag
-            [value]="purchaseOrder.version"
-            [severity]="'info'"
-            [style]="{'font-size': '1rem', 'padding': '0.5rem 1rem'}">
-          </p-tag>
-          <p-tag
-            [value]="getStatusLabel(purchaseOrder.status)"
-            [severity]="getStatusSeverity(purchaseOrder.status)"
-            [style]="{'font-size': '1rem', 'padding': '0.5rem 1rem'}">
-          </p-tag>
+          <p-button
+            label="Phê duyệt cho PMC"
+            icon="pi pi-check"
+            (onClick)="approveForPMC()"
+            severity="success">
+          </p-button>
         </div>
-        <div class="text-500">
-          <i class="pi pi-calendar mr-2"></i>
-          Ngày tạo: {{ purchaseOrder.createdAt | date:'dd/MM/yyyy HH:mm' }}
+        <a 
+          class="flex align-items-center gap-2 text-primary cursor-pointer"
+          (click)="startEditGeneralInfo()"
+          style="text-decoration: none; font-size: 0.875rem;">
+          <i class="pi pi-pencil"></i>
+          <span>Sửa thông tin</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- THÔNG TIN ĐƠN HÀNG Section -->
+    <div class="card mb-4">
+      <h3 class="text-xl font-semibold mb-3">THÔNG TIN ĐƠN HÀNG</h3>
+
+      <div class="grid">
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label class="font-semibold text-600">SỐ PO</label>
+            <div class="p-inputgroup">
+              <span class="p-inputgroup-addon"><i class="pi pi-hashtag"></i></span>
+              <input 
+                *ngIf="!editingGeneralInfo"
+                pInputText 
+                [value]="purchaseOrder.poNumber" 
+                readonly>
+              <input 
+                *ngIf="editingGeneralInfo"
+                pInputText 
+                [(ngModel)]="editGeneralInfo.poNumber">
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label class="font-semibold text-600">KHÁCH HÀNG</label>
+            <div class="p-inputgroup">
+              <span class="p-inputgroup-addon"><i class="pi pi-user"></i></span>
+              <input pInputText [value]="purchaseOrder.customerName" readonly>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label class="font-semibold text-600">NGÀY PO</label>
+            <div class="p-inputgroup">
+              <span class="p-inputgroup-addon"><i class="pi pi-calendar"></i></span>
+              <input 
+                *ngIf="!editingGeneralInfo"
+                pInputText 
+                [value]="purchaseOrder.poDate | date:'dd/MM/yyyy'" 
+                readonly>
+              <p-calendar
+                *ngIf="editingGeneralInfo"
+                [(ngModel)]="editGeneralInfo.poDate"
+                [showIcon]="true"
+                dateFormat="dd/mm/yy"
+                [showButtonBar]="true"
+                styleClass="w-full">
+              </p-calendar>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label class="font-semibold text-600">NGÀY GIAO HÀNG DỰ KIẾN</label>
+            <div class="p-inputgroup">
+              <span class="p-inputgroup-addon"><i class="pi pi-calendar-plus"></i></span>
+              <input 
+                *ngIf="!editingGeneralInfo"
+                pInputText 
+                [value]="(purchaseOrder.expectedDeliveryDate | date:'dd/MM/yyyy') || '-'" 
+                readonly>
+              <p-calendar
+                *ngIf="editingGeneralInfo"
+                [(ngModel)]="editGeneralInfo.expectedDeliveryDate"
+                [showIcon]="true"
+                dateFormat="dd/mm/yy"
+                [showButtonBar]="true"
+                styleClass="w-full">
+              </p-calendar>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label class="font-semibold text-600">LOẠI GIA CÔNG</label>
+            <div class="p-inputgroup">
+              <span class="p-inputgroup-addon"><i class="pi pi-cog"></i></span>
+              <input pInputText [value]="getProcessingTypeLabel(purchaseOrder.processingType || '')" readonly>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-12 md:col-6">
+          <div class="field">
+            <label class="font-semibold text-600">NGÀY TẠO</label>
+            <div class="p-inputgroup">
+              <span class="p-inputgroup-addon"><i class="pi pi-clock"></i></span>
+              <input pInputText [value]="purchaseOrder.createdAt | date:'dd/MM/yyyy'" readonly>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="flex gap-2">
+      <div *ngIf="editingGeneralInfo" class="flex justify-content-end gap-2 mt-3">
         <p-button
-          *ngIf="canClone"
-          label="Tạo Version mới"
-          icon="pi pi-copy"
-          (onClick)="openCloneDialog()"
-          styleClass="p-button-outlined">
+          label="Hủy"
+          icon="pi pi-times"
+          (onClick)="cancelEditGeneralInfo()"
+          styleClass="p-button-text"
+          [disabled]="savingGeneralInfo">
         </p-button>
         <p-button
-          *ngIf="canApprove"
-          label="Phê duyệt cho PMC"
+          label="Lưu"
           icon="pi pi-check"
-          (onClick)="approveForPMC()"
-          severity="success">
-        </p-button>
-        <p-button
-          *ngIf="isApproved"
-          label="Kiểm tra khả dụng linh kiện"
-          icon="pi pi-check-circle"
-          (onClick)="openAvailabilityDialog()"
-          severity="info">
+          (onClick)="saveGeneralInfo()"
+          [loading]="savingGeneralInfo">
         </p-button>
       </div>
     </div>
 
-    <!-- Version Selector -->
-    <div class="mb-4" *ngIf="availableVersions.length > 1">
-      <p-card>
-        <div class="flex align-items-center gap-3">
-          <strong class="text-700">Chọn version xem:</strong>
-          <p-selectButton
-            [options]="availableVersions"
-            [(ngModel)]="selectedVersion"
-            optionLabel="version"
-            (onChange)="onVersionChange($event.value)">
-            <ng-template let-item pTemplate>
-              <div class="flex align-items-center gap-2">
-                <span>{{ item.version }}</span>
-                <p-tag
-                  *ngIf="item.status === 'APPROVED_FOR_PMC'"
-                  value="Phê duyệt"
-                  severity="success"
-                  [style]="{'font-size': '0.75rem'}">
-                </p-tag>
-                <p-tag
-                  *ngIf="item.status === 'LOCKED'"
-                  value="Khóa"
+    <!-- SẢN PHẨM VÀ CÔNG ĐOẠN GIA CÔNG Section -->
+    <div class="card">
+      <div class="flex justify-content-between align-items-center mb-3">
+        <h3 class="text-xl font-semibold m-0">SẢN PHẨM VÀ CÔNG ĐOẠN GIA CÔNG</h3>
+        <div class="flex gap-2">
+          <p-button
+            label="Xuất Excel"
+            icon="pi pi-download"
+            (onClick)="exportToExcel()"
+            styleClass="p-button-outlined"
+            [loading]="exporting">
+          </p-button>
+          <p-button
+            label="Thêm công đoạn"
+            icon="pi pi-plus"
+            (onClick)="openAddOperationDialog()">
+          </p-button>
+        </div>
+      </div>
+
+      <!-- Products List -->
+      <div *ngIf="purchaseOrder.products && purchaseOrder.products.length > 0; else noProducts">
+        <div *ngFor="let product of purchaseOrder.products" class="mb-3">
+          <!-- Product Header (Expandable) -->
+          <p-card [style]="{'margin-bottom': '0.5rem'}">
+            <div class="flex align-items-center justify-content-between">
+              <div class="flex align-items-center gap-3 flex-1 cursor-pointer" (click)="toggleProduct(product.productId)">
+                <i [class]="isProductExpanded(product.productId) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'" 
+                   class="text-primary"></i>
+                <div class="flex align-items-center gap-2">
+                  <span class="font-bold text-lg">{{ product.productCode }}</span>
+                  <span class="text-600">-</span>
+                  <span class="text-600">{{ product.productName }}</span>
+                </div>
+                <p-tag 
+                  [value]="'SL: ' + product.quantity" 
                   severity="info"
-                  [style]="{'font-size': '0.75rem'}">
+                  [style]="{'font-size': '0.875rem'}">
                 </p-tag>
               </div>
-            </ng-template>
-          </p-selectButton>
-        </div>
-      </p-card>
-    </div>
-
-    <!-- PO Information -->
-    <p-tabView [(activeIndex)]="activeTabIndex">
-      <!-- Tab 1: Thông tin chung -->
-      <p-tabPanel header="Thông tin chung" leftIcon="pi pi-info-circle">
-        <div class="grid">
-          <div class="col-12 md:col-6">
-            <div class="field">
-              <label class="font-semibold">Số PO</label>
-              <div class="p-inputgroup">
-                <span class="p-inputgroup-addon"><i class="pi pi-hashtag"></i></span>
-                <input pInputText [value]="purchaseOrder.poNumber" readonly class="font-bold">
-              </div>
-            </div>
-          </div>
-
-          <div class="col-12 md:col-6">
-            <div class="field">
-              <label class="font-semibold">Chủ hàng</label>
-              <div class="p-inputgroup">
-                <span class="p-inputgroup-addon"><i class="pi pi-building"></i></span>
-                <input pInputText [value]="purchaseOrder.customerName" readonly>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-12 md:col-6">
-            <div class="field">
-              <label class="font-semibold">Loại gia công</label>
-              <div class="p-inputgroup">
-                <span class="p-inputgroup-addon"><i class="pi pi-cog"></i></span>
-                <input pInputText [value]="getProcessingTypeLabel(purchaseOrder.processingType)" readonly>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-12 md:col-6">
-            <div class="field">
-              <label class="font-semibold">Ngày PO</label>
-              <div class="p-inputgroup">
-                <span class="p-inputgroup-addon"><i class="pi pi-calendar"></i></span>
-                <input pInputText [value]="purchaseOrder.poDate | date:'dd/MM/yyyy'" readonly>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-12 md:col-6">
-            <div class="field">
-              <label class="font-semibold">Ngày dự kiến giao hàng</label>
-              <div class="p-inputgroup">
-                <span class="p-inputgroup-addon"><i class="pi pi-calendar-plus"></i></span>
-                <input pInputText [value]="purchaseOrder.expectedDeliveryDate ? (purchaseOrder.expectedDeliveryDate | date:'dd/MM/yyyy') : 'Chưa có'" readonly>
-              </div>
-            </div>
-          </div>
-
-          <div class="col-12 md:col-6">
-            <div class="field">
-              <label class="font-semibold">Tổng tiền</label>
-              <div class="p-inputgroup">
-                <span class="p-inputgroup-addon"><i class="pi pi-dollar"></i></span>
-                <input pInputText [value]="purchaseOrder.totalAmount | currency:'VND':'symbol':'1.0-0'" readonly class="font-bold text-primary">
-              </div>
-            </div>
-          </div>
-
-          <div class="col-12">
-            <div class="field">
-              <label class="font-semibold">Ghi chú</label>
-              <textarea pInputTextarea [value]="purchaseOrder.notes || 'Không có ghi chú'" readonly rows="3"></textarea>
-            </div>
-          </div>
-        </div>
-
-        <p-message severity="info" text="Dữ liệu PO được import từ Excel và chỉ có thể xem, không thể chỉnh sửa."></p-message>
-      </p-tabPanel>
-
-      <!-- Tab 2: Products -->
-      <p-tabPanel header="Sản phẩm" leftIcon="pi pi-box">
-        <p-message severity="info" text="Danh sách sản phẩm trong PO này. Click vào sản phẩm để xem chi tiết linh kiện." class="mb-3"></p-message>
-
-        <p-table
-          [value]="products"
-          [paginator]="true"
-          [rows]="10"
-          [rowsPerPageOptions]="[10, 25, 50]"
-          styleClass="p-datatable-gridlines p-datatable-sm"
-          [tableStyle]="{'min-width': '50rem'}">
-          <ng-template pTemplate="header">
-            <tr>
-              <th>#</th>
-              <th pSortableColumn="productCode">
-                Mã sản phẩm
-                <p-sortIcon field="productCode"></p-sortIcon>
-              </th>
-              <th pSortableColumn="productName">
-                Tên sản phẩm
-                <p-sortIcon field="productName"></p-sortIcon>
-              </th>
-              <th pSortableColumn="quantity" class="text-right">
-                Số lượng
-                <p-sortIcon field="quantity"></p-sortIcon>
-              </th>
-              <th pSortableColumn="unitPrice" class="text-right">
-                Đơn giá
-                <p-sortIcon field="unitPrice"></p-sortIcon>
-              </th>
-              <th pSortableColumn="totalAmount" class="text-right">
-                Thành tiền
-                <p-sortIcon field="totalAmount"></p-sortIcon>
-              </th>
-              <th class="text-center">Thao tác</th>
-            </tr>
-          </ng-template>
-
-          <ng-template pTemplate="body" let-product let-rowIndex="rowIndex">
-            <tr>
-              <td>{{ rowIndex + 1 }}</td>
-              <td>
-                <code class="text-primary cursor-pointer" (click)="openProductDetail(product)">
-                  {{ product.productCode }}
-                </code>
-              </td>
-              <td>{{ product.productName }}</td>
-              <td class="text-right">
-                <strong>{{ product.quantity | number }}</strong>
-              </td>
-              <td class="text-right">
-                {{ product.unitPrice ? (product.unitPrice | currency:'VND':'symbol':'1.0-0') : '-' }}
-              </td>
-              <td class="text-right">
-                <strong class="text-primary">{{ product.totalAmount | currency:'VND':'symbol':'1.0-0' }}</strong>
-              </td>
-              <td class="text-center">
+              <div class="flex align-items-center gap-3">
+                <span class="text-primary font-bold">
+                  {{ getProductTotal(product) | currency:'VND':'symbol':'1.0-0' }}
+                </span>
                 <p-button
-                  icon="pi pi-eye"
+                  *ngIf="!isEditingProduct(product.id)"
+                  icon="pi pi-pencil"
                   [rounded]="true"
                   [text]="true"
                   severity="info"
-                  (onClick)="openProductDetail(product)"
-                  pTooltip="Xem linh kiện"
+                  size="small"
+                  (onClick)="startEditProduct(product); $event.stopPropagation()"
+                  pTooltip="Sửa sản phẩm"
                   tooltipPosition="top">
                 </p-button>
-              </td>
-            </tr>
-          </ng-template>
-
-          <ng-template pTemplate="emptymessage">
-            <tr>
-              <td colspan="7" class="text-center">
-                <div class="p-4">
-                  <i class="pi pi-inbox text-4xl text-400"></i>
-                  <p class="text-xl text-500 mt-3">Không có sản phẩm nào</p>
+                <p-button
+                  *ngIf="!isEditingProduct(product.id)"
+                  icon="pi pi-trash"
+                  [rounded]="true"
+                  [text]="true"
+                  severity="danger"
+                  size="small"
+                  (onClick)="deleteProduct(product); $event.stopPropagation()"
+                  pTooltip="Xóa sản phẩm"
+                  tooltipPosition="top">
+                </p-button>
+                <div *ngIf="isEditingProduct(product.id)" class="flex gap-1">
+                  <p-button
+                    icon="pi pi-check"
+                    [rounded]="true"
+                    [text]="true"
+                    severity="success"
+                    size="small"
+                    (onClick)="saveProduct(product); $event.stopPropagation()"
+                    [loading]="savingProduct[product.id]"
+                    pTooltip="Lưu"
+                    tooltipPosition="top">
+                  </p-button>
+                  <p-button
+                    icon="pi pi-times"
+                    [rounded]="true"
+                    [text]="true"
+                    severity="secondary"
+                    size="small"
+                    (onClick)="cancelEditProduct(product.id); $event.stopPropagation()"
+                    pTooltip="Hủy"
+                    tooltipPosition="top">
+                  </p-button>
                 </div>
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-      </p-tabPanel>
-
-      <!-- Tab 3: PO Operations (NHAP_PO sheet) -->
-      <p-tabPanel header="Thao tác PO (Tính phí)" leftIcon="pi pi-list">
-        <p-message severity="info" text="Thông tin này đến từ sheet NHAP_PO - dùng để tính giá, doanh thu và thanh toán." class="mb-3"></p-message>
-
-        <p-table
-          [value]="operations"
-          [paginator]="true"
-          [rows]="10"
-          [rowsPerPageOptions]="[10, 25, 50]"
-          styleClass="p-datatable-gridlines p-datatable-sm"
-          [tableStyle]="{'min-width': '50rem'}">
-          <ng-template pTemplate="header">
-            <tr>
-              <th pSortableColumn="productCode">
-                Mã sản phẩm
-                <p-sortIcon field="productCode"></p-sortIcon>
-              </th>
-              <th pSortableColumn="partCode">
-                Mã linh kiện
-                <p-sortIcon field="partCode"></p-sortIcon>
-              </th>
-              <th pSortableColumn="partName">
-                Tên linh kiện
-                <p-sortIcon field="partName"></p-sortIcon>
-              </th>
-              <th pSortableColumn="contractQty" class="text-right">
-                Số lượng HĐ
-                <p-sortIcon field="contractQty"></p-sortIcon>
-              </th>
-              <th pSortableColumn="unitPrice" class="text-right">
-                Đơn giá
-                <p-sortIcon field="unitPrice"></p-sortIcon>
-              </th>
-              <th pSortableColumn="totalAmount" class="text-right">
-                Thành tiền
-                <p-sortIcon field="totalAmount"></p-sortIcon>
-              </th>
-              <th>Ghi chú</th>
-            </tr>
-          </ng-template>
-
-          <ng-template pTemplate="body" let-op>
-            <tr>
-              <td><code>{{ op.productCode }}</code></td>
-              <td><code>{{ op.partCode }}</code></td>
-              <td>{{ op.partName || '-' }}</td>
-              <td class="text-right">
-                <strong>{{ op.contractQty }}</strong> {{ op.uom || 'PCS' }}
-              </td>
-              <td class="text-right">{{ op.unitPrice | currency:'VND':'symbol':'1.0-0' }}</td>
-              <td class="text-right">
-                <strong class="text-primary">{{ op.totalAmount | currency:'VND':'symbol':'1.0-0' }}</strong>
-              </td>
-              <td>{{ op.notes || '-' }}</td>
-            </tr>
-          </ng-template>
-
-          <ng-template pTemplate="emptymessage">
-            <tr>
-              <td colspan="7" class="text-center">
-                <div class="p-4">
-                  <i class="pi pi-inbox text-4xl text-400"></i>
-                  <p class="text-xl text-500 mt-3">Không có thao tác PO nào</p>
-                </div>
-              </td>
-            </tr>
-          </ng-template>
-
-          <ng-template pTemplate="summary">
-            <div class="flex justify-content-end">
-              <strong class="text-xl">Tổng cộng: {{ purchaseOrder.totalAmount | currency:'VND':'symbol':'1.0-0' }}</strong>
+              </div>
             </div>
-          </ng-template>
-        </p-table>
-      </p-tabPanel>
-    </p-tabView>
+
+            <!-- Product Edit Form -->
+            <div *ngIf="isEditingProduct(product.id) && editingProducts[product.id]" class="mt-3 p-3" style="background: #f8f9fa; border-radius: 4px;">
+              <div class="grid">
+                <div class="col-12 md:col-6">
+                  <label class="font-semibold text-600">Số lượng</label>
+                  <p-inputNumber
+                    [(ngModel)]="editingProducts[product.id].quantity"
+                    [min]="1"
+                    [showButtons]="true"
+                    class="w-full">
+                  </p-inputNumber>
+                </div>
+                <div class="col-12 md:col-6">
+                  <label class="font-semibold text-600">Đơn giá (VND)</label>
+                  <p-inputNumber
+                    [(ngModel)]="editingProducts[product.id].unitPrice"
+                    mode="decimal"
+                    [minFractionDigits]="0"
+                    [maxFractionDigits]="0"
+                    [min]="0"
+                    class="w-full">
+                  </p-inputNumber>
+                </div>
+              </div>
+            </div>
+          </p-card>
+
+          <!-- Product Content (Parts and Operations) -->
+          <div *ngIf="isProductExpanded(product.productId)" class="ml-4 mt-2">
+            <div *ngFor="let part of getPartsForProduct(product.productId)" class="mb-3">
+              <!-- Part Header -->
+              <p-card [style]="{'background': '#f8f9fa', 'margin-bottom': '0.5rem'}">
+                <div class="flex align-items-center justify-content-between">
+                  <div class="flex align-items-center gap-2">
+                    <i class="pi pi-box text-primary"></i>
+                    <span class="font-semibold">{{ part.partCode }}</span>
+                    <span class="text-600">-</span>
+                    <span class="text-600">{{ part.partName }}</span>
+                  </div>
+                  <div class="flex align-items-center gap-2">
+                    <span class="text-primary font-semibold">
+                      {{ getPartTotal(part) | currency:'VND':'symbol':'1.0-0' }}
+                    </span>
+                    <p-button
+                      label="Thêm công đoạn"
+                      icon="pi pi-plus"
+                      size="small"
+                      (onClick)="openAddOperationDialog(product.productId, part.partId)"
+                      styleClass="p-button-sm">
+                    </p-button>
+                  </div>
+                </div>
+              </p-card>
+
+              <!-- Operations Table for this Part -->
+              <div *ngIf="part.operations && part.operations.length > 0" class="ml-4">
+                <p-table
+                  [value]="part.operations"
+                  [paginator]="false"
+                  styleClass="p-datatable-gridlines p-datatable-sm"
+                  [tableStyle]="{'min-width': '50rem'}">
+                  <ng-template pTemplate="header">
+                    <tr>
+                      <th style="width: 50px">#</th>
+                      <th>CÔNG ĐOẠN (GIA CÔNG)</th>
+                      <th style="width: 100px">SỐ LẦN</th>
+                      <th style="width: 150px">ĐƠN GIÁ (VND)</th>
+                      <th style="width: 120px">SL HỢP ĐỒNG</th>
+                      <th style="width: 150px">THÀNH TIỀN</th>
+                      <th style="width: 150px">NGÀY HOÀN THÀNH</th>
+                      <th>GHI CHÚ</th>
+                      <th style="width: 100px" class="text-center">Thao tác</th>
+                    </tr>
+                  </ng-template>
+
+                  <ng-template pTemplate="body" let-op let-rowIndex="rowIndex">
+                    <tr>
+                      <td>{{ rowIndex + 1 }}</td>
+                      <td>
+                        <span *ngIf="!isEditingOperation(op.id)">{{ getOperationStep(op) }}</span>
+                        <input 
+                          *ngIf="isEditingOperation(op.id) && editingOperations[toString(op.id)]"
+                          pInputText
+                          [(ngModel)]="editingOperations[toString(op.id)].operationStep"
+                          class="w-full"
+                          placeholder="Nhập công đoạn...">
+                      </td>
+                      <td>
+                        <span *ngIf="!isEditingOperation(op.id)">{{ op.chargeCount || '-' }}</span>
+                        <input 
+                          *ngIf="isEditingOperation(op.id) && editingOperations[toString(op.id)]"
+                          pInputText
+                          type="number"
+                          [(ngModel)]="editingOperations[toString(op.id)].chargeCount"
+                          class="w-full">
+                      </td>
+                      <td class="text-right">
+                        <span *ngIf="!isEditingOperation(op.id)">{{ op.unitPrice | currency:'VND':'symbol':'1.0-0' }}</span>
+                        <p-inputNumber
+                          *ngIf="isEditingOperation(op.id) && editingOperations[toString(op.id)]"
+                          [(ngModel)]="editingOperations[toString(op.id)].unitPrice"
+                          mode="decimal"
+                          [minFractionDigits]="0"
+                          [maxFractionDigits]="0"
+                          class="w-full">
+                        </p-inputNumber>
+                      </td>
+                      <td class="text-right">
+                        <span *ngIf="!isEditingOperation(op.id)">{{ op.quantity | number }}</span>
+                        <p-inputNumber
+                          *ngIf="isEditingOperation(op.id) && editingOperations[toString(op.id)]"
+                          [(ngModel)]="editingOperations[toString(op.id)].quantity"
+                          [min]="1"
+                          [showButtons]="true"
+                          class="w-full">
+                        </p-inputNumber>
+                      </td>
+                      <td class="text-right">
+                        <strong class="text-primary">
+                          {{ isEditingOperation(op.id) && editingOperations[toString(op.id)] ? 
+                            (calculateTotal(editingOperations[toString(op.id)]) | currency:'VND':'symbol':'1.0-0') : 
+                            (op.totalAmount | currency:'VND':'symbol':'1.0-0') }}
+                        </strong>
+                      </td>
+                      <td>
+                        <span *ngIf="!isEditingOperation(op.id)">
+                          {{ op.completionDate ? (op.completionDate | date:'dd/MM/yyyy') : '-' }}
+                        </span>
+                        <p-calendar
+                          *ngIf="isEditingOperation(op.id) && editingOperations[toString(op.id)]"
+                          [(ngModel)]="editingOperations[toString(op.id)].completionDate"
+                          [showIcon]="true"
+                          dateFormat="dd/mm/yy"
+                          [showButtonBar]="true"
+                          class="w-full">
+                        </p-calendar>
+                      </td>
+                      <td>
+                        <span *ngIf="!isEditingOperation(op.id)">{{ op.notes || '-' }}</span>
+                        <input 
+                          *ngIf="isEditingOperation(op.id) && editingOperations[toString(op.id)]"
+                          pInputText
+                          [(ngModel)]="editingOperations[toString(op.id)].notes"
+                          placeholder="Thêm ghi chú..."
+                          class="w-full">
+                      </td>
+                      <td class="text-center">
+                        <div *ngIf="!isEditingOperation(op.id)" class="flex gap-1 justify-content-center">
+                          <p-button
+                            icon="pi pi-pencil"
+                            [rounded]="true"
+                            [text]="true"
+                            severity="info"
+                            size="small"
+                            (click)="startEditOperation(op); $event.stopPropagation()"
+                            pTooltip="Sửa"
+                            tooltipPosition="top">
+                          </p-button>
+                          <p-button
+                            icon="pi pi-trash"
+                            [rounded]="true"
+                            [text]="true"
+                            severity="danger"
+                            size="small"
+                            (click)="deleteOperation(op); $event.stopPropagation()"
+                            [loading]="deletingOperation[toString(op.id)]"
+                            pTooltip="Xóa"
+                            tooltipPosition="top">
+                          </p-button>
+                        </div>
+                        <div *ngIf="isEditingOperation(op.id)" class="flex gap-1 justify-content-center">
+                          <p-button
+                            icon="pi pi-check"
+                            [rounded]="true"
+                            [text]="true"
+                            severity="success"
+                            size="small"
+                            (click)="saveOperation(op); $event.stopPropagation()"
+                            [loading]="savingOperation[toString(op.id)]"
+                            pTooltip="Lưu"
+                            tooltipPosition="top">
+                          </p-button>
+                          <p-button
+                            icon="pi pi-times"
+                            [rounded]="true"
+                            [text]="true"
+                            severity="secondary"
+                            size="small"
+                            (click)="cancelEditOperation(op.id); $event.stopPropagation()"
+                            pTooltip="Hủy"
+                            tooltipPosition="top">
+                          </p-button>
+                        </div>
+                      </td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <ng-template #noProducts>
+        <div class="text-center p-4">
+          <i class="pi pi-inbox text-4xl text-400"></i>
+          <p class="text-xl text-500 mt-3">Không có sản phẩm nào</p>
+        </div>
+      </ng-template>
+
+      <div *ngIf="purchaseOrder.products && purchaseOrder.products.length > 0" class="mt-3">
+        <a 
+          class="flex align-items-center gap-2 text-primary cursor-pointer"
+          (click)="openAddOperationDialog()"
+          style="text-decoration: none;">
+          <i class="pi pi-plus"></i>
+          <span>+ Thêm công đoạn mới...</span>
+        </a>
+      </div>
+
+      <div class="flex justify-content-end mt-4">
+        <div class="text-xl font-bold text-primary">
+          TỔNG CỘNG: {{ getTotalAmount() | currency:'VND':'symbol':'1.0-0' }}
+        </div>
+      </div>
+    </div>
   </div>
 </div>
 
-<!-- Clone Version Dialog -->
+<!-- Add Product Dialog -->
 <p-dialog
-  header="Tạo Version mới"
-  [(visible)]="showCloneDialog"
+  header="Thêm sản phẩm"
+  [(visible)]="showAddProductDialog"
   [modal]="true"
   [style]="{width: '500px'}"
   [draggable]="false"
   [resizable]="false">
   <div class="p-fluid">
-    <p-message severity="info" text="Version mới sẽ có trạng thái DRAFT và có thể chỉnh sửa." class="mb-3"></p-message>
+    <div class="field">
+      <label for="productSelect">Sản phẩm <span class="text-red-500">*</span></label>
+      <p-dropdown
+        id="productSelect"
+        [(ngModel)]="newProduct.productId"
+        [options]="availableProducts"
+        optionLabel="name"
+        optionValue="id"
+        placeholder="Chọn sản phẩm"
+        [filter]="true"
+        filterBy="code,name"
+        class="w-full">
+        <ng-template let-product pTemplate="item">
+          <div>{{ product.code }} - {{ product.name }}</div>
+        </ng-template>
+      </p-dropdown>
+    </div>
 
     <div class="field">
-      <label for="cloneNotes">Ghi chú cho version mới</label>
-      <textarea
-        pInputTextarea
-        id="cloneNotes"
-        [(ngModel)]="cloneNotes"
-        rows="3"
-        placeholder="Nhập ghi chú...">
-      </textarea>
+      <label for="productQuantity">Số lượng <span class="text-red-500">*</span></label>
+      <p-inputNumber
+        id="productQuantity"
+        [(ngModel)]="newProduct.quantity"
+        [min]="1"
+        [showButtons]="true"
+        class="w-full">
+      </p-inputNumber>
+    </div>
+
+    <div class="field">
+      <label for="productUnitPrice">Đơn giá (VND)</label>
+      <p-inputNumber
+        id="productUnitPrice"
+        [(ngModel)]="newProduct.unitPrice"
+        mode="decimal"
+        [minFractionDigits]="0"
+        [maxFractionDigits]="0"
+        [min]="0"
+        class="w-full">
+      </p-inputNumber>
     </div>
   </div>
 
@@ -359,271 +549,117 @@
       <p-button
         label="Hủy"
         icon="pi pi-times"
-        (onClick)="closeCloneDialog()"
-        styleClass="p-button-text"
-        [disabled]="cloneLoading">
+        (onClick)="closeAddProductDialog()"
+        styleClass="p-button-text">
       </p-button>
       <p-button
-        label="Tạo Version"
-        icon="pi pi-copy"
-        (onClick)="cloneVersion()"
-        [loading]="cloneLoading">
+        label="Thêm"
+        icon="pi pi-check"
+        (onClick)="saveNewProduct()">
       </p-button>
     </div>
   </ng-template>
 </p-dialog>
 
-<!-- Availability Check Dialog -->
+<!-- Add Operation Dialog -->
 <p-dialog
-  header="Kiểm tra khả dụng linh kiện"
-  [(visible)]="showAvailabilityDialog"
+  header="Thêm công đoạn"
+  [(visible)]="showAddOperationDialog"
   [modal]="true"
-  [style]="{width: '900px'}"
+  [style]="{width: '700px'}"
   [draggable]="false"
   [resizable]="false">
   <div class="p-fluid">
-    <p-message severity="info" text="Kiểm tra xem nguyên vật liệu có đủ cho kế hoạch sản xuất hay không." class="mb-3"></p-message>
+    <div class="field">
+      <label for="partSelect">Linh kiện <span class="text-red-500">*</span></label>
+      <p-dropdown
+        id="partSelect"
+        [(ngModel)]="newOperation.partId"
+        [options]="availableParts"
+        optionLabel="code"
+        optionValue="id"
+        placeholder="Chọn linh kiện"
+        [filter]="true"
+        filterBy="code,name"
+        class="w-full">
+        <ng-template let-part pTemplate="item">
+          <div>{{ part.code }} - {{ part.name }}</div>
+        </ng-template>
+      </p-dropdown>
+    </div>
 
     <div class="field">
-      <label for="plannedQty">Số lượng kế hoạch sản xuất <span class="text-red-500">*</span></label>
-      <p-inputNumber
-        id="plannedQty"
-        [(ngModel)]="plannedQuantity"
-        [min]="1"
-        [showButtons]="true"
-        buttonLayout="horizontal"
-        placeholder="Nhập số lượng...">
-      </p-inputNumber>
+      <label for="processingTypeSelect">Loại gia công <span class="text-red-500">*</span></label>
+      <p-dropdown
+        id="processingTypeSelect"
+        [(ngModel)]="newOperation.processingTypeId"
+        [options]="availableProcessingTypes"
+        optionLabel="name"
+        optionValue="id"
+        placeholder="Chọn loại gia công"
+        class="w-full">
+      </p-dropdown>
     </div>
 
-    <div class="flex justify-content-end mb-3">
-      <p-button
-        label="Kiểm tra"
-        icon="pi pi-search"
-        (onClick)="checkAvailability()"
-        [loading]="availabilityLoading">
-      </p-button>
+    <div class="field">
+      <label for="operationStep">Công đoạn <span class="text-red-500">*</span></label>
+      <input pInputText id="operationStep" [(ngModel)]="newOperation.operationStep" required placeholder="Ví dụ: Thân trên trước">
     </div>
 
-    <!-- Result -->
-    <div *ngIf="availabilityResult" class="mt-4">
-      <p-divider></p-divider>
-
-      <div class="mb-3">
-        <p-tag
-          [value]="getOverallStatusLabel(availabilityResult.overallStatus)"
-          [severity]="getOverallStatusSeverity(availabilityResult.overallStatus)"
-          [style]="{'font-size': '1.2rem', 'padding': '0.75rem 1.5rem', 'width': '100%', 'text-align': 'center'}">
-        </p-tag>
-      </div>
-
-      <div class="grid mb-3">
-        <div class="col-6">
-          <p-card>
-            <div class="text-center">
-              <div class="text-500 mb-2">Tổng yêu cầu</div>
-              <div class="text-2xl font-bold text-primary">{{ availabilityResult.totalRequired }}</div>
-            </div>
-          </p-card>
-        </div>
-        <div class="col-6">
-          <p-card>
-            <div class="text-center">
-              <div class="text-500 mb-2">Tổng khả dụng</div>
-              <div class="text-2xl font-bold" [class.text-green-500]="availabilityResult.totalAvailable >= availabilityResult.totalRequired" [class.text-red-500]="availabilityResult.totalAvailable < availabilityResult.totalRequired">
-                {{ availabilityResult.totalAvailable }}
-              </div>
-            </div>
-          </p-card>
+    <div class="grid">
+      <div class="col-6">
+        <div class="field">
+          <label for="chargeCount">Số lần</label>
+          <p-inputNumber id="chargeCount" [(ngModel)]="newOperation.chargeCount" [min]="1" [showButtons]="true"></p-inputNumber>
         </div>
       </div>
+      <div class="col-6">
+        <div class="field">
+          <label for="unitPrice">Đơn giá (VND) <span class="text-red-500">*</span></label>
+          <p-inputNumber id="unitPrice" [(ngModel)]="newOperation.unitPrice" mode="decimal" [minFractionDigits]="0" [maxFractionDigits]="0" [min]="0"></p-inputNumber>
+        </div>
+      </div>
+    </div>
 
-      <p-table
-        [value]="availabilityResult.materialResults"
-        styleClass="p-datatable-sm p-datatable-gridlines">
-        <ng-template pTemplate="header">
-          <tr>
-            <th>Mã NVL</th>
-            <th>Tên NVL</th>
-            <th class="text-right">Yêu cầu</th>
-            <th class="text-right">Tồn kho</th>
-            <th class="text-right">Baseline</th>
-            <th class="text-right">Khả dụng</th>
-            <th class="text-right">Thiếu</th>
-            <th class="text-center">Tình trạng</th>
-          </tr>
-        </ng-template>
+    <div class="grid">
+      <div class="col-6">
+        <div class="field">
+          <label for="quantity">SL Hợp đồng <span class="text-red-500">*</span></label>
+          <p-inputNumber id="quantity" [(ngModel)]="newOperation.quantity" [min]="1" [showButtons]="true"></p-inputNumber>
+        </div>
+      </div>
+      <div class="col-6">
+        <div class="field">
+          <label for="completionDate">Ngày hoàn thành</label>
+          <p-calendar
+            id="completionDate"
+            [(ngModel)]="newOperation.completionDate"
+            [showIcon]="true"
+            dateFormat="dd/mm/yy"
+            [showButtonBar]="true">
+          </p-calendar>
+        </div>
+      </div>
+    </div>
 
-        <ng-template pTemplate="body" let-mat>
-          <tr>
-            <td><code>{{ mat.materialCode }}</code></td>
-            <td>{{ mat.materialName }}</td>
-            <td class="text-right">{{ mat.requiredQty }}</td>
-            <td class="text-right">{{ mat.inventoryQty }}</td>
-            <td class="text-right">{{ mat.poBaselineQty }}</td>
-            <td class="text-right">
-              <strong [class.text-green-500]="mat.shortage <= 0" [class.text-red-500]="mat.shortage > 0">
-                {{ mat.availableQty }}
-              </strong>
-            </td>
-            <td class="text-right">
-              <strong class="text-red-500" *ngIf="mat.shortage > 0">{{ mat.shortage }}</strong>
-              <span *ngIf="mat.shortage <= 0">-</span>
-            </td>
-            <td class="text-center">
-              <p-tag
-                [value]="getMaterialSeverityLabel(mat.severity)"
-                [severity]="getMaterialSeveritySeverity(mat.severity)">
-              </p-tag>
-            </td>
-          </tr>
-        </ng-template>
-      </p-table>
-
-      <p-message
-        *ngIf="availabilityResult.overallStatus === 'FAIL'"
-        severity="error"
-        text="Không đủ nguyên vật liệu để sản xuất. Vui lòng bổ sung trước khi tạo kế hoạch sản xuất."
-        [closable]="false"
-        class="mt-3">
-      </p-message>
-
-      <p-message
-        *ngIf="availabilityResult.overallStatus === 'WARNING'"
-        severity="warn"
-        text="Nguyên vật liệu gần hết. Nên bổ sung để đảm bảo sản xuất suôn sẻ."
-        [closable]="false"
-        class="mt-3">
-      </p-message>
+    <div class="field">
+      <label for="operationNotes">Ghi chú</label>
+      <textarea pInputTextarea id="operationNotes" [(ngModel)]="newOperation.notes" rows="3" placeholder="Thêm ghi chú..."></textarea>
     </div>
   </div>
 
   <ng-template pTemplate="footer">
-    <p-button
-      label="Đóng"
-      icon="pi pi-times"
-      (onClick)="closeAvailabilityDialog()"
-      styleClass="p-button-text">
-    </p-button>
-  </ng-template>
-</p-dialog>
-
-<!-- Product Detail Dialog -->
-<p-dialog
-  header="Chi tiết linh kiện"
-  [(visible)]="showProductDetailDialog"
-  [modal]="true"
-  [style]="{width: '900px'}"
-  [draggable]="false"
-  [resizable]="false">
-  <div *ngIf="selectedProduct">
-    <div class="mb-4">
-      <p-card>
-        <div class="grid">
-          <div class="col-12 md:col-6">
-            <div class="field">
-              <label class="font-semibold">Mã sản phẩm</label>
-              <div class="p-inputgroup">
-                <span class="p-inputgroup-addon"><i class="pi pi-hashtag"></i></span>
-                <input pInputText [value]="selectedProduct.productCode" readonly class="font-bold">
-              </div>
-            </div>
-          </div>
-          <div class="col-12 md:col-6">
-            <div class="field">
-              <label class="font-semibold">Tên sản phẩm</label>
-              <div class="p-inputgroup">
-                <span class="p-inputgroup-addon"><i class="pi pi-box"></i></span>
-                <input pInputText [value]="selectedProduct.productName" readonly>
-              </div>
-            </div>
-          </div>
-          <div class="col-12 md:col-6">
-            <div class="field">
-              <label class="font-semibold">Số lượng</label>
-              <div class="p-inputgroup">
-                <span class="p-inputgroup-addon"><i class="pi pi-sort-numeric-up"></i></span>
-                <input pInputText [value]="selectedProduct.quantity | number" readonly>
-              </div>
-            </div>
-          </div>
-          <div class="col-12 md:col-6">
-            <div class="field">
-              <label class="font-semibold">Thành tiền</label>
-              <div class="p-inputgroup">
-                <span class="p-inputgroup-addon"><i class="pi pi-dollar"></i></span>
-                <input pInputText [value]="selectedProduct.totalAmount | currency:'VND':'symbol':'1.0-0'" readonly class="font-bold text-primary">
-              </div>
-            </div>
-          </div>
-        </div>
-      </p-card>
-    </div>
-
-    <p-divider></p-divider>
-
-    <h3 class="text-xl font-semibold mb-3">Danh sách linh kiện</h3>
-
-    <div *ngIf="productDetailLoading" class="flex justify-content-center align-items-center" style="min-height: 200px">
-      <p-progressSpinner></p-progressSpinner>
-    </div>
-
-    <p-table
-      *ngIf="!productDetailLoading"
-      [value]="productParts"
-      [paginator]="true"
-      [rows]="10"
-      [rowsPerPageOptions]="[10, 25, 50]"
-      styleClass="p-datatable-gridlines p-datatable-sm">
-      <ng-template pTemplate="header">
-        <tr>
-          <th>Mã linh kiện</th>
-          <th>Tên linh kiện</th>
-          <th>Chất liệu</th>
-          <th class="text-right">Số lượng cần</th>
-          <th>Trạng thái</th>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="body" let-part>
-        <tr>
-          <td>
-            <code>{{ part.partId }}</code>
-          </td>
-          <td>{{ part.componentName }}</td>
-          <td>{{ part.material || '-' }}</td>
-          <td class="text-right">
-            <strong>{{ part.quantityRequired }}</strong>
-          </td>
-          <td>
-            <p-tag
-              [value]="part.status"
-              [severity]="part.status === 'Pending' ? 'warning' : 'success'">
-            </p-tag>
-          </td>
-        </tr>
-      </ng-template>
-
-      <ng-template pTemplate="emptymessage">
-        <tr>
-          <td colspan="5" class="text-center">
-            <div class="p-4">
-              <i class="pi pi-inbox text-4xl text-400"></i>
-              <p class="text-xl text-500 mt-3">Không có linh kiện nào</p>
-            </div>
-          </td>
-        </tr>
-      </ng-template>
-    </p-table>
-  </div>
-
-  <ng-template pTemplate="footer">
-    <div class="flex justify-content-end">
+    <div class="flex justify-content-end gap-2">
       <p-button
-        label="Đóng"
+        label="Hủy"
         icon="pi pi-times"
-        (onClick)="closeProductDetailDialog()"
+        (onClick)="closeAddOperationDialog()"
         styleClass="p-button-text">
+      </p-button>
+      <p-button
+        label="Thêm"
+        icon="pi pi-check"
+        (onClick)="saveNewOperation()">
       </p-button>
     </div>
   </ng-template>

@@ -105,5 +105,59 @@ export class PurchaseOrderService {
   delete(id: string): Observable<{ success: boolean; message: string }> {
     return this.http.delete<{ success: boolean; message: string }>(`${this.apiUrl}/${id}`);
   }
+
+  /**
+   * Export PO operations to Excel
+   */
+  exportOperations(purchaseOrderId: string): Observable<Blob> {
+    return this.http.get(`${this.apiUrl}/${purchaseOrderId}/export-operations`, {
+      responseType: 'blob'
+    });
+  }
+
+  /**
+   * Update PO general information
+   */
+  updateGeneralInfo(purchaseOrderId: string, data: {
+    poNumber?: string;
+    customerId?: string;
+    processingType?: string;
+    poDate?: Date;
+    expectedDeliveryDate?: Date;
+    notes?: string;
+  }): Observable<PurchaseOrder> {
+    return this.http.put<PurchaseOrder>(`${this.apiUrl}/${purchaseOrderId}/general-info`, data);
+  }
+
+  /**
+   * Create PO Operation
+   */
+  createOperation(purchaseOrderId: string, operation: any): Observable<any> {
+    return this.http.post(`${this.apiUrl}/${purchaseOrderId}/operations`, operation);
+  }
+
+  /**
+   * Update PO Operation
+   */
+  updateOperation(purchaseOrderId: string, operationId: string, operation: any): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${purchaseOrderId}/operations/${operationId}`, operation);
+  }
+
+  /**
+   * Delete PO Operation
+   */
+  deleteOperation(purchaseOrderId: string, operationId: string): Observable<{ success: boolean; message: string }> {
+    return this.http.delete<{ success: boolean; message: string }>(`${this.apiUrl}/${purchaseOrderId}/operations/${operationId}`);
+  }
+
+  /**
+   * Update PO Product (quantity, unit price)
+   */
+  updateProduct(purchaseOrderId: string, productId: string, data: {
+    quantity: number;
+    unitPrice?: number;
+  }): Observable<any> {
+    return this.http.put(`${this.apiUrl}/${purchaseOrderId}/products/${productId}`, data);
+  }
 }
 

@@ -27,6 +27,7 @@ public class GetPurchaseOrderByIdQueryHandler : IRequestHandler<GetPurchaseOrder
                 .ThenInclude(pp => pp.Product)
             .Include(p => p.POOperations)
                 .ThenInclude(po => po.Part)
+                    .ThenInclude(part => part.Product)
             .Include(p => p.POOperations)
                 .ThenInclude(po => po.ProcessingType)
             .Include(p => p.POOperations)
@@ -74,6 +75,9 @@ public class GetPurchaseOrderByIdQueryHandler : IRequestHandler<GetPurchaseOrder
                 PartId = op.PartId,
                 PartCode = op.Part.Code,
                 PartName = op.Part.Name,
+                ProductId = op.Part.ProductId,
+                ProductCode = op.Part.Product?.Code ?? string.Empty,
+                ProductName = op.Part.Product?.Name,
                 ProcessingTypeId = op.ProcessingTypeId,
                 ProcessingTypeName = op.ProcessingType.Name,
                 ProcessMethodId = op.ProcessMethodId,
@@ -88,6 +92,7 @@ public class GetPurchaseOrderByIdQueryHandler : IRequestHandler<GetPurchaseOrder
                 CycleTime = op.CycleTime,
                 AssemblyContent = op.AssemblyContent,
                 Notes = op.Notes,
+                CompletionDate = op.CompletionDate,
                 SequenceOrder = op.SequenceOrder
             }).OrderBy(op => op.SequenceOrder).ToList()
         };

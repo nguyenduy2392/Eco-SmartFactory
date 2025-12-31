@@ -81,6 +81,11 @@ public class POOperation
     public string? Notes { get; set; }
     
     /// <summary>
+    /// Ngày hoàn thành (Completion Date)
+    /// </summary>
+    public DateTime? CompletionDate { get; set; }
+    
+    /// <summary>
     /// Thứ tự công đoạn
     /// </summary>
     public int SequenceOrder { get; set; }
@@ -95,6 +100,7 @@ public class POOperation
     public virtual ProcessMethod? ProcessMethod { get; set; }
     public virtual ICollection<MappingPOProduction> MappingPOProductions { get; set; } = new List<MappingPOProduction>();
 }
+
 
 
 

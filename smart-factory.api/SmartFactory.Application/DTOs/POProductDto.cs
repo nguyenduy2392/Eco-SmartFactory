@@ -19,6 +19,15 @@ public class CreatePOProductRequest
     public decimal? UnitPrice { get; set; }
 }
 
+public class UpdatePOProductRequest
+{
+    public int Quantity { get; set; }
+    public decimal? UnitPrice { get; set; }
+}
+
+
+
+
 
 
 
