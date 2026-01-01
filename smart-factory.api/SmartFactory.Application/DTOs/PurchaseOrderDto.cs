@@ -95,6 +95,9 @@ public class UpdatePOOperationRequest
     public string? AssemblyContent { get; set; }
     public DateTime? CompletionDate { get; set; }
     public string? Notes { get; set; }
+    // Product and Part codes for updating relationships
+    public string? ProductCode { get; set; }
+    public string? PartCode { get; set; }
     // ÉP NHỰA specific fields
     public string? ModelNumber { get; set; }
     public string? Material { get; set; }

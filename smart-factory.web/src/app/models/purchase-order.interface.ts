@@ -184,4 +184,20 @@ export interface PartAvailabilityResult {
   severity: 'OK' | 'WARNING' | 'CRITICAL';
   bomVersion?: string;
   hasActiveBOM: boolean;
+  materialDetails?: MaterialAvailabilityDetailResult[];
+}
+
+export interface MaterialAvailabilityDetailResult {
+  materialCode: string;
+  materialName: string;
+  unit: string;
+  quantityPerUnit: number;
+  scrapRate: number;
+  requiredQuantity: number;
+  availableQuantity: number;
+  shortage: number;
+  severity: 'OK' | 'WARNING' | 'CRITICAL';
+  customerId?: string;
+  customerName?: string;
+  materialFound: boolean;
 }

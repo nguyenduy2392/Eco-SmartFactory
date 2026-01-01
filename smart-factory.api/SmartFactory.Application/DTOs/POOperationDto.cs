@@ -42,7 +42,7 @@ public class POOperationDto
 
 public class CreatePOOperationRequest
 {
-    public Guid PartId { get; set; }
+    public Guid? PartId { get; set; }
     public Guid ProcessingTypeId { get; set; }
     public Guid? ProcessMethodId { get; set; }
     public string OperationName { get; set; } = string.Empty;
@@ -56,6 +56,9 @@ public class CreatePOOperationRequest
     public DateTime? CompletionDate { get; set; }
     public string? Notes { get; set; }
     public int SequenceOrder { get; set; }
+    // Product and Part codes for creating relationships
+    public string? ProductCode { get; set; }
+    public string? PartCode { get; set; }
     // ÉP NHỰA specific fields
     public string? ModelNumber { get; set; }
     public string? Material { get; set; }

@@ -9,7 +9,7 @@ namespace SmartFactory.Application.Commands.PurchaseOrders;
 public class CreatePOOperationCommand : IRequest<POOperationDto>
 {
     public Guid PurchaseOrderId { get; set; }
-    public Guid PartId { get; set; }
+    public Guid? PartId { get; set; }
     public Guid ProcessingTypeId { get; set; }
     public Guid? ProcessMethodId { get; set; }
     public string OperationName { get; set; } = string.Empty;
@@ -23,6 +23,9 @@ public class CreatePOOperationCommand : IRequest<POOperationDto>
     public DateTime? CompletionDate { get; set; }
     public string? Notes { get; set; }
     public int SequenceOrder { get; set; }
+    // Product and Part codes for creating relationships
+    public string? ProductCode { get; set; }
+    public string? PartCode { get; set; }
     // ÉP NHỰA specific fields
     public string? ModelNumber { get; set; }
     public string? Material { get; set; }
@@ -66,13 +69,89 @@ public class CreatePOOperationCommandHandler : IRequestHandler<CreatePOOperation
         //     throw new Exception("Chỉ có thể thêm công đoạn khi PO ở trạng thái DRAFT");
         // }
 
-        var part = await _context.Parts
-            .Include(p => p.Product)
-            .FirstOrDefaultAsync(p => p.Id == request.PartId, cancellationToken);
+        Entities.Part? part = null;
+
+        // Handle ProductCode and PartCode - find or create Product and Part
+        if (!string.IsNullOrWhiteSpace(request.ProductCode) || !string.IsNullOrWhiteSpace(request.PartCode))
+        {
+            Entities.Product? product = null;
+
+            // Get or create Product if ProductCode is provided
+            if (!string.IsNullOrWhiteSpace(request.ProductCode))
+            {
+                product = await _context.Products
+                    .FirstOrDefaultAsync(p => p.Code == request.ProductCode, cancellationToken);
+
+                if (product == null)
+                {
+                    product = new Entities.Product
+                    {
+                        Code = request.ProductCode,
+                        Name = $"Product {request.ProductCode}",
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.Products.Add(product);
+                    await _context.SaveChangesAsync(cancellationToken);
+                    _logger.LogInformation("Created new Product: Code={ProductCode}", product.Code);
+                }
+            }
+
+            // Get or create Part if PartCode is provided
+            if (!string.IsNullOrWhiteSpace(request.PartCode))
+            {
+                part = await _context.Parts
+                    .Include(p => p.Product)
+                    .FirstOrDefaultAsync(p => p.Code == request.PartCode, cancellationToken);
+
+                if (part == null)
+                {
+                    if (product == null)
+                    {
+                        throw new Exception("Cannot create Part without Product. Please provide ProductCode when creating a new Part.");
+                    }
+
+                    part = new Entities.Part
+                    {
+                        Code = request.PartCode,
+                        Name = $"Part {request.PartCode}",
+                        ProductId = product.Id,
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.Parts.Add(part);
+                    await _context.SaveChangesAsync(cancellationToken);
+                    _logger.LogInformation("Created new Part: Code={PartCode}, ProductId={ProductId}", part.Code, part.ProductId);
+                }
+                else
+                {
+                    // If part exists but product is different, update the part's product relationship
+                    if (product != null && part.ProductId != product.Id)
+                    {
+                        part.ProductId = product.Id;
+                        part.UpdatedAt = DateTime.UtcNow;
+                        await _context.SaveChangesAsync(cancellationToken);
+                        _logger.LogInformation("Updated Part ProductId: PartCode={PartCode}, NewProductId={ProductId}", part.Code, product.Id);
+                    }
+                    // Reload Product navigation property
+                    await _context.Entry(part)
+                        .Reference(p => p.Product)
+                        .LoadAsync(cancellationToken);
+                }
+            }
+        }
+
+        // If PartId is provided, use it (fallback if ProductCode/PartCode not provided)
+        if (part == null && request.PartId.HasValue)
+        {
+            part = await _context.Parts
+                .Include(p => p.Product)
+                .FirstOrDefaultAsync(p => p.Id == request.PartId.Value, cancellationToken);
+        }
 
         if (part == null)
         {
-            throw new Exception($"Part with ID {request.PartId} not found");
+            throw new Exception("Part not found. Please provide either PartId, or ProductCode and PartCode.");
         }
 
         var processingType = await _context.ProcessingTypes
@@ -88,7 +167,7 @@ public class CreatePOOperationCommandHandler : IRequestHandler<CreatePOOperation
         var operation = new Entities.POOperation
         {
             PurchaseOrderId = request.PurchaseOrderId,
-            PartId = request.PartId,
+            PartId = part.Id, // Use the part we found/created, not request.PartId
             ProcessingTypeId = request.ProcessingTypeId,
             ProcessMethodId = request.ProcessMethodId,
             OperationName = request.OperationName,

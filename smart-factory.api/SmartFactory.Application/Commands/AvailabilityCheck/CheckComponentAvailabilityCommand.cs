@@ -32,8 +32,9 @@ public class CheckComponentAvailabilityCommandHandler : IRequestHandler<CheckCom
 
     public async Task<AvailabilityCheckResult> Handle(CheckComponentAvailabilityCommand request, CancellationToken cancellationToken)
     {
-        // Validate Part exists
+        // Validate Part exists and load with Product
         var part = await _context.Parts
+            .Include(p => p.Product)
             .FirstOrDefaultAsync(p => p.Id == request.PartId, cancellationToken);
 
         if (part == null)
@@ -64,26 +65,21 @@ public class CheckComponentAvailabilityCommandHandler : IRequestHandler<CheckCom
             OverallStatus = "PASS"
         };
 
-        // Check if ACTIVE BOM exists for (Part + ProcessingType)
+        // Try to find customer from POOperations that use this part
+        var customerId = await _context.POOperations
+            .Where(op => op.PartId == request.PartId)
+            .Include(op => op.PurchaseOrder)
+            .OrderByDescending(op => op.PurchaseOrder.CreatedAt)
+            .Select(op => op.PurchaseOrder.CustomerId)
+            .FirstOrDefaultAsync(cancellationToken);
+
+        // Check if ACTIVE BOM exists for (Part + ProcessingType) and load details
         var activeBOM = await _context.ProcessBOMs
             .Where(b => b.PartId == request.PartId 
                 && b.ProcessingTypeId == request.ProcessingTypeId 
                 && b.Status == "ACTIVE")
+            .Include(b => b.BOMDetails)
             .FirstOrDefaultAsync(cancellationToken);
-
-        // Determine availability and severity
-        string severity;
-        bool canProduce = activeBOM != null;
-        
-        if (!canProduce)
-        {
-            severity = "CRITICAL";
-            result.OverallStatus = "FAIL";
-        }
-        else
-        {
-            severity = "OK";
-        }
 
         var detail = new PartAvailabilityDetail
         {
@@ -93,16 +89,121 @@ public class CheckComponentAvailabilityCommandHandler : IRequestHandler<CheckCom
             ProcessingType = processingType.Code,
             ProcessingTypeName = processingType.Name,
             RequiredQuantity = request.Quantity,
-            CanProduce = canProduce,
-            Severity = severity,
             BOMVersion = activeBOM?.Version,
-            HasActiveBOM = canProduce
+            HasActiveBOM = activeBOM != null
         };
+
+        // If no BOM, mark as CRITICAL
+        if (activeBOM == null)
+        {
+            detail.CanProduce = false;
+            detail.Severity = "CRITICAL";
+            result.OverallStatus = "FAIL";
+        }
+        else
+        {
+            // Check material availability for each BOM detail
+            bool hasShortage = false;
+            bool hasWarning = false;
+
+            foreach (var bomDetail in activeBOM.BOMDetails.OrderBy(d => d.SequenceOrder))
+            {
+                var materialDetail = new MaterialAvailabilityDetail
+                {
+                    MaterialCode = bomDetail.MaterialCode,
+                    MaterialName = bomDetail.MaterialName,
+                    Unit = bomDetail.Unit,
+                    QuantityPerUnit = bomDetail.QuantityPerUnit,
+                    ScrapRate = bomDetail.ScrapRate
+                };
+
+                // Calculate required quantity: Quantity × QuantityPerUnit × (1 + ScrapRate)
+                materialDetail.RequiredQuantity = request.Quantity * bomDetail.QuantityPerUnit * (1 + bomDetail.ScrapRate);
+
+                // Find material in warehouse
+                // If we have customerId, prioritize that customer's materials
+                Entities.Material? material = null;
+                if (customerId != Guid.Empty)
+                {
+                    material = await _context.Materials
+                        .Include(m => m.Customer)
+                        .FirstOrDefaultAsync(m => m.Code == bomDetail.MaterialCode 
+                            && m.CustomerId == customerId 
+                            && m.IsActive, cancellationToken);
+                }
+
+                // If not found with customerId, search across all customers
+                if (material == null)
+                {
+                    material = await _context.Materials
+                        .Include(m => m.Customer)
+                        .FirstOrDefaultAsync(m => m.Code == bomDetail.MaterialCode 
+                            && m.IsActive, cancellationToken);
+                }
+
+                if (material != null)
+                {
+                    materialDetail.MaterialFound = true;
+                    materialDetail.AvailableQuantity = material.CurrentStock;
+                    materialDetail.CustomerId = material.CustomerId;
+                    materialDetail.CustomerName = material.Customer?.Name;
+                }
+                else
+                {
+                    materialDetail.MaterialFound = false;
+                    materialDetail.AvailableQuantity = 0;
+                }
+
+                // Calculate shortage
+                materialDetail.Shortage = Math.Max(0, materialDetail.RequiredQuantity - materialDetail.AvailableQuantity);
+
+                // Determine severity
+                if (materialDetail.Shortage > 0)
+                {
+                    materialDetail.Severity = "CRITICAL";
+                    hasShortage = true;
+                }
+                else if (materialDetail.AvailableQuantity < materialDetail.RequiredQuantity * 1.1m)
+                {
+                    // Less than 10% buffer
+                    materialDetail.Severity = "WARNING";
+                    hasWarning = true;
+                }
+                else
+                {
+                    materialDetail.Severity = "OK";
+                }
+
+                detail.MaterialDetails.Add(materialDetail);
+            }
+
+            // Determine part-level severity and canProduce
+            if (hasShortage)
+            {
+                detail.CanProduce = false;
+                detail.Severity = "CRITICAL";
+                result.OverallStatus = "FAIL";
+            }
+            else if (hasWarning)
+            {
+                detail.CanProduce = true;
+                detail.Severity = "WARNING";
+                if (result.OverallStatus == "PASS")
+                {
+                    result.OverallStatus = "WARNING";
+                }
+            }
+            else
+            {
+                detail.CanProduce = true;
+                detail.Severity = "OK";
+            }
+        }
 
         result.PartDetails.Add(detail);
 
-        _logger.LogInformation("Component availability check: Part {PartCode} ({ProcessingType}): Quantity={Quantity}, CanProduce={CanProduce}, Severity={Severity}",
-            part.Code, processingType.Code, request.Quantity, canProduce, severity);
+        _logger.LogInformation("Component availability check: Part {PartCode} ({ProcessingType}): Quantity={Quantity}, CanProduce={CanProduce}, Severity={Severity}, MaterialCount={MaterialCount}",
+            part.Code, processingType.Code, request.Quantity, detail.CanProduce, detail.Severity, detail.MaterialDetails.Count);
 
         return result;
     }

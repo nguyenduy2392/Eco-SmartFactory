@@ -18,6 +18,9 @@ public class UpdatePOOperationCommand : IRequest<POOperationDto>
     public string? PrintContent { get; set; }
     public decimal? CycleTime { get; set; }
     public string? AssemblyContent { get; set; }
+    // Product and Part codes for updating relationships
+    public string? ProductCode { get; set; }
+    public string? PartCode { get; set; }
     // ÉP NHỰA specific fields
     public string? ModelNumber { get; set; }
     public string? Material { get; set; }
@@ -67,6 +70,95 @@ public class UpdatePOOperationCommandHandler : IRequestHandler<UpdatePOOperation
         // {
         //     throw new Exception("Chỉ có thể chỉnh sửa công đoạn khi PO ở trạng thái DRAFT");
         // }
+
+        // Handle ProductCode and PartCode updates
+        if (!string.IsNullOrWhiteSpace(request.ProductCode) || !string.IsNullOrWhiteSpace(request.PartCode))
+        {
+            Entities.Product? product = null;
+            Entities.Part? part = null;
+
+            // Get or create Product if ProductCode is provided
+            if (!string.IsNullOrWhiteSpace(request.ProductCode))
+            {
+                product = await _context.Products
+                    .FirstOrDefaultAsync(p => p.Code == request.ProductCode, cancellationToken);
+
+                if (product == null)
+                {
+                    product = new Entities.Product
+                    {
+                        Code = request.ProductCode,
+                        Name = $"Product {request.ProductCode}",
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.Products.Add(product);
+                    await _context.SaveChangesAsync(cancellationToken);
+                    _logger.LogInformation("Created new Product: Code={ProductCode}", product.Code);
+                }
+            }
+            else
+            {
+                // If ProductCode is not provided, use the existing product from the current part
+                product = operation.Part.Product;
+            }
+
+            // Get or create Part if PartCode is provided
+            if (!string.IsNullOrWhiteSpace(request.PartCode))
+            {
+                part = await _context.Parts
+                    .FirstOrDefaultAsync(p => p.Code == request.PartCode, cancellationToken);
+
+                if (part == null)
+                {
+                    if (product == null)
+                    {
+                        throw new Exception("Cannot create Part without Product. Please provide ProductCode when creating a new Part.");
+                    }
+
+                    part = new Entities.Part
+                    {
+                        Code = request.PartCode,
+                        Name = $"Part {request.PartCode}",
+                        ProductId = product.Id,
+                        IsActive = true,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    _context.Parts.Add(part);
+                    await _context.SaveChangesAsync(cancellationToken);
+                    _logger.LogInformation("Created new Part: Code={PartCode}, ProductId={ProductId}", part.Code, part.ProductId);
+                }
+                else
+                {
+                    // If part exists but product is different, update the part's product relationship
+                    if (product != null && part.ProductId != product.Id)
+                    {
+                        part.ProductId = product.Id;
+                        part.UpdatedAt = DateTime.UtcNow;
+                        _logger.LogInformation("Updated Part ProductId: PartCode={PartCode}, NewProductId={ProductId}", part.Code, product.Id);
+                    }
+                }
+            }
+            else
+            {
+                // If PartCode is not provided, use the existing part
+                part = operation.Part;
+            }
+
+            // Update operation's PartId if it changed
+            if (part != null && operation.PartId != part.Id)
+            {
+                operation.PartId = part.Id;
+                // Reload the Part navigation property to reflect the change
+                await _context.Entry(operation)
+                    .Reference(op => op.Part)
+                    .LoadAsync(cancellationToken);
+                await _context.Entry(operation.Part)
+                    .Reference(p => p.Product)
+                    .LoadAsync(cancellationToken);
+                _logger.LogInformation("Updated PO Operation PartId: OperationId={OperationId}, NewPartId={PartId}", operation.Id, part.Id);
+            }
+        }
 
         operation.OperationName = request.OperationName;
         operation.ChargeCount = request.ChargeCount;

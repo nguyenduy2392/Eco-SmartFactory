@@ -4,7 +4,8 @@ import { PartService, PartDetail } from '../../services/part.service';
 import { ProcessingTypeService } from '../../services/processing-type.service';
 import {
   AvailabilityCheckRequest,
-  AvailabilityCheckResult
+  AvailabilityCheckResult,
+  PartAvailabilityResult
 } from '../../models/purchase-order.interface';
 import { ProcessingType } from '../../models/processing-type.interface';
 import { MessageService } from 'primeng/api';
@@ -31,6 +32,7 @@ export class AvailabilityCheckComponent implements OnInit {
   // Check result
   checkLoading = false;
   availabilityResult: AvailabilityCheckResult | null = null;
+  expandedParts: Set<string> = new Set();
 
   constructor(
     private partService: PartService,
@@ -91,7 +93,7 @@ export class AvailabilityCheckComponent implements OnInit {
       quantity: this.quantity
     };
 
-    this.availabilityService.checkAvailabilityByComponent(request).subscribe({
+        this.availabilityService.checkAvailabilityByComponent(request).subscribe({
       next: (result: any) => {
         // Map BE response to frontend interface
         this.availabilityResult = {
@@ -110,7 +112,21 @@ export class AvailabilityCheckComponent implements OnInit {
             canProduce: p.canProduce,
             severity: p.severity,
             bomVersion: p.bomVersion,
-            hasActiveBOM: p.hasActiveBOM
+            hasActiveBOM: p.hasActiveBOM,
+            materialDetails: p.materialDetails?.map((m: any) => ({
+              materialCode: m.materialCode,
+              materialName: m.materialName,
+              unit: m.unit,
+              quantityPerUnit: m.quantityPerUnit,
+              scrapRate: m.scrapRate,
+              requiredQuantity: m.requiredQuantity,
+              availableQuantity: m.availableQuantity,
+              shortage: m.shortage,
+              severity: m.severity,
+              customerId: m.customerId,
+              customerName: m.customerName,
+              materialFound: m.materialFound
+            })) || []
           })) || []
         };
         this.checkLoading = false;
@@ -187,6 +203,7 @@ export class AvailabilityCheckComponent implements OnInit {
     this.selectedProcessingTypeId = '';
     this.quantity = 0;
     this.availabilityResult = null;
+    this.expandedParts.clear();
   }
 
   // Helpers
@@ -260,6 +277,43 @@ export class AvailabilityCheckComponent implements OnInit {
 
   getCanProduceCount(): number {
     return this.availabilityResult?.partResults.filter(p => p.canProduce).length || 0;
+  }
+
+  getMaterialRowClass(severity: string): { [key: string]: boolean } {
+    return {
+      'material-row-critical': severity === 'CRITICAL',
+      'material-row-warning': severity === 'WARNING'
+    };
+  }
+
+  getMaterialSeverityLabel(severity: string): string {
+    const severityMap: { [key: string]: string } = {
+      'OK': 'Đủ',
+      'WARNING': 'Cảnh báo',
+      'CRITICAL': 'Thiếu'
+    };
+    return severityMap[severity] || severity;
+  }
+
+  getMaterialSeveritySeverity(severity: string): string {
+    const severityMap: { [key: string]: string } = {
+      'OK': 'success',
+      'WARNING': 'warning',
+      'CRITICAL': 'danger'
+    };
+    return severityMap[severity] || 'info';
+  }
+
+  toggleMaterialDetails(part: PartAvailabilityResult): void {
+    if (this.expandedParts.has(part.partId)) {
+      this.expandedParts.delete(part.partId);
+    } else {
+      this.expandedParts.add(part.partId);
+    }
+  }
+
+  isPartExpanded(part: PartAvailabilityResult): boolean {
+    return this.expandedParts.has(part.partId);
   }
 }
 

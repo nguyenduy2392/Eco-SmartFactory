@@ -177,9 +177,11 @@
         [paginator]="true"
         [rows]="10"
         [rowsPerPageOptions]="[10, 25, 50]"
-        styleClass="p-datatable-sm p-datatable-gridlines">
+        styleClass="p-datatable-sm p-datatable-gridlines"
+        dataKey="partId">
         <ng-template pTemplate="header">
           <tr>
+            <th style="width: 50px"></th>
             <th pSortableColumn="partCode">
               Mã linh kiện
               <p-sortIcon field="partCode"></p-sortIcon>
@@ -214,6 +216,17 @@
         <ng-template pTemplate="body" let-part>
           <tr [ngClass]="getRowClass(part.severity)">
             <td>
+              <button 
+                type="button" 
+                pButton 
+                pRipple 
+                (click)="toggleMaterialDetails(part)"
+                [icon]="isPartExpanded(part) ? 'pi pi-chevron-down' : 'pi pi-chevron-right'"
+                class="p-button-text p-button-rounded p-button-plain"
+                *ngIf="part.materialDetails && part.materialDetails.length > 0">
+              </button>
+            </td>
+            <td>
               <code>{{ part.partCode }}</code>
             </td>
             <td>{{ part.partName }}</td>
@@ -236,6 +249,76 @@
                 [value]="getPartSeverityLabel(part.severity)"
                 [severity]="getPartSeveritySeverity(part.severity)">
               </p-tag>
+            </td>
+          </tr>
+          <tr *ngIf="isPartExpanded(part)">
+            <td colspan="8" class="p-0">
+              <div class="p-3 bg-gray-50">
+                <h5 class="mb-3 font-semibold">
+                  <i class="pi pi-list mr-2"></i>
+                  Chi tiết nguyên vật liệu
+                </h5>
+                <p-table
+                  [value]="part.materialDetails || []"
+                  styleClass="p-datatable-sm p-datatable-gridlines"
+                  [tableStyle]="{'width': '100%'}">
+                  <ng-template pTemplate="header">
+                    <tr>
+                      <th>Mã NVL</th>
+                      <th>Tên NVL</th>
+                      <th class="text-right">SL/PCS</th>
+                      <th class="text-right">Hao hụt (%)</th>
+                      <th>ĐVT</th>
+                      <th class="text-right">Cần</th>
+                      <th class="text-right">Có sẵn</th>
+                      <th class="text-right">Thiếu</th>
+                      <th class="text-center">Tình trạng</th>
+                      <th>Nhà cung cấp</th>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="body" let-material>
+                    <tr [ngClass]="getMaterialRowClass(material.severity)">
+                      <td><code>{{ material.materialCode }}</code></td>
+                      <td>{{ material.materialName || '-' }}</td>
+                      <td class="text-right">{{ material.quantityPerUnit | number:'1.4-4' }}</td>
+                      <td class="text-right">{{ (material.scrapRate * 100) | number:'1.2-2' }}%</td>
+                      <td>{{ material.unit }}</td>
+                      <td class="text-right">
+                        <strong>{{ material.requiredQuantity | number:'1.2-2' }}</strong>
+                      </td>
+                      <td class="text-right">
+                        <span [ngClass]="material.materialFound ? '' : 'text-500'">
+                          {{ material.materialFound ? (material.availableQuantity | number:'1.2-2') : 'N/A' }}
+                        </span>
+                      </td>
+                      <td class="text-right">
+                        <strong [ngClass]="material.shortage > 0 ? 'text-red-500' : ''">
+                          {{ material.shortage | number:'1.2-2' }}
+                        </strong>
+                      </td>
+                      <td class="text-center">
+                        <p-tag
+                          [value]="getMaterialSeverityLabel(material.severity)"
+                          [severity]="getMaterialSeveritySeverity(material.severity)">
+                        </p-tag>
+                      </td>
+                      <td>
+                        <span *ngIf="material.customerName">{{ material.customerName }}</span>
+                        <span *ngIf="!material.materialFound" class="text-500">Không tìm thấy</span>
+                        <span *ngIf="material.materialFound && !material.customerName" class="text-500">-</span>
+                      </td>
+                    </tr>
+                  </ng-template>
+                  <ng-template pTemplate="emptymessage">
+                    <tr>
+                      <td colspan="10" class="text-center p-3">
+                        <i class="pi pi-info-circle text-400 mr-2"></i>
+                        Không có thông tin nguyên vật liệu
+                      </td>
+                    </tr>
+                  </ng-template>
+                </p-table>
+              </div>
             </td>
           </tr>
         </ng-template>

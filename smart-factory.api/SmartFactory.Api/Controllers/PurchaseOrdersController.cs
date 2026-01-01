@@ -227,6 +227,9 @@ public class PurchaseOrdersController : BaseApiController
                 CompletionDate = request.CompletionDate,
                 Notes = request.Notes,
                 SequenceOrder = request.SequenceOrder,
+                // Product and Part codes
+                ProductCode = request.ProductCode,
+                PartCode = request.PartCode,
                 // ÉP NHỰA specific fields
                 ModelNumber = request.ModelNumber,
                 Material = request.Material,
@@ -268,6 +271,9 @@ public class PurchaseOrdersController : BaseApiController
                 AssemblyContent = request.AssemblyContent,
                 CompletionDate = request.CompletionDate,
                 Notes = request.Notes,
+                // Product and Part codes
+                ProductCode = request.ProductCode,
+                PartCode = request.PartCode,
                 // ÉP NHỰA specific fields
                 ModelNumber = request.ModelNumber,
                 Material = request.Material,

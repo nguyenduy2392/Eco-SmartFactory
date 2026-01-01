@@ -139,7 +139,7 @@ public class PartAvailabilityDetail
     public int RequiredQuantity { get; set; }
     
     /// <summary>
-    /// Whether this part can be produced (has ACTIVE BOM)
+    /// Whether this part can be produced (has ACTIVE BOM and sufficient materials)
     /// </summary>
     public bool CanProduce { get; set; }
     
@@ -157,6 +157,69 @@ public class PartAvailabilityDetail
     /// Whether ACTIVE BOM exists
     /// </summary>
     public bool HasActiveBOM { get; set; }
+    
+    /// <summary>
+    /// Material-level details for this part
+    /// </summary>
+    public List<MaterialAvailabilityDetail> MaterialDetails { get; set; } = new();
+}
+
+/// <summary>
+/// Material-level availability detail
+/// </summary>
+public class MaterialAvailabilityDetail
+{
+    public string MaterialCode { get; set; } = string.Empty;
+    public string MaterialName { get; set; } = string.Empty;
+    public string Unit { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// Quantity per unit (from BOM)
+    /// </summary>
+    public decimal QuantityPerUnit { get; set; }
+    
+    /// <summary>
+    /// Scrap rate (from BOM)
+    /// </summary>
+    public decimal ScrapRate { get; set; }
+    
+    /// <summary>
+    /// Required quantity = Quantity × QuantityPerUnit × (1 + ScrapRate)
+    /// </summary>
+    public decimal RequiredQuantity { get; set; }
+    
+    /// <summary>
+    /// Available quantity from warehouse (CurrentStock)
+    /// </summary>
+    public decimal AvailableQuantity { get; set; }
+    
+    /// <summary>
+    /// Shortage = RequiredQuantity - AvailableQuantity
+    /// </summary>
+    public decimal Shortage { get; set; }
+    
+    /// <summary>
+    /// Severity: OK, WARNING, CRITICAL
+    /// OK: AvailableQuantity >= RequiredQuantity
+    /// WARNING: AvailableQuantity < RequiredQuantity × 1.1 (less than 10% buffer)
+    /// CRITICAL: Shortage > 0
+    /// </summary>
+    public string Severity { get; set; } = "OK";
+    
+    /// <summary>
+    /// Customer ID who owns this material
+    /// </summary>
+    public Guid? CustomerId { get; set; }
+    
+    /// <summary>
+    /// Customer name who owns this material
+    /// </summary>
+    public string? CustomerName { get; set; }
+    
+    /// <summary>
+    /// Whether material was found in warehouse
+    /// </summary>
+    public bool MaterialFound { get; set; }
 }
 
 

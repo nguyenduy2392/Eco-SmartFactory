@@ -319,6 +319,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         operationId: this.purchaseOrder.operations?.find(op => op.productCode === group.productCode)?.id || '',
         rowIndex: this.tableData.length,
         productNumber: group.productCode || '',
+        partNumber: group.partCode || '',
         processingContent: group.assemblyContent || group.operationName || '',
         processingCount: processingCount,
         unitPrice: unitPrice,
@@ -422,6 +423,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         this.tableColumns = [
           actionColumn,
           { title: 'Mã sản phẩm', field: 'productNumber', width: 120, editor: 'input' },
+          { title: 'Mã linh kiện', field: 'partNumber', width: 150, editor: 'input' },
           { title: 'Nội dung gia công', field: 'processingContent', editor: 'input', width: 200 },
           { title: 'Số lần gia công', field: 'processingCount', editor: 'number', width: 100, editorParams: { min: 0 } },
           { title: 'Đơn giá (VND)', field: 'unitPrice', editor: 'number', width: 120, editorParams: { min: 0, step: 0.01 } },
@@ -775,6 +777,10 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
   mapFieldToUpdate(field: string, value: any): any {
     const updates: any = {};
 
+    // Handle ProductCode and PartCode for all processing types
+    if (field === 'productNumber') updates.productCode = value;
+    else if (field === 'partNumber') updates.partCode = value;
+
     switch (this.processingType) {
       case 'EP_NHUA':
         if (field === 'modelNumber') updates.modelNumber = value;
@@ -839,7 +845,10 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
       requiredMaterial: updates.requiredMaterial ?? operation.requiredMaterial,
       requiredColor: updates.requiredColor ?? operation.requiredColor,
       completionDate: updates.completionDate ?? operation.completionDate,
-      notes: updates.notes ?? operation.notes
+      notes: updates.notes ?? operation.notes,
+      // ProductCode and PartCode for updating relationships
+      productCode: updates.productCode ?? operation.productCode,
+      partCode: updates.partCode ?? operation.partCode
     };
     return result;
   }
@@ -941,6 +950,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         groups.set(key, {
           productCode: op.productCode,
           productName: op.productName,
+          partCode: op.partCode,
           assemblyContent: op.assemblyContent || op.operationName,
           chargeCount: op.chargeCount,
           unitPrice: op.unitPrice,
@@ -1021,6 +1031,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
       case 'LAP_RAP':
         Object.assign(newRow, {
           productNumber: '',
+          partNumber: '',
           processingContent: '',
           processingCount: 0,
           unitPrice: 0,
@@ -1091,6 +1102,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
       case 'LAP_RAP':
         Object.assign(newRow, {
           productNumber: afterRowData.productNumber || '',
+          partNumber: afterRowData.partNumber || '',
           processingContent: '',
           processingCount: 0,
           unitPrice: 0,
@@ -1354,8 +1366,8 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
       throw new Error('Không tìm thấy operation để lấy thông tin cần thiết');
     }
 
-    // Try to find Part based on productCode if provided
-    let partId = firstOperation.partId || '';
+    // Try to find Part based on productCode if provided (fallback for backward compatibility)
+    let partId: string | undefined = undefined;
     if (row.productNumber && this.parts && this.parts.length > 0) {
       const matchingPart = this.parts.find(p =>
         p.productCode === row.productNumber ||
@@ -1367,9 +1379,12 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
     }
 
     const baseData: any = {
-      partId: partId,
+      partId: partId, // Optional - can use ProductCode and PartCode instead
       processingTypeId: firstOperation.processingTypeId || '',
-      sequenceOrder: (this.purchaseOrder.operations?.length || 0) + 1
+      sequenceOrder: (this.purchaseOrder.operations?.length || 0) + 1,
+      // Send ProductCode and PartCode to let backend find or create Product/Part
+      productCode: row.productNumber || undefined,
+      partCode: row.partNumber || undefined
     };
 
     switch (this.processingType) {
@@ -1420,9 +1435,16 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
   }
 
   buildUpdateDataFromRow(row: any, operation: POOperation): any {
+    // Base data with ProductCode and PartCode
+    const baseData: any = {
+      productCode: row.productNumber !== undefined && row.productNumber !== '' ? row.productNumber : operation.productCode,
+      partCode: row.partNumber !== undefined && row.partNumber !== '' ? row.partNumber : operation.partCode
+    };
+
     switch (this.processingType) {
       case 'EP_NHUA':
         return {
+          ...baseData,
           operationName: operation.operationName || 'EP_NHUA',
           modelNumber: row.modelNumber !== undefined ? row.modelNumber : operation.modelNumber,
           material: row.material !== undefined ? row.material : operation.material,
@@ -1440,6 +1462,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         };
       case 'PHUN_IN':
         return {
+          ...baseData,
           operationName: operation.operationName || 'PHUN_IN',
           printContent: row.processingContent !== undefined ? row.processingContent : operation.printContent,
           sprayPosition: row.sprayPosition !== undefined ? row.sprayPosition : operation.sprayPosition,
@@ -1453,6 +1476,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         };
       case 'LAP_RAP':
         return {
+          ...baseData,
           operationName: operation.operationName || 'LAP_RAP',
           assemblyContent: row.processingContent !== undefined ? row.processingContent : operation.assemblyContent,
           chargeCount: row.processingCount !== undefined ? (this.toNumberOrNull(row.processingCount) ?? 0) : operation.chargeCount,
@@ -1464,7 +1488,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           notes: row.notes !== undefined ? row.notes : operation.notes
         };
       default:
-        return {};
+        return baseData;
     }
   }
 
