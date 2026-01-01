@@ -242,18 +242,17 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           operationId: op.id,
           rowIndex: this.tableData.length,
           productNumber: group.productCode || '',
-          number: '',
           modelNumber: op.modelNumber || group.modelNumber || '',
           partNumber: op.partCode || '',
           partName: op.partName || '',
           material: op.material || group.material || '',
           colorCode: op.colorCode || group.colorCode || '',
           color: op.color || group.color || '',
-          cavityQuantity: op.cavityQuantity || group.cavityQuantity || '',
-          set: op.set || group.set || '',
-          cycle: op.cycleTime || group.cycle || '',
-          netWeight: op.netWeight || '',
-          totalWeight: op.totalWeight || group.totalWeight || '',
+          cavityQuantity: this.toNumberOrNull(op.cavityQuantity ?? group.cavityQuantity),
+          set: this.toNumberOrNull(op.set ?? group.set),
+          cycle: this.toNumberOrNull(op.cycleTime ?? group.cycle),
+          netWeight: this.toNumberOrNull(op.netWeight),
+          totalWeight: this.toNumberOrNull(op.totalWeight ?? group.totalWeight),
           machineType: op.machineType || group.machineType || '',
           requiredMaterial: op.requiredMaterial || group.requiredMaterial || '',
           requiredColor: op.requiredColor || group.requiredColor || '',
@@ -306,18 +305,26 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
     this.tableData = [];
 
     grouped.forEach((group) => {
+      const processingCount = this.toNumberOrNull(group.chargeCount) ?? 0;
+      const unitPrice = this.toNumberOrNull(group.unitPrice) ?? 0;
+      const quantity = this.toNumberOrNull(group.quantity) ?? 0;
+
+      // Tổng số tiền = Số lần gia công * Đơn giá
+      const totalAmount1 = processingCount * unitPrice;
+      // Tổng tất số tiền = Tổng số tiền * Số lượng hợp đồng
+      const totalAmount2 = totalAmount1 * quantity;
+
       this.tableData.push({
         id: group.productCode || '',
         operationId: this.purchaseOrder.operations?.find(op => op.productCode === group.productCode)?.id || '',
         rowIndex: this.tableData.length,
         productNumber: group.productCode || '',
-        sequenceNumber: '',
         processingContent: group.assemblyContent || group.operationName || '',
-        processingCount: group.chargeCount || 0,
-        unitPrice: group.unitPrice || 0,
-        totalAmount1: group.totalAmount || 0,
-        quantity: group.quantity || 0,
-        totalAmount2: group.totalAmount || 0,
+        processingCount: processingCount,
+        unitPrice: unitPrice,
+        totalAmount1: totalAmount1,
+        quantity: quantity,
+        totalAmount2: totalAmount2,
         completionDate: group.completionDate ? this.formatDate(group.completionDate) : '',
         notes: group.notes || ''
       });
@@ -366,7 +373,6 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         this.tableColumns = [
           actionColumn,
           { title: 'Mã sản phẩm', field: 'productNumber', width: 120, editor: 'input' },
-          { title: 'Số thứ tự', field: 'number', editor: 'input', width: 80 },
           { title: 'Số khuôn/Mẫu', field: 'modelNumber', editor: 'input', width: 120 },
           { title: 'Mã linh kiện', field: 'partNumber', width: 150, editor: 'input' },
           { title: 'Tên sản phẩm & Chi tiết', field: 'partName', width: 200, editor: 'input' },
@@ -394,10 +400,9 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         this.tableColumns = [
           actionColumn,
           { title: 'Mã sản phẩm', field: 'productNumber', width: 120, editor: 'input' },
-          { title: 'Số lần', field: 'sequenceNumber', editor: 'input', width: 80 },
           { title: 'Mã linh kiện', field: 'partNumber', width: 120, editor: 'input' },
           { title: 'Vị trí phun sơn', field: 'sprayPosition', editor: 'input', width: 150 },
-          { title: 'Nội dung gia công', field: 'processingContent', editor: 'input', width: 120 },
+          { title: 'Công đoạn', field: 'processingContent', editor: 'input', width: 120 },
           { title: 'Số lần gia công', field: 'processingCount', editor: 'number', width: 100, editorParams: { min: 0 } },
           { title: 'Giá mỗi lần (VND)', field: 'unitPrice', editor: 'number', width: 130, editorParams: { min: 0, step: 0.01 } },
           { title: 'Tổng đơn giá (VND)', field: 'totalUnitPrice', width: 130, editor: false, formatter: (cell: any) => {
@@ -417,7 +422,6 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         this.tableColumns = [
           actionColumn,
           { title: 'Mã sản phẩm', field: 'productNumber', width: 120, editor: 'input' },
-          { title: 'Số lần', field: 'sequenceNumber', editor: 'input', width: 80 },
           { title: 'Nội dung gia công', field: 'processingContent', editor: 'input', width: 200 },
           { title: 'Số lần gia công', field: 'processingCount', editor: 'number', width: 100, editorParams: { min: 0 } },
           { title: 'Đơn giá (VND)', field: 'unitPrice', editor: 'number', width: 120, editorParams: { min: 0, step: 0.01 } },
@@ -426,7 +430,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
             return value ? this.formatCurrency(value) : '';
           }},
           { title: 'Số lượng hợp đồng (PCS)', field: 'quantity', editor: 'number', width: 130, editorParams: { min: 0 } },
-          { title: 'Tổng số tiền (VND)', field: 'totalAmount2', width: 140, editor: false, formatter: (cell: any) => {
+          { title: 'Tổng tất số tiền (VND)', field: 'totalAmount2', width: 140, editor: false, formatter: (cell: any) => {
             const value = cell.getValue();
             return value ? this.formatCurrency(value) : '';
           }},
@@ -443,7 +447,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
     try {
       const field = cell.getField();
       const rowData = cell.getRow().getData();
-      const newValue = cell.getValue();
+      let newValue = cell.getValue();
       const oldValue = cell.getOldValue();
 
       console.log('Cell edited:', { field, newValue, oldValue, rowData });
@@ -458,6 +462,11 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
       if (this.isCalculatedField(field)) {
         console.log('Calculated field, skipping');
         return;
+      }
+
+      // Convert numeric fields to numbers
+      if (this.isNumericField(field)) {
+        newValue = this.toNumberOrNull(newValue) ?? 0;
       }
 
       // Update row data
@@ -486,22 +495,34 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
 
       switch (this.processingType) {
         case 'EP_NHUA':
-          const totalPrice = (row.quantity || 0) * (row.chargeCount || 0) * (row.unitPrice || 0);
+          const quantity = this.toNumberOrNull(row.quantity) ?? 0;
+          const chargeCount = this.toNumberOrNull(row.chargeCount) ?? 0;
+          const unitPrice = this.toNumberOrNull(row.unitPrice) ?? 0;
+          const totalPrice = quantity * chargeCount * unitPrice;
           row.totalPrice = totalPrice;
           rowComponent.update({ totalPrice });
           break;
         case 'PHUN_IN':
-          const totalUnitPrice = (row.processingCount || 0) * (row.unitPrice || 0);
-          const amount = totalUnitPrice * (row.quantity || 0);
+          const processingCount = this.toNumberOrNull(row.processingCount) ?? 0;
+          const unitPricePhun = this.toNumberOrNull(row.unitPrice) ?? 0;
+          const quantityPhun = this.toNumberOrNull(row.quantity) ?? 0;
+          const totalUnitPrice = processingCount * unitPricePhun;
+          const amount = totalUnitPrice * quantityPhun;
           row.totalUnitPrice = totalUnitPrice;
           row.amount = amount;
           rowComponent.update({ totalUnitPrice, amount });
           break;
         case 'LAP_RAP':
-          const totalAmount = (row.processingCount || 0) * (row.unitPrice || 0) * (row.quantity || 0);
-          row.totalAmount1 = totalAmount;
-          row.totalAmount2 = totalAmount;
-          rowComponent.update({ totalAmount1: totalAmount, totalAmount2: totalAmount });
+          // Tổng số tiền = Số lần gia công * Đơn giá
+          const processingCountLap = this.toNumberOrNull(row.processingCount) ?? 0;
+          const unitPriceLap = this.toNumberOrNull(row.unitPrice) ?? 0;
+          const totalAmount1 = processingCountLap * unitPriceLap;
+          // Tổng tất số tiền = Tổng số tiền * Số lượng hợp đồng
+          const quantityLap = this.toNumberOrNull(row.quantity) ?? 0;
+          const totalAmount2 = totalAmount1 * quantityLap;
+          row.totalAmount1 = totalAmount1;
+          row.totalAmount2 = totalAmount2;
+          rowComponent.update({ totalAmount1, totalAmount2 });
           break;
       }
     } catch (error) {
@@ -687,15 +708,15 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           material: updates.material || row.material || '',
           colorCode: updates.colorCode || row.colorCode || '',
           color: updates.color || row.color || '',
-          cavityQuantity: updates.cavityQuantity ?? row.cavityQuantity ?? 0,
-          set: updates.set ?? row.set ?? 0,
-          cycleTime: updates.cycleTime ?? row.cycle ?? 0,
-          netWeight: updates.netWeight ?? row.netWeight ?? 0,
-          totalWeight: updates.totalWeight ?? row.totalWeight ?? 0,
+          cavityQuantity: this.toNumberOrNull(updates.cavityQuantity ?? row.cavityQuantity),
+          set: this.toNumberOrNull(updates.set ?? row.set),
+          cycleTime: this.toNumberOrNull(updates.cycleTime ?? row.cycle),
+          netWeight: this.toNumberOrNull(updates.netWeight ?? row.netWeight),
+          totalWeight: this.toNumberOrNull(updates.totalWeight ?? row.totalWeight),
           machineType: updates.machineType || row.machineType || '',
-          chargeCount: updates.chargeCount ?? row.chargeCount ?? 0,
-          unitPrice: updates.unitPrice ?? row.unitPrice ?? 0,
-          quantity: updates.quantity ?? row.quantity ?? 0
+          chargeCount: (this.toNumberOrNull(updates.chargeCount ?? row.chargeCount) ?? 0),
+          unitPrice: (this.toNumberOrNull(updates.unitPrice ?? row.unitPrice) ?? 0),
+          quantity: (this.toNumberOrNull(updates.quantity ?? row.quantity) ?? 0)
         };
       case 'PHUN_IN':
         return {
@@ -703,9 +724,9 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           operationName: updates.operationName || 'PHUN_IN',
           printContent: updates.printContent || row.processingContent || '',
           sprayPosition: updates.sprayPosition || row.sprayPosition || '',
-          chargeCount: updates.chargeCount ?? row.processingCount ?? 0,
-          unitPrice: updates.unitPrice ?? row.unitPrice ?? 0,
-          quantity: updates.quantity ?? row.quantity ?? 0,
+          chargeCount: (this.toNumberOrNull(updates.chargeCount ?? row.processingCount) ?? 0),
+          unitPrice: (this.toNumberOrNull(updates.unitPrice ?? row.unitPrice) ?? 0),
+          quantity: (this.toNumberOrNull(updates.quantity ?? row.quantity) ?? 0),
           completionDate: updates.completionDate || row.completionDate || null,
           notes: updates.notes || row.notes || ''
         };
@@ -714,9 +735,9 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           ...baseData,
           operationName: updates.operationName || 'LAP_RAP',
           assemblyContent: updates.assemblyContent || row.processingContent || '',
-          chargeCount: updates.chargeCount ?? row.processingCount ?? 0,
-          unitPrice: updates.unitPrice ?? row.unitPrice ?? 0,
-          quantity: updates.quantity ?? row.quantity ?? 0,
+          chargeCount: (this.toNumberOrNull(updates.chargeCount ?? row.processingCount) ?? 0),
+          unitPrice: (this.toNumberOrNull(updates.unitPrice ?? row.unitPrice) ?? 0),
+          quantity: (this.toNumberOrNull(updates.quantity ?? row.quantity) ?? 0),
           completionDate: updates.completionDate || row.completionDate || null,
           notes: updates.notes || row.notes || ''
         };
@@ -738,6 +759,19 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
     }
   }
 
+  isNumericField(field: string): boolean {
+    switch (this.processingType) {
+      case 'EP_NHUA':
+        return ['quantity', 'chargeCount', 'unitPrice', 'cavityQuantity', 'set', 'cycle', 'netWeight', 'totalWeight'].includes(field);
+      case 'PHUN_IN':
+        return ['processingCount', 'unitPrice', 'quantity'].includes(field);
+      case 'LAP_RAP':
+        return ['processingCount', 'unitPrice', 'quantity'].includes(field);
+      default:
+        return false;
+    }
+  }
+
   mapFieldToUpdate(field: string, value: any): any {
     const updates: any = {};
 
@@ -747,32 +781,32 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         else if (field === 'material') updates.material = value;
         else if (field === 'colorCode') updates.colorCode = value;
         else if (field === 'color') updates.color = value;
-        else if (field === 'cavityQuantity') updates.cavityQuantity = value;
-        else if (field === 'set') updates.set = value;
-        else if (field === 'cycle') updates.cycleTime = value;
-        else if (field === 'netWeight') updates.netWeight = value;
-        else if (field === 'totalWeight') updates.totalWeight = value;
+        else if (field === 'cavityQuantity') updates.cavityQuantity = this.toNumberOrNull(value);
+        else if (field === 'set') updates.set = this.toNumberOrNull(value);
+        else if (field === 'cycle') updates.cycleTime = this.toNumberOrNull(value);
+        else if (field === 'netWeight') updates.netWeight = this.toNumberOrNull(value);
+        else if (field === 'totalWeight') updates.totalWeight = this.toNumberOrNull(value);
         else if (field === 'machineType') updates.machineType = value;
         else if (field === 'requiredMaterial') updates.requiredMaterial = value;
         else if (field === 'requiredColor') updates.requiredColor = value;
-        else if (field === 'quantity') updates.quantity = value;
-        else if (field === 'chargeCount') updates.chargeCount = value;
-        else if (field === 'unitPrice') updates.unitPrice = value;
+        else if (field === 'quantity') updates.quantity = this.toNumberOrNull(value) ?? 0;
+        else if (field === 'chargeCount') updates.chargeCount = this.toNumberOrNull(value) ?? 0;
+        else if (field === 'unitPrice') updates.unitPrice = this.toNumberOrNull(value) ?? 0;
         break;
       case 'PHUN_IN':
         if (field === 'sprayPosition') updates.sprayPosition = value;
         else if (field === 'processingContent') updates.printContent = value;
-        else if (field === 'processingCount') updates.chargeCount = value;
-        else if (field === 'unitPrice') updates.unitPrice = value;
-        else if (field === 'quantity') updates.quantity = value;
+        else if (field === 'processingCount') updates.chargeCount = this.toNumberOrNull(value) ?? 0;
+        else if (field === 'unitPrice') updates.unitPrice = this.toNumberOrNull(value) ?? 0;
+        else if (field === 'quantity') updates.quantity = this.toNumberOrNull(value) ?? 0;
         else if (field === 'completionDate') updates.completionDate = value;
         else if (field === 'notes') updates.notes = value;
         break;
       case 'LAP_RAP':
         if (field === 'processingContent') updates.assemblyContent = value;
-        else if (field === 'processingCount') updates.chargeCount = value;
-        else if (field === 'unitPrice') updates.unitPrice = value;
-        else if (field === 'quantity') updates.quantity = value;
+        else if (field === 'processingCount') updates.chargeCount = this.toNumberOrNull(value) ?? 0;
+        else if (field === 'unitPrice') updates.unitPrice = this.toNumberOrNull(value) ?? 0;
+        else if (field === 'quantity') updates.quantity = this.toNumberOrNull(value) ?? 0;
         else if (field === 'completionDate') updates.completionDate = value;
         else if (field === 'notes') updates.notes = value;
         break;
@@ -782,29 +816,32 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
   }
 
   buildUpdateData(operation: POOperation, updates: any): any {
-    return {
+    // For nullable numeric fields, convert empty strings to null
+    // For required numeric fields, ensure they're numbers
+    const result: any = {
       operationName: updates.printContent || updates.assemblyContent || operation.operationName,
-      chargeCount: updates.chargeCount ?? operation.chargeCount,
-      unitPrice: updates.unitPrice ?? operation.unitPrice,
-      quantity: updates.quantity ?? operation.quantity,
+      chargeCount: updates.chargeCount !== undefined ? (this.toNumberOrNull(updates.chargeCount) ?? operation.chargeCount ?? 0) : operation.chargeCount,
+      unitPrice: updates.unitPrice !== undefined ? (this.toNumberOrNull(updates.unitPrice) ?? operation.unitPrice ?? 0) : operation.unitPrice,
+      quantity: updates.quantity !== undefined ? (this.toNumberOrNull(updates.quantity) ?? operation.quantity ?? 0) : operation.quantity,
       sprayPosition: updates.sprayPosition ?? operation.sprayPosition,
       printContent: updates.printContent ?? operation.printContent,
-      cycleTime: updates.cycleTime ?? operation.cycleTime,
+      cycleTime: updates.cycleTime !== undefined ? this.toNumberOrNull(updates.cycleTime) : operation.cycleTime,
       assemblyContent: updates.assemblyContent ?? operation.assemblyContent,
       modelNumber: updates.modelNumber ?? operation.modelNumber,
       material: updates.material ?? operation.material,
       colorCode: updates.colorCode ?? operation.colorCode,
       color: updates.color ?? operation.color,
-      cavityQuantity: updates.cavityQuantity ?? operation.cavityQuantity,
-      set: updates.set ?? operation.set,
-      netWeight: updates.netWeight ?? operation.netWeight,
-      totalWeight: updates.totalWeight ?? operation.totalWeight,
+      cavityQuantity: updates.cavityQuantity !== undefined ? this.toNumberOrNull(updates.cavityQuantity) : operation.cavityQuantity,
+      set: updates.set !== undefined ? this.toNumberOrNull(updates.set) : operation.set,
+      netWeight: updates.netWeight !== undefined ? this.toNumberOrNull(updates.netWeight) : operation.netWeight,
+      totalWeight: updates.totalWeight !== undefined ? this.toNumberOrNull(updates.totalWeight) : operation.totalWeight,
       machineType: updates.machineType ?? operation.machineType,
       requiredMaterial: updates.requiredMaterial ?? operation.requiredMaterial,
       requiredColor: updates.requiredColor ?? operation.requiredColor,
       completionDate: updates.completionDate ?? operation.completionDate,
       notes: updates.notes ?? operation.notes
     };
+    return result;
   }
 
   findOperationById(id: string): POOperation | null {
@@ -853,10 +890,10 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           material: op.material || '',
           colorCode: op.colorCode || '',
           color: op.color || '',
-          cavityQuantity: op.cavityQuantity || '',
-          set: op.set || '',
-          cycle: op.cycleTime || '',
-          totalWeight: op.totalWeight || '',
+          cavityQuantity: op.cavityQuantity ?? null,
+          set: op.set ?? null,
+          cycle: op.cycleTime ?? null,
+          totalWeight: op.totalWeight ?? null,
           machineType: op.machineType || '',
           requiredMaterial: op.requiredMaterial || '',
           requiredColor: op.requiredColor || '',
@@ -945,7 +982,6 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
       case 'EP_NHUA':
         Object.assign(newRow, {
           productNumber: '',
-          number: '',
           modelNumber: '',
           partNumber: '',
           partName: '',
@@ -985,7 +1021,6 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
       case 'LAP_RAP':
         Object.assign(newRow, {
           productNumber: '',
-          sequenceNumber: '',
           processingContent: '',
           processingCount: 0,
           unitPrice: 0,
@@ -1017,7 +1052,6 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
       case 'EP_NHUA':
         Object.assign(newRow, {
           productNumber: afterRowData.productNumber || '',
-          number: '',
           modelNumber: afterRowData.modelNumber || '',
           partNumber: afterRowData.partNumber || '',
           partName: afterRowData.partName || '',
@@ -1057,7 +1091,6 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
       case 'LAP_RAP':
         Object.assign(newRow, {
           productNumber: afterRowData.productNumber || '',
-          sequenceNumber: '',
           processingContent: '',
           processingCount: 0,
           unitPrice: 0,
@@ -1240,9 +1273,19 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
       );
 
       for (const row of allTableData) {
+        // Recalculate totals before saving to ensure data consistency
+        this.recalculateRow(row);
+
         const isNewRow = !row.operationId || row.id.startsWith('new_') || !existingOperationIds.has(row.operationId);
 
         if (isNewRow) {
+          // Validate required fields for new rows
+          if (this.processingType === 'LAP_RAP') {
+            if (!row.productNumber || row.productNumber.trim() === '') {
+              throw new Error(`Dòng mới cần có Mã sản phẩm. Vui lòng nhập Mã sản phẩm trước khi lưu.`);
+            }
+          }
+
           // Create new operation
           const operationData = this.buildCreateOperationDataFromRow(row);
           savePromises.push(
@@ -1263,7 +1306,10 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
                   }
                   resolve(createdOperation);
                 },
-                error: (err) => reject(err)
+                error: (err) => {
+                  console.error('Error creating operation:', err);
+                  reject(err);
+                }
               });
             })
           );
@@ -1308,8 +1354,20 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
       throw new Error('Không tìm thấy operation để lấy thông tin cần thiết');
     }
 
+    // Try to find Part based on productCode if provided
+    let partId = firstOperation.partId || '';
+    if (row.productNumber && this.parts && this.parts.length > 0) {
+      const matchingPart = this.parts.find(p =>
+        p.productCode === row.productNumber ||
+        (p.productId && this.products.find(pr => pr.id === p.productId && pr.code === row.productNumber))
+      );
+      if (matchingPart) {
+        partId = matchingPart.id;
+      }
+    }
+
     const baseData: any = {
-      partId: firstOperation.partId || '',
+      partId: partId,
       processingTypeId: firstOperation.processingTypeId || '',
       sequenceOrder: (this.purchaseOrder.operations?.length || 0) + 1
     };
@@ -1323,15 +1381,15 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           material: row.material || '',
           colorCode: row.colorCode || '',
           color: row.color || '',
-          cavityQuantity: row.cavityQuantity ?? 0,
-          set: row.set ?? 0,
-          cycleTime: row.cycle ?? 0,
-          netWeight: row.netWeight ?? 0,
-          totalWeight: row.totalWeight ?? 0,
+          cavityQuantity: this.toNumberOrNull(row.cavityQuantity),
+          set: this.toNumberOrNull(row.set),
+          cycleTime: this.toNumberOrNull(row.cycle),
+          netWeight: this.toNumberOrNull(row.netWeight),
+          totalWeight: this.toNumberOrNull(row.totalWeight),
           machineType: row.machineType || '',
-          chargeCount: row.chargeCount ?? 0,
-          unitPrice: row.unitPrice ?? 0,
-          quantity: row.quantity ?? 0
+          chargeCount: (this.toNumberOrNull(row.chargeCount) ?? 0),
+          unitPrice: (this.toNumberOrNull(row.unitPrice) ?? 0),
+          quantity: (this.toNumberOrNull(row.quantity) ?? 0)
         };
       case 'PHUN_IN':
         return {
@@ -1339,9 +1397,9 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           operationName: 'PHUN_IN',
           printContent: row.processingContent || '',
           sprayPosition: row.sprayPosition || '',
-          chargeCount: row.processingCount ?? 0,
-          unitPrice: row.unitPrice ?? 0,
-          quantity: row.quantity ?? 0,
+          chargeCount: (this.toNumberOrNull(row.processingCount) ?? 0),
+          unitPrice: (this.toNumberOrNull(row.unitPrice) ?? 0),
+          quantity: (this.toNumberOrNull(row.quantity) ?? 0),
           completionDate: row.completionDate ? this.parseDate(row.completionDate) : null,
           notes: row.notes || ''
         };
@@ -1350,9 +1408,9 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           ...baseData,
           operationName: 'LAP_RAP',
           assemblyContent: row.processingContent || '',
-          chargeCount: row.processingCount ?? 0,
-          unitPrice: row.unitPrice ?? 0,
-          quantity: row.quantity ?? 0,
+          chargeCount: (this.toNumberOrNull(row.processingCount) ?? 0),
+          unitPrice: (this.toNumberOrNull(row.unitPrice) ?? 0),
+          quantity: (this.toNumberOrNull(row.quantity) ?? 0),
           completionDate: row.completionDate ? this.parseDate(row.completionDate) : null,
           notes: row.notes || ''
         };
@@ -1370,24 +1428,24 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           material: row.material !== undefined ? row.material : operation.material,
           colorCode: row.colorCode !== undefined ? row.colorCode : operation.colorCode,
           color: row.color !== undefined ? row.color : operation.color,
-          cavityQuantity: row.cavityQuantity !== undefined ? row.cavityQuantity : operation.cavityQuantity,
-          set: row.set !== undefined ? row.set : operation.set,
-          cycleTime: row.cycle !== undefined ? row.cycle : operation.cycleTime,
-          netWeight: row.netWeight !== undefined ? row.netWeight : operation.netWeight,
-          totalWeight: row.totalWeight !== undefined ? row.totalWeight : operation.totalWeight,
+          cavityQuantity: row.cavityQuantity !== undefined ? this.toNumberOrNull(row.cavityQuantity) : operation.cavityQuantity,
+          set: row.set !== undefined ? this.toNumberOrNull(row.set) : operation.set,
+          cycleTime: row.cycle !== undefined ? this.toNumberOrNull(row.cycle) : operation.cycleTime,
+          netWeight: row.netWeight !== undefined ? this.toNumberOrNull(row.netWeight) : operation.netWeight,
+          totalWeight: row.totalWeight !== undefined ? this.toNumberOrNull(row.totalWeight) : operation.totalWeight,
           machineType: row.machineType !== undefined ? row.machineType : operation.machineType,
-          chargeCount: row.chargeCount !== undefined ? row.chargeCount : operation.chargeCount,
-          unitPrice: row.unitPrice !== undefined ? row.unitPrice : operation.unitPrice,
-          quantity: row.quantity !== undefined ? row.quantity : operation.quantity
+          chargeCount: row.chargeCount !== undefined ? (this.toNumberOrNull(row.chargeCount) ?? 0) : operation.chargeCount,
+          unitPrice: row.unitPrice !== undefined ? (this.toNumberOrNull(row.unitPrice) ?? 0) : operation.unitPrice,
+          quantity: row.quantity !== undefined ? (this.toNumberOrNull(row.quantity) ?? 0) : operation.quantity
         };
       case 'PHUN_IN':
         return {
           operationName: operation.operationName || 'PHUN_IN',
           printContent: row.processingContent !== undefined ? row.processingContent : operation.printContent,
           sprayPosition: row.sprayPosition !== undefined ? row.sprayPosition : operation.sprayPosition,
-          chargeCount: row.processingCount !== undefined ? row.processingCount : operation.chargeCount,
-          unitPrice: row.unitPrice !== undefined ? row.unitPrice : operation.unitPrice,
-          quantity: row.quantity !== undefined ? row.quantity : operation.quantity,
+          chargeCount: row.processingCount !== undefined ? (this.toNumberOrNull(row.processingCount) ?? 0) : operation.chargeCount,
+          unitPrice: row.unitPrice !== undefined ? (this.toNumberOrNull(row.unitPrice) ?? 0) : operation.unitPrice,
+          quantity: row.quantity !== undefined ? (this.toNumberOrNull(row.quantity) ?? 0) : operation.quantity,
           completionDate: row.completionDate !== undefined && row.completionDate !== ''
             ? this.parseDate(row.completionDate)
             : operation.completionDate,
@@ -1397,9 +1455,9 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         return {
           operationName: operation.operationName || 'LAP_RAP',
           assemblyContent: row.processingContent !== undefined ? row.processingContent : operation.assemblyContent,
-          chargeCount: row.processingCount !== undefined ? row.processingCount : operation.chargeCount,
-          unitPrice: row.unitPrice !== undefined ? row.unitPrice : operation.unitPrice,
-          quantity: row.quantity !== undefined ? row.quantity : operation.quantity,
+          chargeCount: row.processingCount !== undefined ? (this.toNumberOrNull(row.processingCount) ?? 0) : operation.chargeCount,
+          unitPrice: row.unitPrice !== undefined ? (this.toNumberOrNull(row.unitPrice) ?? 0) : operation.unitPrice,
+          quantity: row.quantity !== undefined ? (this.toNumberOrNull(row.quantity) ?? 0) : operation.quantity,
           completionDate: row.completionDate !== undefined && row.completionDate !== ''
             ? this.parseDate(row.completionDate)
             : operation.completionDate,
@@ -1423,6 +1481,13 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
     // Try standard date parsing
     const date = new Date(dateString);
     return isNaN(date.getTime()) ? null : date;
+  }
+
+  toNumberOrNull(value: any): number | null {
+    if (value === null || value === undefined) return null;
+    if (value === '' || value === ' ') return null;
+    const num = typeof value === 'number' ? value : Number(value);
+    return isNaN(num) ? null : num;
   }
 
   cancel(): void {

@@ -43,6 +43,34 @@ public class CustomersController : BaseApiController
         var result = await Mediator.Send(command);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(Guid id, [FromBody] UpdateCustomerRequest request)
+    {
+        try
+        {
+            var command = new UpdateCustomerCommand
+            {
+                Id = id,
+                Code = request.Code,
+                Name = request.Name,
+                Address = request.Address,
+                ContactPerson = request.ContactPerson,
+                Email = request.Email,
+                Phone = request.Phone,
+                PaymentTerms = request.PaymentTerms,
+                Notes = request.Notes,
+                IsActive = request.IsActive
+            };
+
+            var result = await Mediator.Send(command);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
 }
 
 
