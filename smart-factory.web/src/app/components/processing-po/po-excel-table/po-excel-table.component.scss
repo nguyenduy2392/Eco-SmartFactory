@@ -1,0 +1,402 @@
+.excel-table-wrapper {
+  width: 100%;
+  padding: 1rem;
+  background: #f5f7fa;
+
+  // Info Card Styling
+  .info-card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+    position: relative;
+    z-index: 1;
+
+    .card-header {
+       background: linear-gradient(135deg, #667eea 0%,  #667eea 0%);
+      padding: 1rem 1.5rem;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+
+      .card-title {
+        margin: 0;
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+
+        i {
+          font-size: 1.2rem;
+        }
+      }
+    }
+
+    .card-body {
+      padding: 1.5rem;
+      position: relative;
+      z-index: 1;
+
+      .form-section {
+        .field {
+          margin-bottom: 1.25rem;
+          position: relative;
+          z-index: 1;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          .field-label {
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+
+            i {
+              color: #667eea;
+              font-size: 0.85rem;
+            }
+          }
+
+          .p-inputgroup {
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            border-radius: 6px;
+            overflow: visible;
+            transition: box-shadow 0.2s;
+            position: relative;
+            z-index: 1;
+
+            &:hover {
+              box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+            }
+
+            .p-inputgroup-addon {
+              background: #f8f9fa;
+              border-color: #dee2e6;
+              color: #667eea;
+              font-weight: 500;
+            }
+
+            input,
+            ::ng-deep .p-dropdown,
+            ::ng-deep .p-calendar {
+              border-color: #dee2e6;
+              transition: border-color 0.2s;
+              position: relative;
+              z-index: 1;
+
+              &:focus,
+              &:focus-within {
+                border-color: #667eea;
+                box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+              }
+            }
+
+            // Ensure dropdown and calendar panels are visible
+            ::ng-deep .p-dropdown-panel,
+            ::ng-deep .p-datepicker {
+              z-index: 9999 !important;
+            }
+
+            input[readonly] {
+              background: #f8f9fa;
+              cursor: not-allowed;
+            }
+          }
+
+          textarea {
+            border-radius: 6px;
+            border-color: #dee2e6;
+            transition: border-color 0.2s;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+
+            &:focus {
+              border-color: #667eea;
+              box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // Table Card Styling
+  .table-card {
+    border: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+    position: relative;
+    z-index: 1;
+
+    .card-header {
+       background: linear-gradient(135deg, #667eea 0%,  #667eea 0%);
+      padding: 1rem 1.5rem;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+
+      .card-title {
+        margin: 0;
+        color: white;
+        font-size: 1.1rem;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+
+        i {
+          font-size: 1.2rem;
+        }
+      }
+    }
+
+    .excel-table-container {
+      width: 100%;
+      background: white;
+      padding: 0;
+      overflow: visible;
+
+      .tabulator-container {
+        width: 100%;
+        min-height: 300px;
+      }
+    }
+  }
+
+  // Action Footer
+  .action-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    margin-top: 1rem;
+
+    ::ng-deep .p-button {
+      min-width: 120px;
+      padding: 0.75rem 1.5rem;
+      font-weight: 600;
+      border-radius: 6px;
+      transition: all 0.2s;
+
+      &.p-button-primary {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+
+        &:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+        }
+      }
+
+      &.p-button-outlined {
+        border-width: 2px;
+        font-weight: 600;
+
+        &:hover:not(:disabled) {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+      }
+    }
+  }
+}
+
+// Fix z-index for PrimeNG dropdowns and calendars
+::ng-deep {
+  .p-dropdown-panel,
+  .p-datepicker {
+    z-index: 9999 !important;
+  }
+
+  .p-overlaypanel {
+    z-index: 10000 !important;
+  }
+
+  .tabulator {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 13px;
+    border: none;
+    margin-bottom: 0 !important;
+    border-radius: 0;
+
+    .tabulator-header {
+       background: linear-gradient(135deg, #667eea 0%,  #667eea 0%);
+      color: white;
+      font-weight: 600;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+
+      .tabulator-col {
+        background: transparent;
+        color: white;
+        border-right: 1px solid rgba(255, 255, 255, 0.2);
+        transition: background-color 0.2s;
+
+        &:hover {
+          background-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .tabulator-col-content {
+          padding: 12px 10px;
+        }
+
+        .tabulator-col-sorter {
+          .tabulator-arrow {
+            border-top-color: white;
+          }
+        }
+      }
+    }
+
+    .tabulator-tableHolder {
+      max-height: 600px;
+      overflow-y: auto;
+
+      &::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: #f1f1f1;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: #888;
+        border-radius: 4px;
+
+        &:hover {
+          background: #555;
+        }
+      }
+
+      .tabulator-table {
+        .tabulator-row {
+          border-bottom: 1px solid #e9ecef;
+          transition: all 0.2s;
+
+          &:nth-child(even) {
+            background-color: #fafbfc;
+          }
+
+          &:hover {
+            background-color: #f0f4ff !important;
+            transform: scale(1.001);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+          }
+
+          &.tabulator-selected {
+            background-color: #e3f2fd !important;
+          }
+
+          .tabulator-cell {
+            border-right: 1px solid #e9ecef;
+            padding: 10px 12px;
+            vertical-align: middle;
+
+            &.tabulator-editing {
+              border: 2px solid #667eea !important;
+              background-color: white !important;
+              padding: 8px 10px;
+              box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+            }
+
+            input, textarea, select {
+              width: 100% !important;
+              border: 1px solid #dee2e6 !important;
+              outline: none !important;
+              background: white !important;
+              font-size: 13px !important;
+              padding: 6px 8px !important;
+              box-sizing: border-box !important;
+              border-radius: 4px !important;
+              transition: border-color 0.2s !important;
+
+              &:focus {
+                border-color: #667eea !important;
+                box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25) !important;
+              }
+            }
+
+            &[tabulator-field="totalPrice"],
+            &[tabulator-field="totalUnitPrice"],
+            &[tabulator-field="amount"],
+            &[tabulator-field="totalAmount1"],
+            &[tabulator-field="totalAmount2"],
+            &[tabulator-field="totalWeight"],
+            &[tabulator-field="requiredMaterial"],
+            &[tabulator-field="requiredColor"] {
+              background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%) !important;
+              color: #2c3e50;
+              font-weight: 700;
+              cursor: default !important;
+            }
+
+            &[tabulator-field="productNumber"],
+            &[tabulator-field="partNumber"],
+            &[tabulator-field="partName"] {
+              background-color: #f8f9fa !important;
+              cursor: default !important;
+              font-weight: 500;
+              color: #495057;
+            }
+
+            .tabulator-add-btn,
+            .tabulator-delete-btn {
+              padding: 6px 10px;
+              color: white;
+              border: none;
+              border-radius: 5px;
+              cursor: pointer;
+              font-size: 12px;
+              transition: all 0.2s;
+              display: inline-flex;
+              align-items: center;
+              justify-content: center;
+              box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
+
+            .tabulator-add-btn {
+              background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+              margin-right: 6px;
+
+              &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(17, 153, 142, 0.4);
+              }
+
+              &:active {
+                transform: translateY(0);
+              }
+            }
+
+            .tabulator-delete-btn {
+              background: linear-gradient(135deg, #eb3349 0%, #f45c43 100%);
+
+              &:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 4px 8px rgba(235, 51, 73, 0.4);
+              }
+
+              &:active {
+                transform: translateY(0);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    .tabulator-footer {
+      display: none;
+    }
+  }
+}
+

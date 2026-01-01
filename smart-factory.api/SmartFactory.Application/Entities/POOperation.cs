@@ -75,6 +75,62 @@ public class POOperation
     /// </summary>
     public string? AssemblyContent { get; set; }
     
+    // ÉP NHỰA specific fields
+    /// <summary>
+    /// Mã số mẫu/khuôn (模号/款号)
+    /// </summary>
+    public string? ModelNumber { get; set; }
+    
+    /// <summary>
+    /// Loại vật liệu (胶料)
+    /// </summary>
+    public string? Material { get; set; }
+    
+    /// <summary>
+    /// Mã màu (色份遍号)
+    /// </summary>
+    public string? ColorCode { get; set; }
+    
+    /// <summary>
+    /// Màu sắc (颜色)
+    /// </summary>
+    public string? Color { get; set; }
+    
+    /// <summary>
+    /// Số lòng khuôn (莫腔量)
+    /// </summary>
+    public int? CavityQuantity { get; set; }
+    
+    /// <summary>
+    /// Số bộ (套Bộ)
+    /// </summary>
+    public int? Set { get; set; }
+    
+    /// <summary>
+    /// Trọng lượng tịnh (淨重)
+    /// </summary>
+    public decimal? NetWeight { get; set; }
+    
+    /// <summary>
+    /// Tổng trọng lượng (总重量)
+    /// </summary>
+    public decimal? TotalWeight { get; set; }
+    
+    /// <summary>
+    /// Loại máy ép (晚機型號)
+    /// </summary>
+    public string? MachineType { get; set; }
+    
+    /// <summary>
+    /// Lượng nhựa cần (需要胶料)
+    /// </summary>
+    public decimal? RequiredMaterial { get; set; }
+    
+    /// <summary>
+    /// Lượng màu cần (需要色份)
+    /// </summary>
+    public decimal? RequiredColor { get; set; }
+    
     /// <summary>
     /// Ghi chú
     /// </summary>

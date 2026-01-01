@@ -18,178 +18,21 @@
         <h2 class="text-2xl font-bold m-0">
           PO: {{ purchaseOrder.poNumber }}
         </h2>
-        <p-tag
-          [value]="getStatusLabel(purchaseOrder.status)"
-          [severity]="getStatusSeverity(purchaseOrder.status)"
-          [style]="{'font-size': '1rem', 'padding': '0.5rem 1rem'}">
-        </p-tag>
-        <p-tag
-          *ngIf="purchaseOrder.status === 'DRAFT'"
-          value="Nháp"
-          severity="warning"
-          [style]="{'font-size': '1rem', 'padding': '0.5rem 1rem'}">
-        </p-tag>
-      </div>
-
-      <div class="flex flex-column gap-2 align-items-end">
-        <div class="flex gap-2">
-          <p-button
-            label="Tạo Version mới"
-            icon="pi pi-copy"
-            (onClick)="openCloneDialog()"
-            styleClass="p-button-outlined">
-          </p-button>
-          <p-button
-            label="Phê duyệt cho PMC"
-            icon="pi pi-check"
-            (onClick)="approveForPMC()"
-            severity="success">
-          </p-button>
-        </div>
-        <a 
-          class="flex align-items-center gap-2 text-primary cursor-pointer"
-          (click)="startEditGeneralInfo()"
-          style="text-decoration: none; font-size: 0.875rem;">
-          <i class="pi pi-pencil"></i>
-          <span>Sửa thông tin</span>
-        </a>
       </div>
     </div>
 
-    <!-- THÔNG TIN ĐƠN HÀNG Section -->
-    <div class="card mb-4">
-      <h3 class="text-xl font-semibold mb-3">THÔNG TIN ĐƠN HÀNG</h3>
-
-      <div class="grid">
-        <div class="col-12 md:col-6">
-          <div class="field">
-            <label class="font-semibold text-600">SỐ PO</label>
-            <div class="p-inputgroup">
-              <span class="p-inputgroup-addon"><i class="pi pi-hashtag"></i></span>
-              <input 
-                *ngIf="!editingGeneralInfo"
-                pInputText 
-                [value]="purchaseOrder.poNumber" 
-                readonly>
-              <input 
-                *ngIf="editingGeneralInfo"
-                pInputText 
-                [(ngModel)]="editGeneralInfo.poNumber">
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 md:col-6">
-          <div class="field">
-            <label class="font-semibold text-600">KHÁCH HÀNG</label>
-            <div class="p-inputgroup">
-              <span class="p-inputgroup-addon"><i class="pi pi-user"></i></span>
-              <input pInputText [value]="purchaseOrder.customerName" readonly>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 md:col-6">
-          <div class="field">
-            <label class="font-semibold text-600">NGÀY PO</label>
-            <div class="p-inputgroup">
-              <span class="p-inputgroup-addon"><i class="pi pi-calendar"></i></span>
-              <input 
-                *ngIf="!editingGeneralInfo"
-                pInputText 
-                [value]="purchaseOrder.poDate | date:'dd/MM/yyyy'" 
-                readonly>
-              <p-calendar
-                *ngIf="editingGeneralInfo"
-                [(ngModel)]="editGeneralInfo.poDate"
-                [showIcon]="true"
-                dateFormat="dd/mm/yy"
-                [showButtonBar]="true"
-                styleClass="w-full">
-              </p-calendar>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 md:col-6">
-          <div class="field">
-            <label class="font-semibold text-600">NGÀY GIAO HÀNG DỰ KIẾN</label>
-            <div class="p-inputgroup">
-              <span class="p-inputgroup-addon"><i class="pi pi-calendar-plus"></i></span>
-              <input 
-                *ngIf="!editingGeneralInfo"
-                pInputText 
-                [value]="(purchaseOrder.expectedDeliveryDate | date:'dd/MM/yyyy') || '-'" 
-                readonly>
-              <p-calendar
-                *ngIf="editingGeneralInfo"
-                [(ngModel)]="editGeneralInfo.expectedDeliveryDate"
-                [showIcon]="true"
-                dateFormat="dd/mm/yy"
-                [showButtonBar]="true"
-                styleClass="w-full">
-              </p-calendar>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 md:col-6">
-          <div class="field">
-            <label class="font-semibold text-600">LOẠI GIA CÔNG</label>
-            <div class="p-inputgroup">
-              <span class="p-inputgroup-addon"><i class="pi pi-cog"></i></span>
-              <input pInputText [value]="getProcessingTypeLabel(purchaseOrder.processingType || '')" readonly>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 md:col-6">
-          <div class="field">
-            <label class="font-semibold text-600">NGÀY TẠO</label>
-            <div class="p-inputgroup">
-              <span class="p-inputgroup-addon"><i class="pi pi-clock"></i></span>
-              <input pInputText [value]="purchaseOrder.createdAt | date:'dd/MM/yyyy'" readonly>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div *ngIf="editingGeneralInfo" class="flex justify-content-end gap-2 mt-3">
-        <p-button
-          label="Hủy"
-          icon="pi pi-times"
-          (onClick)="cancelEditGeneralInfo()"
-          styleClass="p-button-text"
-          [disabled]="savingGeneralInfo">
-        </p-button>
-        <p-button
-          label="Lưu"
-          icon="pi pi-check"
-          (onClick)="saveGeneralInfo()"
-          [loading]="savingGeneralInfo">
-        </p-button>
-      </div>
+    <!-- Excel Table with PO Form -->
+    <div *ngIf="purchaseOrder">
+      <app-po-excel-table
+        [purchaseOrder]="purchaseOrder"
+        [processingType]="purchaseOrder.processingType"
+        (dataChanged)="onExcelDataChanged()"
+        (saved)="onPOSaved($event)">
+      </app-po-excel-table>
     </div>
 
-    <!-- SẢN PHẨM VÀ CÔNG ĐOẠN GIA CÔNG Section -->
-    <div class="card">
-      <div class="flex justify-content-between align-items-center mb-3">
-        <h3 class="text-xl font-semibold m-0">SẢN PHẨM VÀ CÔNG ĐOẠN GIA CÔNG</h3>
-        <div class="flex gap-2">
-          <p-button
-            label="Xuất Excel"
-            icon="pi pi-download"
-            (onClick)="exportToExcel()"
-            styleClass="p-button-outlined"
-            [loading]="exporting">
-          </p-button>
-          <p-button
-            label="Thêm công đoạn"
-            icon="pi pi-plus"
-            (onClick)="openAddOperationDialog()">
-          </p-button>
-        </div>
-      </div>
+    <!-- Traditional Table Mode (Hidden) -->
+    <div *ngIf="false">
 
       <!-- Products List -->
       <div *ngIf="purchaseOrder.products && purchaseOrder.products.length > 0; else noProducts">
@@ -205,11 +48,7 @@
                   <span class="text-600">-</span>
                   <span class="text-600">{{ product.productName }}</span>
                 </div>
-                <p-tag 
-                  [value]="'SL: ' + product.quantity" 
-                  severity="info"
-                  [style]="{'font-size': '0.875rem'}">
-                </p-tag>
+               
               </div>
               <div class="flex align-items-center gap-3">
                 <span class="text-primary font-bold">
@@ -479,7 +318,7 @@
           (click)="openAddOperationDialog()"
           style="text-decoration: none;">
           <i class="pi pi-plus"></i>
-          <span>+ Thêm công đoạn mới...</span>
+          <span> Thêm công đoạn mới</span>
         </a>
       </div>
 
@@ -488,9 +327,9 @@
           TỔNG CỘNG: {{ getTotalAmount() | currency:'VND':'symbol':'1.0-0' }}
         </div>
       </div>
+      </div>
     </div>
   </div>
-</div>
 
 <!-- Add Product Dialog -->
 <p-dialog

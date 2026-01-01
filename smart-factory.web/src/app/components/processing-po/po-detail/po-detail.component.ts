@@ -16,13 +16,14 @@ import { ProcessingType } from '../../../models/processing-type.interface';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { SharedModule } from '../../../shared.module';
 import { PrimengModule } from '../../../primeng.module';
+import { POExcelTableComponent } from '../po-excel-table/po-excel-table.component';
 
 @Component({
   selector: 'app-po-detail',
   templateUrl: './po-detail.component.html',
   styleUrls: ['./po-detail.component.scss'],
   standalone: true,
-  imports: [SharedModule, PrimengModule]
+  imports: [SharedModule, PrimengModule, POExcelTableComponent]
 })
 export class PODetailComponent implements OnInit {
   purchaseOrder: PurchaseOrder | null = null;
@@ -70,6 +71,9 @@ export class PODetailComponent implements OnInit {
 
   // Expanded products
   expandedProducts: Set<string> = new Set();
+
+  // Excel mode - always enabled
+  excelMode = true;
 
   // Loading states
   savingGeneralInfo = false;
@@ -367,7 +371,7 @@ export class PODetailComponent implements OnInit {
 
   getPartsForProduct(productId: string): any[] {
     if (!this.purchaseOrder?.operations) return [];
-    
+
     const partMap = new Map<string, any>();
     this.purchaseOrder.operations
       .filter(op => op.productId === productId)
@@ -416,7 +420,7 @@ export class PODetailComponent implements OnInit {
     this.savingOperation[operationId] = true;
 
     const processingTypeName = operation.processingTypeName || '';
-    const operationName = edited.operationStep 
+    const operationName = edited.operationStep
       ? `${processingTypeName} - ${edited.operationStep}`
       : edited.operationStep;
 
@@ -492,7 +496,7 @@ export class PODetailComponent implements OnInit {
   openAddOperationDialog(productId?: string, partId?: string): void {
     this.newOperation = {
       partId: partId || '',
-      processingTypeId: this.purchaseOrder?.processingType ? 
+      processingTypeId: this.purchaseOrder?.processingType ?
         this.availableProcessingTypes.find(t => t.code === this.purchaseOrder?.processingType)?.id || '' : '',
       operationStep: '',
       chargeCount: 1,
@@ -521,7 +525,7 @@ export class PODetailComponent implements OnInit {
   saveNewOperation(): void {
     if (!this.poId || !this.purchaseOrder) return;
 
-    if (!this.newOperation.partId || !this.newOperation.processingTypeId || !this.newOperation.operationStep || 
+    if (!this.newOperation.partId || !this.newOperation.processingTypeId || !this.newOperation.operationStep ||
         !this.newOperation.unitPrice || !this.newOperation.quantity) {
       this.messageService.add({
         severity: 'warn',
@@ -683,6 +687,20 @@ export class PODetailComponent implements OnInit {
       summary: 'Thông báo',
       detail: 'Chức năng tạo version mới đang được phát triển'
     });
+  }
+
+  // Excel mode toggle
+  toggleExcelMode(): void {
+    this.excelMode = !this.excelMode;
+  }
+
+  onExcelDataChanged(): void {
+    this.loadPODetail();
+  }
+
+  onPOSaved(updatedPO: PurchaseOrder): void {
+    this.purchaseOrder = updatedPO;
+    this.loadPODetail();
   }
 
   // Approve for PMC

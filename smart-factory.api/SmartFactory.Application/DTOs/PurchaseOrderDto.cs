@@ -76,6 +76,8 @@ public class UpdatePurchaseOrderRequest
 public class UpdateGeneralInfoRequest
 {
     public string? PONumber { get; set; }
+    public Guid? CustomerId { get; set; }
+    public string? ProcessingType { get; set; }
     public DateTime? PODate { get; set; }
     public DateTime? ExpectedDeliveryDate { get; set; }
     public string? Notes { get; set; }
@@ -93,6 +95,18 @@ public class UpdatePOOperationRequest
     public string? AssemblyContent { get; set; }
     public DateTime? CompletionDate { get; set; }
     public string? Notes { get; set; }
+    // ÉP NHỰA specific fields
+    public string? ModelNumber { get; set; }
+    public string? Material { get; set; }
+    public string? ColorCode { get; set; }
+    public string? Color { get; set; }
+    public int? CavityQuantity { get; set; }
+    public int? Set { get; set; }
+    public decimal? NetWeight { get; set; }
+    public decimal? TotalWeight { get; set; }
+    public string? MachineType { get; set; }
+    public decimal? RequiredMaterial { get; set; }
+    public decimal? RequiredColor { get; set; }
 }
 
 public class ClonePOVersionRequest

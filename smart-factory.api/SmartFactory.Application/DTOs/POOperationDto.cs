@@ -23,6 +23,18 @@ public class POOperationDto
     public string? PrintContent { get; set; }
     public decimal? CycleTime { get; set; }
     public string? AssemblyContent { get; set; }
+    // ÉP NHỰA specific fields
+    public string? ModelNumber { get; set; }
+    public string? Material { get; set; }
+    public string? ColorCode { get; set; }
+    public string? Color { get; set; }
+    public int? CavityQuantity { get; set; }
+    public int? Set { get; set; }
+    public decimal? NetWeight { get; set; }
+    public decimal? TotalWeight { get; set; }
+    public string? MachineType { get; set; }
+    public decimal? RequiredMaterial { get; set; }
+    public decimal? RequiredColor { get; set; }
     public string? Notes { get; set; }
     public DateTime? CompletionDate { get; set; }
     public int SequenceOrder { get; set; }
@@ -42,7 +54,20 @@ public class CreatePOOperationRequest
     public decimal? CycleTime { get; set; }
     public string? AssemblyContent { get; set; }
     public DateTime? CompletionDate { get; set; }
+    public string? Notes { get; set; }
     public int SequenceOrder { get; set; }
+    // ÉP NHỰA specific fields
+    public string? ModelNumber { get; set; }
+    public string? Material { get; set; }
+    public string? ColorCode { get; set; }
+    public string? Color { get; set; }
+    public int? CavityQuantity { get; set; }
+    public int? Set { get; set; }
+    public decimal? NetWeight { get; set; }
+    public decimal? TotalWeight { get; set; }
+    public string? MachineType { get; set; }
+    public decimal? RequiredMaterial { get; set; }
+    public decimal? RequiredColor { get; set; }
 }
 
 

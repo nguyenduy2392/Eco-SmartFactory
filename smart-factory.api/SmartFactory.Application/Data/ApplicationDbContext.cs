@@ -276,6 +276,16 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.SprayPosition).HasMaxLength(100);
             entity.Property(e => e.PrintContent).HasMaxLength(255);
             entity.Property(e => e.AssemblyContent).HasMaxLength(500);
+            // ÉP NHỰA specific fields
+            entity.Property(e => e.ModelNumber).HasMaxLength(100);
+            entity.Property(e => e.Material).HasMaxLength(200);
+            entity.Property(e => e.ColorCode).HasMaxLength(50);
+            entity.Property(e => e.Color).HasMaxLength(200);
+            entity.Property(e => e.NetWeight).HasColumnType("decimal(10,2)");
+            entity.Property(e => e.TotalWeight).HasColumnType("decimal(10,2)");
+            entity.Property(e => e.MachineType).HasMaxLength(50);
+            entity.Property(e => e.RequiredMaterial).HasColumnType("decimal(10,2)");
+            entity.Property(e => e.RequiredColor).HasColumnType("decimal(10,2)");
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
 
             entity.HasOne(e => e.PurchaseOrder)

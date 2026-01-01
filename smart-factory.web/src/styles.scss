@@ -10,6 +10,9 @@ $gutter: 1rem; //for primeflex grid system
 @import "primeflex/primeflex.scss";
 @import "primeicons/primeicons.css";
 
+/* Tabulator */
+@import "tabulator-tables/dist/css/tabulator.min.css";
+
 @import "width";
 @import "custom-primeng";
 

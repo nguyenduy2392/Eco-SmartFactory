@@ -18,6 +18,18 @@ public class UpdatePOOperationCommand : IRequest<POOperationDto>
     public string? PrintContent { get; set; }
     public decimal? CycleTime { get; set; }
     public string? AssemblyContent { get; set; }
+    // ÉP NHỰA specific fields
+    public string? ModelNumber { get; set; }
+    public string? Material { get; set; }
+    public string? ColorCode { get; set; }
+    public string? Color { get; set; }
+    public int? CavityQuantity { get; set; }
+    public int? Set { get; set; }
+    public decimal? NetWeight { get; set; }
+    public decimal? TotalWeight { get; set; }
+    public string? MachineType { get; set; }
+    public decimal? RequiredMaterial { get; set; }
+    public decimal? RequiredColor { get; set; }
     public DateTime? CompletionDate { get; set; }
     public string? Notes { get; set; }
 }
@@ -64,6 +76,18 @@ public class UpdatePOOperationCommandHandler : IRequestHandler<UpdatePOOperation
         operation.PrintContent = request.PrintContent;
         operation.CycleTime = request.CycleTime;
         operation.AssemblyContent = request.AssemblyContent;
+        // ÉP NHỰA specific fields
+        operation.ModelNumber = request.ModelNumber;
+        operation.Material = request.Material;
+        operation.ColorCode = request.ColorCode;
+        operation.Color = request.Color;
+        operation.CavityQuantity = request.CavityQuantity;
+        operation.Set = request.Set;
+        operation.NetWeight = request.NetWeight;
+        operation.TotalWeight = request.TotalWeight;
+        operation.MachineType = request.MachineType;
+        operation.RequiredMaterial = request.RequiredMaterial;
+        operation.RequiredColor = request.RequiredColor;
         operation.CompletionDate = request.CompletionDate;
         operation.Notes = request.Notes;
         operation.TotalAmount = request.ChargeCount * request.UnitPrice * request.Quantity;
@@ -103,6 +127,18 @@ public class UpdatePOOperationCommandHandler : IRequestHandler<UpdatePOOperation
             PrintContent = operation.PrintContent,
             CycleTime = operation.CycleTime,
             AssemblyContent = operation.AssemblyContent,
+            // ÉP NHỰA specific fields
+            ModelNumber = operation.ModelNumber,
+            Material = operation.Material,
+            ColorCode = operation.ColorCode,
+            Color = operation.Color,
+            CavityQuantity = operation.CavityQuantity,
+            Set = operation.Set,
+            NetWeight = operation.NetWeight,
+            TotalWeight = operation.TotalWeight,
+            MachineType = operation.MachineType,
+            RequiredMaterial = operation.RequiredMaterial,
+            RequiredColor = operation.RequiredColor,
             Notes = operation.Notes,
             CompletionDate = operation.CompletionDate,
             SequenceOrder = operation.SequenceOrder

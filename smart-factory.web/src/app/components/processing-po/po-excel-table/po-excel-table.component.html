@@ -1,0 +1,173 @@
+<div class="excel-table-wrapper">
+  <!-- THÔNG TIN ĐƠN HÀNG Section -->
+  <div class="info-card card mb-4">
+    <div class="card-header">
+      <h3 class="card-title">
+        <i class="pi pi-info-circle mr-2"></i>
+        THÔNG TIN ĐƠN HÀNG
+      </h3>
+    </div>
+    <div class="card-body">
+      <div class="grid">
+        <!-- Left Column -->
+        <div class="col-12 lg:col-6">
+          <div class="form-section">
+            <div class="field">
+              <label class="field-label">
+                <i class="pi pi-hashtag mr-1"></i>
+                SỐ PO
+              </label>
+              <div class="p-inputgroup">
+                <span class="p-inputgroup-addon"><i class="pi pi-hashtag"></i></span>
+                <input pInputText [(ngModel)]="poFormData.poNumber" class="w-full">
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label">
+                <i class="pi pi-calendar mr-1"></i>
+                NGÀY PO
+              </label>
+              <div class="p-inputgroup">
+                <span class="p-inputgroup-addon"><i class="pi pi-calendar"></i></span>
+                <p-calendar
+                  [(ngModel)]="poFormData.poDate"
+                  [showIcon]="true"
+                  dateFormat="dd/mm/yy"
+                  [showButtonBar]="true"
+                  [appendTo]="'body'"
+                  styleClass="w-full">
+                </p-calendar>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label">
+                <i class="pi pi-cog mr-1"></i>
+                LOẠI GIA CÔNG
+              </label>
+              <div class="p-inputgroup">
+                <span class="p-inputgroup-addon"><i class="pi pi-cog"></i></span>
+                <p-dropdown
+                  [options]="processingTypes"
+                  [(ngModel)]="poFormData.processingType"
+                  optionLabel="name"
+                  optionValue="code"
+                  placeholder="Chọn loại gia công"
+                  [loading]="loadingProcessingTypes"
+                  [appendTo]="'body'"
+                  styleClass="w-full">
+                </p-dropdown>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right Column -->
+        <div class="col-12 lg:col-6">
+          <div class="form-section">
+            <div class="field">
+              <label class="field-label">
+                <i class="pi pi-user mr-1"></i>
+                KHÁCH HÀNG
+              </label>
+              <div class="p-inputgroup">
+                <span class="p-inputgroup-addon"><i class="pi pi-user"></i></span>
+                <p-dropdown
+                  [options]="customers"
+                  [(ngModel)]="poFormData.customerId"
+                  optionLabel="name"
+                  optionValue="id"
+                  placeholder="Chọn khách hàng"
+                  [loading]="loadingCustomers"
+                  [appendTo]="'body'"
+                  styleClass="w-full">
+                </p-dropdown>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label">
+                <i class="pi pi-calendar-plus mr-1"></i>
+                NGÀY GIAO HÀNG DỰ KIẾN
+              </label>
+              <div class="p-inputgroup">
+                <span class="p-inputgroup-addon"><i class="pi pi-calendar-plus"></i></span>
+                <p-calendar
+                  [(ngModel)]="poFormData.expectedDeliveryDate"
+                  [showIcon]="true"
+                  dateFormat="dd/mm/yy"
+                  [showButtonBar]="true"
+                  [appendTo]="'body'"
+                  styleClass="w-full">
+                </p-calendar>
+              </div>
+            </div>
+
+            <div class="field">
+              <label class="field-label">
+                <i class="pi pi-clock mr-1"></i>
+                NGÀY TẠO
+              </label>
+              <div class="p-inputgroup">
+                <span class="p-inputgroup-addon"><i class="pi pi-clock"></i></span>
+                <input pInputText [value]="purchaseOrder?.createdAt | date:'dd/MM/yyyy'" readonly class="w-full">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full Width Notes -->
+        <div class="col-12">
+          <div class="field">
+            <label class="field-label">
+              <i class="pi pi-comment mr-1"></i>
+              GHI CHÚ
+            </label>
+            <textarea
+              pInputTextarea
+              [(ngModel)]="poFormData.notes"
+              [rows]="3"
+              placeholder="Nhập ghi chú..."
+              class="w-full">
+            </textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Excel Table -->
+  <div class="table-card card mb-4">
+    <div class="card-header">
+      <h3 class="card-title">
+        <i class="pi pi-table mr-2"></i>
+        CHI TIẾT LINH KIỆN & CÔNG ĐOẠN
+      </h3>
+    </div>
+    <div class="card-body p-0">
+      <div class="excel-table-container">
+        <div #tableContainer class="tabulator-container"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save/Cancel Buttons -->
+  <div class="action-footer">
+    <p-button
+      label="Hủy"
+      icon="pi pi-times"
+      (onClick)="cancel()"
+      styleClass="p-button-outlined p-button-secondary"
+      [disabled]="saving">
+    </p-button>
+    <p-button
+      label="Lưu"
+      icon="pi pi-check"
+      (onClick)="saveAll()"
+      [loading]="saving"
+      styleClass="p-button-primary">
+    </p-button>
+  </div>
+</div>
+

@@ -167,6 +167,8 @@ public class PurchaseOrdersController : BaseApiController
             {
                 Id = id,
                 PONumber = request.PONumber,
+                CustomerId = request.CustomerId,
+                ProcessingType = request.ProcessingType,
                 PODate = request.PODate,
                 ExpectedDeliveryDate = request.ExpectedDeliveryDate,
                 Notes = request.Notes
@@ -223,7 +225,20 @@ public class PurchaseOrdersController : BaseApiController
                 CycleTime = request.CycleTime,
                 AssemblyContent = request.AssemblyContent,
                 CompletionDate = request.CompletionDate,
-                SequenceOrder = request.SequenceOrder
+                Notes = request.Notes,
+                SequenceOrder = request.SequenceOrder,
+                // ÉP NHỰA specific fields
+                ModelNumber = request.ModelNumber,
+                Material = request.Material,
+                ColorCode = request.ColorCode,
+                Color = request.Color,
+                CavityQuantity = request.CavityQuantity,
+                Set = request.Set,
+                NetWeight = request.NetWeight,
+                TotalWeight = request.TotalWeight,
+                MachineType = request.MachineType,
+                RequiredMaterial = request.RequiredMaterial,
+                RequiredColor = request.RequiredColor
             };
             var result = await Mediator.Send(command);
             return Ok(result);
@@ -252,7 +267,19 @@ public class PurchaseOrdersController : BaseApiController
                 CycleTime = request.CycleTime,
                 AssemblyContent = request.AssemblyContent,
                 CompletionDate = request.CompletionDate,
-                Notes = request.Notes
+                Notes = request.Notes,
+                // ÉP NHỰA specific fields
+                ModelNumber = request.ModelNumber,
+                Material = request.Material,
+                ColorCode = request.ColorCode,
+                Color = request.Color,
+                CavityQuantity = request.CavityQuantity,
+                Set = request.Set,
+                NetWeight = request.NetWeight,
+                TotalWeight = request.TotalWeight,
+                MachineType = request.MachineType,
+                RequiredMaterial = request.RequiredMaterial,
+                RequiredColor = request.RequiredColor
             };
             var result = await Mediator.Send(command);
             return Ok(result);

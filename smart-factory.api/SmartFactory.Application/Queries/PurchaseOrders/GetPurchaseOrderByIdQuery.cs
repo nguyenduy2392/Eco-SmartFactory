@@ -91,6 +91,18 @@ public class GetPurchaseOrderByIdQueryHandler : IRequestHandler<GetPurchaseOrder
                 PrintContent = op.PrintContent,
                 CycleTime = op.CycleTime,
                 AssemblyContent = op.AssemblyContent,
+                // ÉP NHỰA specific fields
+                ModelNumber = op.ModelNumber,
+                Material = op.Material,
+                ColorCode = op.ColorCode,
+                Color = op.Color,
+                CavityQuantity = op.CavityQuantity,
+                Set = op.Set,
+                NetWeight = op.NetWeight,
+                TotalWeight = op.TotalWeight,
+                MachineType = op.MachineType,
+                RequiredMaterial = op.RequiredMaterial,
+                RequiredColor = op.RequiredColor,
                 Notes = op.Notes,
                 CompletionDate = op.CompletionDate,
                 SequenceOrder = op.SequenceOrder

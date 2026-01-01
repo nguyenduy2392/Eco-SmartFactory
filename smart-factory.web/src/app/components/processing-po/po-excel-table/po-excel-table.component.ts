@@ -1,0 +1,1459 @@
+import { Component, Input, Output, EventEmitter, OnInit, OnChanges, SimpleChanges, ViewChild, ElementRef, AfterViewInit, OnDestroy } from '@angular/core';
+import { POOperation, PurchaseOrder } from '../../../models/purchase-order.interface';
+import { Tabulator, EditModule, FormatModule, InteractionModule, SortModule, ResizeColumnsModule } from 'tabulator-tables';
+import { PurchaseOrderService } from '../../../services/purchase-order.service';
+import { CustomerService } from '../../../services/customer.service';
+import { ProcessingTypeService } from '../../../services/processing-type.service';
+import { ProductService } from '../../../services/system/product.service';
+import { PartService, PartDetail } from '../../../services/part.service';
+import { MessageService } from 'primeng/api';
+import { Customer } from '../../../models/customer.interface';
+import { ProcessingType } from '../../../models/processing-type.interface';
+import { Product } from '../../../models/interface/product.interface';
+import { SharedModule } from '../../../shared.module';
+import { PrimengModule } from '../../../primeng.module';
+
+// Register modules for inline editing, formatting, interaction, sorting, and resizing
+Tabulator.registerModule([EditModule, FormatModule, InteractionModule, SortModule, ResizeColumnsModule]);
+
+@Component({
+  selector: 'app-po-excel-table',
+  templateUrl: './po-excel-table.component.html',
+  styleUrls: ['./po-excel-table.component.scss'],
+  standalone: true,
+  imports: [SharedModule, PrimengModule]
+})
+export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
+  @Input() purchaseOrder!: PurchaseOrder;
+  @Input() processingType!: 'EP_NHUA' | 'PHUN_IN' | 'LAP_RAP';
+  @Output() dataChanged = new EventEmitter<void>();
+  @Output() saved = new EventEmitter<PurchaseOrder>();
+
+  @ViewChild('tableContainer', { static: false }) tableContainer!: ElementRef;
+
+  tabulatorInstance!: Tabulator;
+  tableData: any[] = [];
+  tableColumns: any[] = [];
+
+  // PO Form data
+  poFormData: any = {
+    poNumber: '',
+    poDate: null,
+    expectedDeliveryDate: null,
+    customerId: '',
+    processingType: '',
+    notes: ''
+  };
+
+  customers: Customer[] = [];
+  processingTypes: ProcessingType[] = [];
+  products: Product[] = [];
+  parts: PartDetail[] = [];
+  loadingCustomers = false;
+  loadingProcessingTypes = false;
+  loadingProducts = false;
+  loadingParts = false;
+  saving = false;
+
+  private isInitialized = false;
+  private pendingChanges: Map<string, any> = new Map();
+  private saveTimeout: any;
+  private isSaving = false;
+
+  constructor(
+    private poService: PurchaseOrderService,
+    private customerService: CustomerService,
+    private processingTypeService: ProcessingTypeService,
+    private productService: ProductService,
+    private partService: PartService,
+    private messageService: MessageService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadCustomers();
+    this.loadProcessingTypes();
+    this.loadProducts();
+    this.loadParts();
+    this.initializeFormData();
+  }
+
+  initializeFormData(): void {
+    if (this.purchaseOrder) {
+      this.poFormData = {
+        poNumber: this.purchaseOrder.poNumber || '',
+        poDate: this.purchaseOrder.poDate ? new Date(this.purchaseOrder.poDate) : null,
+        expectedDeliveryDate: this.purchaseOrder.expectedDeliveryDate ? new Date(this.purchaseOrder.expectedDeliveryDate) : null,
+        customerId: this.purchaseOrder.customerId || '',
+        processingType: this.purchaseOrder.processingType || '',
+        notes: this.purchaseOrder.notes || ''
+      };
+    }
+  }
+
+  loadCustomers(): void {
+    this.loadingCustomers = true;
+    this.customerService.getAll().subscribe({
+      next: (customers) => {
+        this.customers = customers;
+        this.loadingCustomers = false;
+      },
+      error: (error) => {
+        console.error('Error loading customers:', error);
+        this.loadingCustomers = false;
+      }
+    });
+  }
+
+  loadProcessingTypes(): void {
+    this.loadingProcessingTypes = true;
+    this.processingTypeService.getAll().subscribe({
+      next: (types) => {
+        this.processingTypes = types;
+        this.loadingProcessingTypes = false;
+      },
+      error: (error) => {
+        console.error('Error loading processing types:', error);
+        this.loadingProcessingTypes = false;
+      }
+    });
+  }
+
+  loadProducts(): void {
+    this.loadingProducts = true;
+    this.productService.getAll().subscribe({
+      next: (products) => {
+        this.products = products;
+        this.loadingProducts = false;
+      },
+      error: (error) => {
+        console.error('Error loading products:', error);
+        this.loadingProducts = false;
+      }
+    });
+  }
+
+  loadParts(): void {
+    this.loadingParts = true;
+    this.partService.getAll().subscribe({
+      next: (parts) => {
+        this.parts = parts;
+        this.loadingParts = false;
+      },
+      error: (error) => {
+        console.error('Error loading parts:', error);
+        this.loadingParts = false;
+      }
+    });
+  }
+
+  getProcessingTypeLabel(code: string): string {
+    const type = this.processingTypes.find(t => t.code === code);
+    return type ? type.name : code;
+  }
+
+  ngAfterViewInit(): void {
+    if (this.purchaseOrder && this.processingType && this.tableContainer) {
+      this.initializeTable();
+    }
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['purchaseOrder']) {
+      this.initializeFormData();
+      if (this.isInitialized && this.tabulatorInstance) {
+        this.updateTableData();
+      } else if (this.tableContainer) {
+        this.initializeTable();
+      }
+    }
+    if (changes['processingType']) {
+      if (this.isInitialized && this.tabulatorInstance) {
+        this.updateTableData();
+      } else if (this.tableContainer) {
+        this.initializeTable();
+      }
+    }
+  }
+
+  initializeTable(): void {
+    if (!this.tableContainer || !this.purchaseOrder || !this.processingType) {
+      return;
+    }
+
+    // Destroy existing instance if any
+    if (this.tabulatorInstance) {
+      try {
+        this.tabulatorInstance.destroy();
+      } catch (e) {
+        console.warn('Error destroying tabulator instance:', e);
+      }
+      this.tabulatorInstance = null as any;
+    }
+
+    this.prepareData();
+    this.prepareColumns();
+
+    const container = this.tableContainer.nativeElement;
+
+    this.tabulatorInstance = new Tabulator(container, {
+      data: this.tableData,
+      columns: this.tableColumns,
+      layout: 'fitColumns',
+      height: 'auto',
+      editableTitleCancel: true,
+      cellEdited: (cell: any) => {
+        this.onCellEdit(cell);
+      },
+      cellEditCancelled: (cell: any) => {
+        // Handle edit cancellation if needed
+      }
+    });
+
+    this.isInitialized = true;
+  }
+
+  prepareData(): void {
+    if (!this.purchaseOrder?.operations) {
+      this.tableData = [];
+      return;
+    }
+
+    switch (this.processingType) {
+      case 'EP_NHUA':
+        this.prepareEpNhuaData();
+        break;
+      case 'PHUN_IN':
+        this.preparePhunInData();
+        break;
+      case 'LAP_RAP':
+        this.prepareLapRapData();
+        break;
+    }
+  }
+
+  prepareEpNhuaData(): void {
+    const grouped = this.groupOperationsByProductAndModel();
+    this.tableData = [];
+
+    grouped.forEach((group, groupIndex) => {
+      group.operations.forEach((op: POOperation, opIndex: number) => {
+        this.tableData.push({
+          id: op.id,
+          operationId: op.id,
+          rowIndex: this.tableData.length,
+          productNumber: group.productCode || '',
+          number: '',
+          modelNumber: op.modelNumber || group.modelNumber || '',
+          partNumber: op.partCode || '',
+          partName: op.partName || '',
+          material: op.material || group.material || '',
+          colorCode: op.colorCode || group.colorCode || '',
+          color: op.color || group.color || '',
+          cavityQuantity: op.cavityQuantity || group.cavityQuantity || '',
+          set: op.set || group.set || '',
+          cycle: op.cycleTime || group.cycle || '',
+          netWeight: op.netWeight || '',
+          totalWeight: op.totalWeight || group.totalWeight || '',
+          machineType: op.machineType || group.machineType || '',
+          requiredMaterial: op.requiredMaterial || group.requiredMaterial || '',
+          requiredColor: op.requiredColor || group.requiredColor || '',
+          quantity: op.quantity || 0,
+          chargeCount: op.chargeCount || 0,
+          unitPrice: op.unitPrice || 0,
+          totalPrice: op.totalAmount || 0,
+          _groupKey: `${group.productCode}_${group.modelNumber}` // For grouping
+        });
+      });
+    });
+  }
+
+  preparePhunInData(): void {
+    const grouped = this.groupOperationsByProductAndPart();
+    this.tableData = [];
+
+    grouped.forEach((group) => {
+      const processingMethods = this.getProcessingMethodsForPart(group.partId);
+
+      processingMethods.forEach((method: any) => {
+        const op = group.operations.find((o: POOperation) =>
+          o.printContent === method.name || o.operationName.includes(method.name)
+        );
+
+        this.tableData.push({
+          id: `${group.partId}_${method.name}`,
+          operationId: op?.id || '',
+          rowIndex: this.tableData.length,
+          productNumber: group.productCode || '',
+          sequenceNumber: '',
+          partNumber: group.partCode || '',
+          sprayPosition: op?.sprayPosition || group.partName || '',
+          processingContent: method.name || '',
+          processingCount: method.count || (op?.chargeCount || 0),
+          unitPrice: method.unitPrice || (op?.unitPrice || 0),
+          totalUnitPrice: method.totalPrice || (op?.totalAmount || 0),
+          quantity: op?.quantity || group.quantity || 0,
+          amount: method.totalAmount || (op?.totalAmount || 0),
+          completionDate: op?.completionDate ? this.formatDate(op.completionDate) : '',
+          notes: op?.notes || '',
+          _groupKey: `${group.productCode}_${group.partCode}`
+        });
+      });
+    });
+  }
+
+  prepareLapRapData(): void {
+    const grouped = this.groupOperationsByProduct();
+    this.tableData = [];
+
+    grouped.forEach((group) => {
+      this.tableData.push({
+        id: group.productCode || '',
+        operationId: this.purchaseOrder.operations?.find(op => op.productCode === group.productCode)?.id || '',
+        rowIndex: this.tableData.length,
+        productNumber: group.productCode || '',
+        sequenceNumber: '',
+        processingContent: group.assemblyContent || group.operationName || '',
+        processingCount: group.chargeCount || 0,
+        unitPrice: group.unitPrice || 0,
+        totalAmount1: group.totalAmount || 0,
+        quantity: group.quantity || 0,
+        totalAmount2: group.totalAmount || 0,
+        completionDate: group.completionDate ? this.formatDate(group.completionDate) : '',
+        notes: group.notes || ''
+      });
+    });
+  }
+
+  prepareColumns(): void {
+    // Add action column for add and delete buttons
+    const actionColumn = {
+      title: 'Thao tác',
+      width: 120,
+      formatter: (cell: any) => {
+        const row = cell.getRow();
+        return `
+          <button class="tabulator-add-btn" style="padding: 4px 8px; background: #28a745; color: white; border: none; border-radius: 3px; cursor: pointer; margin-right: 4px;" data-row-id="${row.getData().id}">
+            <i class="pi pi-plus" style="font-size: 10px;"></i>
+          </button>
+          <button class="tabulator-delete-btn" style="padding: 4px 8px; background: #dc3545; color: white; border: none; border-radius: 3px; cursor: pointer;" data-row-id="${row.getData().id}">
+            <i class="pi pi-trash" style="font-size: 10px;"></i>
+          </button>
+        `;
+      },
+      cellClick: (e: any, cell: any) => {
+        const target = e.target.closest('button');
+        if (!target) return;
+
+        const rowId = target.getAttribute('data-row-id');
+        const row = this.tabulatorInstance.getRow(rowId);
+        if (!row) return;
+
+        const rowData = row.getData();
+
+        if (target.classList.contains('tabulator-add-btn')) {
+          // Insert row after current row
+          this.insertRowAfter(rowData);
+        } else if (target.classList.contains('tabulator-delete-btn')) {
+          this.deleteRow(rowData);
+        }
+      },
+      headerSort: false,
+      resizable: false
+    };
+
+    switch (this.processingType) {
+      case 'EP_NHUA':
+        this.tableColumns = [
+          actionColumn,
+          { title: 'Mã sản phẩm', field: 'productNumber', width: 120, editor: 'input' },
+          { title: 'Số thứ tự', field: 'number', editor: 'input', width: 80 },
+          { title: 'Số khuôn/Mẫu', field: 'modelNumber', editor: 'input', width: 120 },
+          { title: 'Mã linh kiện', field: 'partNumber', width: 150, editor: 'input' },
+          { title: 'Tên sản phẩm & Chi tiết', field: 'partName', width: 200, editor: 'input' },
+          { title: 'Vật liệu', field: 'material', editor: 'input', width: 120 },
+          { title: 'Mã màu', field: 'colorCode', editor: 'input', width: 100 },
+          { title: 'Màu sắc', field: 'color', editor: 'input', width: 120 },
+          { title: 'Số lỗ khuôn', field: 'cavityQuantity', editor: 'number', width: 100, editorParams: { min: 0 } },
+          { title: 'Bộ', field: 'set', editor: 'number', width: 80, editorParams: { min: 0 } },
+          { title: 'Chu kỳ', field: 'cycle', editor: 'number', width: 100, editorParams: { min: 0 } },
+          { title: 'Trọng lượng tịnh', field: 'netWeight', editor: 'number', width: 120, editorParams: { min: 0, step: 0.01 } },
+          { title: 'Tổng trọng lượng', field: 'totalWeight', width: 140, editor: 'number', editorParams: { min: 0, step: 0.01 } },
+          { title: 'Số máy ép', field: 'machineType', editor: 'input', width: 120 },
+          { title: 'Vật liệu cần', field: 'requiredMaterial', width: 120, editor: 'input' },
+          { title: 'Màu cần', field: 'requiredColor', width: 100, editor: 'input' },
+          { title: 'Số lượng hợp đồng (PCS)', field: 'quantity', editor: 'number', width: 130, editorParams: { min: 0 } },
+          { title: 'Số lần ép', field: 'chargeCount', editor: 'number', width: 80, editorParams: { min: 0 } },
+          { title: 'Đơn giá (VND)', field: 'unitPrice', editor: 'number', width: 120, editorParams: { min: 0, step: 0.01 } },
+          { title: 'Tổng đơn giá (VND)', field: 'totalPrice', width: 130, editor: false, formatter: (cell: any) => {
+            const value = cell.getValue();
+            return value ? this.formatCurrency(value) : '';
+          }}
+        ];
+        break;
+      case 'PHUN_IN':
+        this.tableColumns = [
+          actionColumn,
+          { title: 'Mã sản phẩm', field: 'productNumber', width: 120, editor: 'input' },
+          { title: 'Số lần', field: 'sequenceNumber', editor: 'input', width: 80 },
+          { title: 'Mã linh kiện', field: 'partNumber', width: 120, editor: 'input' },
+          { title: 'Vị trí phun sơn', field: 'sprayPosition', editor: 'input', width: 150 },
+          { title: 'Nội dung gia công', field: 'processingContent', editor: 'input', width: 120 },
+          { title: 'Số lần gia công', field: 'processingCount', editor: 'number', width: 100, editorParams: { min: 0 } },
+          { title: 'Giá mỗi lần (VND)', field: 'unitPrice', editor: 'number', width: 130, editorParams: { min: 0, step: 0.01 } },
+          { title: 'Tổng đơn giá (VND)', field: 'totalUnitPrice', width: 130, editor: false, formatter: (cell: any) => {
+            const value = cell.getValue();
+            return value ? this.formatCurrency(value) : '';
+          }},
+          { title: 'Số lượng hợp đồng (PCS)', field: 'quantity', editor: 'number', width: 130, editorParams: { min: 0 } },
+          { title: 'Thành tiền (VND)', field: 'amount', width: 130, editor: false, formatter: (cell: any) => {
+            const value = cell.getValue();
+            return value ? this.formatCurrency(value) : '';
+          }},
+          { title: 'Ngày hoàn thành', field: 'completionDate', editor: 'input', width: 120 },
+          { title: 'Ghi chú', field: 'notes', editor: 'input', width: 200 }
+        ];
+        break;
+      case 'LAP_RAP':
+        this.tableColumns = [
+          actionColumn,
+          { title: 'Mã sản phẩm', field: 'productNumber', width: 120, editor: 'input' },
+          { title: 'Số lần', field: 'sequenceNumber', editor: 'input', width: 80 },
+          { title: 'Nội dung gia công', field: 'processingContent', editor: 'input', width: 200 },
+          { title: 'Số lần gia công', field: 'processingCount', editor: 'number', width: 100, editorParams: { min: 0 } },
+          { title: 'Đơn giá (VND)', field: 'unitPrice', editor: 'number', width: 120, editorParams: { min: 0, step: 0.01 } },
+          { title: 'Tổng số tiền (VND)', field: 'totalAmount1', width: 140, editor: false, formatter: (cell: any) => {
+            const value = cell.getValue();
+            return value ? this.formatCurrency(value) : '';
+          }},
+          { title: 'Số lượng hợp đồng (PCS)', field: 'quantity', editor: 'number', width: 130, editorParams: { min: 0 } },
+          { title: 'Tổng số tiền (VND)', field: 'totalAmount2', width: 140, editor: false, formatter: (cell: any) => {
+            const value = cell.getValue();
+            return value ? this.formatCurrency(value) : '';
+          }},
+          { title: 'Ngày hoàn thành', field: 'completionDate', editor: 'input', width: 120 },
+          { title: 'Ghi chú', field: 'notes', editor: 'input', width: 200 }
+        ];
+        break;
+    }
+  }
+
+  onCellEdit(cell: any): void {
+    if (this.isSaving) return;
+
+    try {
+      const field = cell.getField();
+      const rowData = cell.getRow().getData();
+      const newValue = cell.getValue();
+      const oldValue = cell.getOldValue();
+
+      console.log('Cell edited:', { field, newValue, oldValue, rowData });
+
+      // Skip if value hasn't changed
+      if (oldValue === newValue) {
+        console.log('Value unchanged, skipping');
+        return;
+      }
+
+      // Skip calculated fields (they shouldn't be editable anyway)
+      if (this.isCalculatedField(field)) {
+        console.log('Calculated field, skipping');
+        return;
+      }
+
+      // Update row data
+      rowData[field] = newValue;
+
+      // Mark for save
+      this.markForSave(rowData.operationId, field, newValue, rowData);
+
+      // Recalculate totals
+      this.recalculateRow(rowData);
+
+      console.log('Pending changes count:', this.pendingChanges.size);
+      // Don't auto-save, wait for user to click Save button
+      // this.debounceSave();
+    } catch (error) {
+      console.error('Error in cell edit:', error);
+    }
+  }
+
+  recalculateRow(row: any): void {
+    if (!this.tabulatorInstance) return;
+
+    try {
+      const rowComponent = this.tabulatorInstance.getRow(row.id);
+      if (!rowComponent) return;
+
+      switch (this.processingType) {
+        case 'EP_NHUA':
+          const totalPrice = (row.quantity || 0) * (row.chargeCount || 0) * (row.unitPrice || 0);
+          row.totalPrice = totalPrice;
+          rowComponent.update({ totalPrice });
+          break;
+        case 'PHUN_IN':
+          const totalUnitPrice = (row.processingCount || 0) * (row.unitPrice || 0);
+          const amount = totalUnitPrice * (row.quantity || 0);
+          row.totalUnitPrice = totalUnitPrice;
+          row.amount = amount;
+          rowComponent.update({ totalUnitPrice, amount });
+          break;
+        case 'LAP_RAP':
+          const totalAmount = (row.processingCount || 0) * (row.unitPrice || 0) * (row.quantity || 0);
+          row.totalAmount1 = totalAmount;
+          row.totalAmount2 = totalAmount;
+          rowComponent.update({ totalAmount1: totalAmount, totalAmount2: totalAmount });
+          break;
+      }
+    } catch (error) {
+      console.error('Error recalculating row:', error);
+    }
+  }
+
+  markForSave(operationId: string, field: string, value: any, row: any): void {
+    // For new rows, use row id as key
+    const key = operationId ? `${operationId}_${field}` : `${row.id}_${field}`;
+    const isNew = !operationId || row.id.startsWith('new_');
+    this.pendingChanges.set(key, { operationId, field, value, row, isNew });
+    console.log('Marked for save:', { key, operationId, field, value, isNew, pendingCount: this.pendingChanges.size });
+  }
+
+  debounceSave(): void {
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+    }
+
+    this.saveTimeout = setTimeout(() => {
+      this.saveChanges();
+    }, 2000);
+  }
+
+  async saveChanges(): Promise<void> {
+    if (this.pendingChanges.size === 0) {
+      console.log('No pending changes to save');
+      return;
+    }
+
+    if (this.isSaving) {
+      console.log('Already saving, skipping...');
+      return;
+    }
+
+    console.log('Saving changes, count:', this.pendingChanges.size);
+    this.isSaving = true;
+    const changesToSave = new Map(this.pendingChanges);
+    this.pendingChanges.clear();
+
+    const changesByOperation = new Map<string, any>();
+    const newRowsToCreate = new Map<string, any>();
+
+    changesToSave.forEach((change, key) => {
+      const { operationId, field, value, row, isNew } = change;
+
+      console.log('Processing change:', { key, operationId, field, value, isNew, rowId: row.id });
+
+      // Handle new rows (row starts with 'new_' or no operationId)
+      // Note: operationId can be empty string for existing rows that don't have an operation yet
+      // So we check row.id to determine if it's truly a new row
+      if (isNew || row.id.startsWith('new_')) {
+        const rowKey = row.id;
+        if (!newRowsToCreate.has(rowKey)) {
+          newRowsToCreate.set(rowKey, {
+            row,
+            data: {}
+          });
+        }
+        const update = this.mapFieldToUpdate(field, value);
+        if (Object.keys(update).length > 0) {
+          Object.assign(newRowsToCreate.get(rowKey)!.data, update);
+          console.log('Added to new rows:', { rowKey, update, mergedData: newRowsToCreate.get(rowKey)!.data });
+        }
+        return;
+      }
+
+      // If operationId is empty but row is not new, skip it (this shouldn't happen for existing operations)
+      if (!operationId || operationId === '') {
+        console.warn('Skipping change with empty operationId for existing row:', { rowId: row.id, field, value });
+        return;
+      }
+
+      // Handle existing operations
+      if (!changesByOperation.has(operationId)) {
+        changesByOperation.set(operationId, {
+          operationId,
+          updates: {}
+        });
+      }
+
+      const update = this.mapFieldToUpdate(field, value);
+      if (Object.keys(update).length > 0) {
+        Object.assign(changesByOperation.get(operationId)!.updates, update);
+        console.log('Added to existing operation:', { operationId, update, mergedUpdates: changesByOperation.get(operationId)!.updates });
+      }
+    });
+
+    console.log('Changes grouped:', {
+      newRows: newRowsToCreate.size,
+      existingOps: changesByOperation.size,
+      newRowKeys: Array.from(newRowsToCreate.keys()),
+      existingOpIds: Array.from(changesByOperation.keys())
+    });
+
+    const savePromises: Promise<any>[] = [];
+
+    // Update existing operations
+    savePromises.push(...Array.from(changesByOperation.values()).map(change => {
+      const operation = this.findOperationById(change.operationId);
+      if (!operation) return Promise.resolve();
+
+      return new Promise((resolve, reject) => {
+        this.poService.updateOperation(
+          this.purchaseOrder.id,
+          change.operationId,
+          {
+            ...this.buildUpdateData(operation, change.updates)
+          }
+        ).subscribe({
+          next: () => resolve(undefined),
+          error: (err) => reject(err)
+        });
+      });
+    }));
+
+    // Create new operations
+    savePromises.push(...Array.from(newRowsToCreate.values()).map(({ row, data }) => {
+      return new Promise((resolve, reject) => {
+        // Build operation data for creation
+        const operationData = this.buildCreateOperationData(row, data);
+
+        this.poService.createOperation(this.purchaseOrder.id, operationData).subscribe({
+          next: (createdOperation: any) => {
+            // Update row with new operation ID
+            if (this.tabulatorInstance) {
+              const rowComponent = this.tabulatorInstance.getRow(row.id);
+              if (rowComponent) {
+                rowComponent.update({
+                  id: createdOperation.id,
+                  operationId: createdOperation.id
+                });
+                row.id = createdOperation.id;
+                row.operationId = createdOperation.id;
+              }
+            }
+            resolve(createdOperation);
+          },
+          error: (err) => reject(err)
+        });
+      });
+    }));
+
+    try {
+      console.log('Executing save promises. Count:', savePromises.length);
+      await Promise.all(savePromises);
+      console.log('All changes saved successfully');
+      // Don't show message here, let saveAll() handle it
+      this.dataChanged.emit();
+    } catch (error: any) {
+      console.error('Error saving changes:', error);
+      // Restore pending changes on error
+      changesToSave.forEach((change, key) => {
+        this.pendingChanges.set(key, change);
+      });
+      const errorMessage = error?.error?.message || error?.message || 'Không thể lưu thay đổi';
+      throw new Error(errorMessage);
+    } finally {
+      this.isSaving = false;
+    }
+  }
+
+  buildCreateOperationData(row: any, updates: any): any {
+    // Get first operation to get required IDs (partId, processingTypeId)
+    const firstOperation = this.purchaseOrder.operations?.[0];
+    if (!firstOperation) {
+      throw new Error('Không tìm thấy operation để lấy thông tin cần thiết');
+    }
+
+    const baseData: any = {
+      partId: firstOperation.partId || '',
+      processingTypeId: firstOperation.processingTypeId || '',
+      sequenceOrder: (this.purchaseOrder.operations?.length || 0) + 1
+    };
+
+    switch (this.processingType) {
+      case 'EP_NHUA':
+        return {
+          ...baseData,
+          operationName: updates.operationName || 'EP_NHUA',
+          modelNumber: updates.modelNumber || row.modelNumber || '',
+          material: updates.material || row.material || '',
+          colorCode: updates.colorCode || row.colorCode || '',
+          color: updates.color || row.color || '',
+          cavityQuantity: updates.cavityQuantity ?? row.cavityQuantity ?? 0,
+          set: updates.set ?? row.set ?? 0,
+          cycleTime: updates.cycleTime ?? row.cycle ?? 0,
+          netWeight: updates.netWeight ?? row.netWeight ?? 0,
+          totalWeight: updates.totalWeight ?? row.totalWeight ?? 0,
+          machineType: updates.machineType || row.machineType || '',
+          chargeCount: updates.chargeCount ?? row.chargeCount ?? 0,
+          unitPrice: updates.unitPrice ?? row.unitPrice ?? 0,
+          quantity: updates.quantity ?? row.quantity ?? 0
+        };
+      case 'PHUN_IN':
+        return {
+          ...baseData,
+          operationName: updates.operationName || 'PHUN_IN',
+          printContent: updates.printContent || row.processingContent || '',
+          sprayPosition: updates.sprayPosition || row.sprayPosition || '',
+          chargeCount: updates.chargeCount ?? row.processingCount ?? 0,
+          unitPrice: updates.unitPrice ?? row.unitPrice ?? 0,
+          quantity: updates.quantity ?? row.quantity ?? 0,
+          completionDate: updates.completionDate || row.completionDate || null,
+          notes: updates.notes || row.notes || ''
+        };
+      case 'LAP_RAP':
+        return {
+          ...baseData,
+          operationName: updates.operationName || 'LAP_RAP',
+          assemblyContent: updates.assemblyContent || row.processingContent || '',
+          chargeCount: updates.chargeCount ?? row.processingCount ?? 0,
+          unitPrice: updates.unitPrice ?? row.unitPrice ?? 0,
+          quantity: updates.quantity ?? row.quantity ?? 0,
+          completionDate: updates.completionDate || row.completionDate || null,
+          notes: updates.notes || row.notes || ''
+        };
+      default:
+        return baseData;
+    }
+  }
+
+  isCalculatedField(field: string): boolean {
+    switch (this.processingType) {
+      case 'EP_NHUA':
+        return field === 'totalPrice';
+      case 'PHUN_IN':
+        return field === 'totalUnitPrice' || field === 'amount';
+      case 'LAP_RAP':
+        return field === 'totalAmount1' || field === 'totalAmount2';
+      default:
+        return false;
+    }
+  }
+
+  mapFieldToUpdate(field: string, value: any): any {
+    const updates: any = {};
+
+    switch (this.processingType) {
+      case 'EP_NHUA':
+        if (field === 'modelNumber') updates.modelNumber = value;
+        else if (field === 'material') updates.material = value;
+        else if (field === 'colorCode') updates.colorCode = value;
+        else if (field === 'color') updates.color = value;
+        else if (field === 'cavityQuantity') updates.cavityQuantity = value;
+        else if (field === 'set') updates.set = value;
+        else if (field === 'cycle') updates.cycleTime = value;
+        else if (field === 'netWeight') updates.netWeight = value;
+        else if (field === 'totalWeight') updates.totalWeight = value;
+        else if (field === 'machineType') updates.machineType = value;
+        else if (field === 'requiredMaterial') updates.requiredMaterial = value;
+        else if (field === 'requiredColor') updates.requiredColor = value;
+        else if (field === 'quantity') updates.quantity = value;
+        else if (field === 'chargeCount') updates.chargeCount = value;
+        else if (field === 'unitPrice') updates.unitPrice = value;
+        break;
+      case 'PHUN_IN':
+        if (field === 'sprayPosition') updates.sprayPosition = value;
+        else if (field === 'processingContent') updates.printContent = value;
+        else if (field === 'processingCount') updates.chargeCount = value;
+        else if (field === 'unitPrice') updates.unitPrice = value;
+        else if (field === 'quantity') updates.quantity = value;
+        else if (field === 'completionDate') updates.completionDate = value;
+        else if (field === 'notes') updates.notes = value;
+        break;
+      case 'LAP_RAP':
+        if (field === 'processingContent') updates.assemblyContent = value;
+        else if (field === 'processingCount') updates.chargeCount = value;
+        else if (field === 'unitPrice') updates.unitPrice = value;
+        else if (field === 'quantity') updates.quantity = value;
+        else if (field === 'completionDate') updates.completionDate = value;
+        else if (field === 'notes') updates.notes = value;
+        break;
+    }
+
+    return updates;
+  }
+
+  buildUpdateData(operation: POOperation, updates: any): any {
+    return {
+      operationName: updates.printContent || updates.assemblyContent || operation.operationName,
+      chargeCount: updates.chargeCount ?? operation.chargeCount,
+      unitPrice: updates.unitPrice ?? operation.unitPrice,
+      quantity: updates.quantity ?? operation.quantity,
+      sprayPosition: updates.sprayPosition ?? operation.sprayPosition,
+      printContent: updates.printContent ?? operation.printContent,
+      cycleTime: updates.cycleTime ?? operation.cycleTime,
+      assemblyContent: updates.assemblyContent ?? operation.assemblyContent,
+      modelNumber: updates.modelNumber ?? operation.modelNumber,
+      material: updates.material ?? operation.material,
+      colorCode: updates.colorCode ?? operation.colorCode,
+      color: updates.color ?? operation.color,
+      cavityQuantity: updates.cavityQuantity ?? operation.cavityQuantity,
+      set: updates.set ?? operation.set,
+      netWeight: updates.netWeight ?? operation.netWeight,
+      totalWeight: updates.totalWeight ?? operation.totalWeight,
+      machineType: updates.machineType ?? operation.machineType,
+      requiredMaterial: updates.requiredMaterial ?? operation.requiredMaterial,
+      requiredColor: updates.requiredColor ?? operation.requiredColor,
+      completionDate: updates.completionDate ?? operation.completionDate,
+      notes: updates.notes ?? operation.notes
+    };
+  }
+
+  findOperationById(id: string): POOperation | null {
+    return this.purchaseOrder.operations?.find(op => op.id === id) || null;
+  }
+
+  updateTableData(): void {
+    if (!this.tabulatorInstance) {
+      this.initializeTable();
+      return;
+    }
+
+    this.prepareData();
+    this.prepareColumns();
+    this.tabulatorInstance.setColumns(this.tableColumns);
+    this.tabulatorInstance.setData(this.tableData);
+  }
+
+  formatDate(date: Date | string): string {
+    if (!date) return '';
+    const d = new Date(date);
+    return `${d.getDate().toString().padStart(2, '0')}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getFullYear()}`;
+  }
+
+  formatCurrency(value: number): string {
+    return new Intl.NumberFormat('vi-VN', {
+      style: 'currency',
+      currency: 'VND',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0
+    }).format(value);
+  }
+
+  // Helper methods for grouping
+  groupOperationsByProductAndModel(): any[] {
+    const groups = new Map<string, any>();
+
+    this.purchaseOrder.operations?.forEach((op: POOperation) => {
+      const key = `${op.productCode || ''}_${op.modelNumber || ''}`;
+
+      if (!groups.has(key)) {
+        groups.set(key, {
+          productCode: op.productCode,
+          productName: op.productName,
+          modelNumber: op.modelNumber || '',
+          material: op.material || '',
+          colorCode: op.colorCode || '',
+          color: op.color || '',
+          cavityQuantity: op.cavityQuantity || '',
+          set: op.set || '',
+          cycle: op.cycleTime || '',
+          totalWeight: op.totalWeight || '',
+          machineType: op.machineType || '',
+          requiredMaterial: op.requiredMaterial || '',
+          requiredColor: op.requiredColor || '',
+          operations: []
+        });
+      }
+
+      groups.get(key)!.operations.push(op);
+    });
+
+    return Array.from(groups.values());
+  }
+
+  groupOperationsByProductAndPart(): any[] {
+    const groups = new Map<string, any>();
+
+    this.purchaseOrder.operations?.forEach((op: POOperation) => {
+      const key = `${op.productCode || ''}_${op.partCode || ''}`;
+
+      if (!groups.has(key)) {
+        groups.set(key, {
+          productCode: op.productCode,
+          productName: op.productName,
+          partCode: op.partCode,
+          partName: op.partName,
+          partId: op.partId,
+          quantity: op.quantity,
+          operations: []
+        });
+      }
+
+      groups.get(key)!.operations.push(op);
+    });
+
+    return Array.from(groups.values());
+  }
+
+  groupOperationsByProduct(): any[] {
+    const groups = new Map<string, any>();
+
+    this.purchaseOrder.operations?.forEach((op: POOperation) => {
+      const key = op.productCode || '';
+
+      if (!groups.has(key)) {
+        groups.set(key, {
+          productCode: op.productCode,
+          productName: op.productName,
+          assemblyContent: op.assemblyContent || op.operationName,
+          chargeCount: op.chargeCount,
+          unitPrice: op.unitPrice,
+          totalAmount: op.totalAmount,
+          quantity: op.quantity,
+          completionDate: op.completionDate,
+          notes: op.notes
+        });
+      } else {
+        const group = groups.get(key)!;
+        group.totalAmount = (group.totalAmount || 0) + (op.totalAmount || 0);
+      }
+    });
+
+    return Array.from(groups.values());
+  }
+
+  getProcessingMethodsForPart(partId: string): any[] {
+    return [
+      { name: '散枪', count: 0, unitPrice: 217, totalPrice: 0, totalAmount: 0 },
+      { name: '夹模', count: 0, unitPrice: 217, totalPrice: 0, totalAmount: 0 },
+      { name: '边摸', count: 0, unitPrice: 217, totalPrice: 0, totalAmount: 0 },
+      { name: '移印', count: 0, unitPrice: 122, totalPrice: 0, totalAmount: 0 },
+      { name: '手油', count: 0, unitPrice: 238, totalPrice: 0, totalAmount: 0 }
+    ];
+  }
+
+  addRow(): void {
+    if (!this.tabulatorInstance || !this.purchaseOrder) return;
+
+    // Create a new empty row based on processing type
+    const newRow: any = {
+      id: `new_${Date.now()}`,
+      operationId: '',
+      rowIndex: this.tableData.length
+    };
+
+    switch (this.processingType) {
+      case 'EP_NHUA':
+        Object.assign(newRow, {
+          productNumber: '',
+          number: '',
+          modelNumber: '',
+          partNumber: '',
+          partName: '',
+          material: '',
+          colorCode: '',
+          color: '',
+          cavityQuantity: 0,
+          set: 0,
+          cycle: 0,
+          netWeight: 0,
+          totalWeight: 0,
+          machineType: '',
+          requiredMaterial: '',
+          requiredColor: '',
+          quantity: 0,
+          chargeCount: 0,
+          unitPrice: 0,
+          totalPrice: 0
+        });
+        break;
+      case 'PHUN_IN':
+        Object.assign(newRow, {
+          productNumber: '',
+          sequenceNumber: '',
+          partNumber: '',
+          sprayPosition: '',
+          processingContent: '',
+          processingCount: 0,
+          unitPrice: 0,
+          totalUnitPrice: 0,
+          quantity: 0,
+          amount: 0,
+          completionDate: '',
+          notes: ''
+        });
+        break;
+      case 'LAP_RAP':
+        Object.assign(newRow, {
+          productNumber: '',
+          sequenceNumber: '',
+          processingContent: '',
+          processingCount: 0,
+          unitPrice: 0,
+          totalAmount1: 0,
+          quantity: 0,
+          totalAmount2: 0,
+          completionDate: '',
+          notes: ''
+        });
+        break;
+    }
+
+    // Add row to table
+    this.tabulatorInstance.addRow(newRow);
+    this.tableData.push(newRow);
+  }
+
+  insertRowAfter(afterRowData: any): void {
+    if (!this.tabulatorInstance || !this.purchaseOrder) return;
+
+    // Create a new empty row based on processing type
+    const newRow: any = {
+      id: `new_${Date.now()}`,
+      operationId: '',
+      rowIndex: this.tableData.length
+    };
+
+    switch (this.processingType) {
+      case 'EP_NHUA':
+        Object.assign(newRow, {
+          productNumber: afterRowData.productNumber || '',
+          number: '',
+          modelNumber: afterRowData.modelNumber || '',
+          partNumber: afterRowData.partNumber || '',
+          partName: afterRowData.partName || '',
+          material: afterRowData.material || '',
+          colorCode: afterRowData.colorCode || '',
+          color: afterRowData.color || '',
+          cavityQuantity: 0,
+          set: 0,
+          cycle: 0,
+          netWeight: 0,
+          totalWeight: 0,
+          machineType: afterRowData.machineType || '',
+          requiredMaterial: '',
+          requiredColor: '',
+          quantity: 0,
+          chargeCount: 0,
+          unitPrice: 0,
+          totalPrice: 0
+        });
+        break;
+      case 'PHUN_IN':
+        Object.assign(newRow, {
+          productNumber: afterRowData.productNumber || '',
+          sequenceNumber: '',
+          partNumber: afterRowData.partNumber || '',
+          sprayPosition: '',
+          processingContent: '',
+          processingCount: 0,
+          unitPrice: 0,
+          totalUnitPrice: 0,
+          quantity: 0,
+          amount: 0,
+          completionDate: '',
+          notes: ''
+        });
+        break;
+      case 'LAP_RAP':
+        Object.assign(newRow, {
+          productNumber: afterRowData.productNumber || '',
+          sequenceNumber: '',
+          processingContent: '',
+          processingCount: 0,
+          unitPrice: 0,
+          totalAmount1: 0,
+          quantity: 0,
+          totalAmount2: 0,
+          completionDate: '',
+          notes: ''
+        });
+        break;
+    }
+
+    // Find the index of the row to insert after
+    const afterRowIndex = this.tableData.findIndex((r: any) => r.id === afterRowData.id);
+
+    if (afterRowIndex >= 0) {
+      // Insert after the found row
+      const insertIndex = afterRowIndex + 1;
+
+      // Insert into tableData array
+      this.tableData.splice(insertIndex, 0, newRow);
+
+      // Get the row component to insert after
+      const allRows = this.tabulatorInstance.getRows();
+      if (allRows.length > afterRowIndex) {
+        const afterRowComponent = allRows[afterRowIndex];
+
+        // Use addRow with position parameter (addRow(data, addToTop, referenceRow))
+        this.tabulatorInstance.addRow(newRow, false, afterRowComponent);
+      } else {
+        // Fallback: reload all data
+        this.tabulatorInstance.setData(this.tableData);
+      }
+
+      // Scroll to the new row after a short delay
+      setTimeout(() => {
+        const newRowComponent = this.tabulatorInstance.getRow(newRow.id);
+        if (newRowComponent) {
+          newRowComponent.scrollTo();
+        }
+      }, 100);
+    } else {
+      // If row not found, add at end
+      this.tabulatorInstance.addRow(newRow);
+      this.tableData.push(newRow);
+    }
+  }
+
+  async deleteRow(rowData: any): Promise<void> {
+    if (!this.tabulatorInstance || !this.purchaseOrder) return;
+
+    // If it's a new row (not saved yet), just remove from table
+    if (rowData.id.startsWith('new_') || !rowData.operationId) {
+      this.tabulatorInstance.deleteRow(rowData.id);
+      this.tableData = this.tableData.filter((r: any) => r.id !== rowData.id);
+      return;
+    }
+
+    // Confirm deletion
+    if (!confirm('Bạn có chắc chắn muốn xóa dòng này?')) {
+      return;
+    }
+
+    try {
+      // Delete from server
+      await new Promise((resolve, reject) => {
+        this.poService.deleteOperation(this.purchaseOrder.id, rowData.operationId).subscribe({
+          next: () => resolve(undefined),
+          error: (err) => reject(err)
+        });
+      });
+
+      // Remove from table
+      this.tabulatorInstance.deleteRow(rowData.id);
+      this.tableData = this.tableData.filter((r: any) => r.id !== rowData.id);
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Thành công',
+        detail: 'Đã xóa dòng'
+      });
+
+      this.dataChanged.emit();
+    } catch (error) {
+      console.error('Error deleting row:', error);
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Lỗi',
+        detail: 'Không thể xóa dòng'
+      });
+    }
+  }
+
+  async saveAll(): Promise<void> {
+    if (!this.purchaseOrder) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Cảnh báo',
+        detail: 'Không có thông tin PO để lưu'
+      });
+      return;
+    }
+
+    this.saving = true;
+
+    try {
+      console.log('Saving all table data...');
+
+      // Get all current table data from Tabulator
+      const allTableData = this.tabulatorInstance?.getData() || [];
+      console.log('Total rows in table:', allTableData.length);
+
+      // Process all rows: update existing and create new ones
+      await this.saveAllTableData(allTableData);
+
+      // Then save PO general info
+      console.log('Saving PO general info...', this.poFormData);
+      const updatedPO = await new Promise<PurchaseOrder>((resolve, reject) => {
+        this.poService.updateGeneralInfo(this.purchaseOrder.id, {
+          poNumber: this.poFormData.poNumber,
+          poDate: this.poFormData.poDate,
+          expectedDeliveryDate: this.poFormData.expectedDeliveryDate,
+          customerId: this.poFormData.customerId,
+          processingType: this.poFormData.processingType,
+          notes: this.poFormData.notes
+        }).subscribe({
+          next: (updated) => {
+            console.log('PO general info saved:', updated);
+            this.purchaseOrder = updated;
+            resolve(updated);
+          },
+          error: (err) => {
+            console.error('Error saving PO general info:', err);
+            reject(err);
+          }
+        });
+      });
+
+      // Clear pending changes after successful save
+      this.pendingChanges.clear();
+
+      this.messageService.add({
+        severity: 'success',
+        summary: 'Thành công',
+        detail: 'Đã lưu tất cả thay đổi'
+      });
+
+      this.saved.emit(updatedPO);
+      this.dataChanged.emit();
+    } catch (error: any) {
+      console.error('Error saving:', error);
+      const errorMessage = error?.error?.message || error?.message || 'Không thể lưu thay đổi';
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Lỗi',
+        detail: errorMessage
+      });
+    } finally {
+      this.saving = false;
+    }
+  }
+
+  async saveAllTableData(allTableData: any[]): Promise<void> {
+    if (!allTableData || allTableData.length === 0) {
+      console.log('No table data to save');
+      return;
+    }
+
+    if (this.isSaving) {
+      console.log('Already saving, skipping...');
+      return;
+    }
+
+    this.isSaving = true;
+
+    try {
+      const savePromises: Promise<any>[] = [];
+      const existingOperationIds = new Set(
+        (this.purchaseOrder.operations || []).map((op: POOperation) => op.id)
+      );
+
+      for (const row of allTableData) {
+        const isNewRow = !row.operationId || row.id.startsWith('new_') || !existingOperationIds.has(row.operationId);
+
+        if (isNewRow) {
+          // Create new operation
+          const operationData = this.buildCreateOperationDataFromRow(row);
+          savePromises.push(
+            new Promise((resolve, reject) => {
+              this.poService.createOperation(this.purchaseOrder.id, operationData).subscribe({
+                next: (createdOperation: any) => {
+                  // Update row with new operation ID
+                  if (this.tabulatorInstance) {
+                    const rowComponent = this.tabulatorInstance.getRow(row.id);
+                    if (rowComponent) {
+                      rowComponent.update({
+                        id: createdOperation.id,
+                        operationId: createdOperation.id
+                      });
+                      row.id = createdOperation.id;
+                      row.operationId = createdOperation.id;
+                    }
+                  }
+                  resolve(createdOperation);
+                },
+                error: (err) => reject(err)
+              });
+            })
+          );
+        } else if (row.operationId) {
+          // Update existing operation
+          const operation = this.findOperationById(row.operationId);
+          if (operation) {
+            const updateData = this.buildUpdateDataFromRow(row, operation);
+            savePromises.push(
+              new Promise((resolve, reject) => {
+                this.poService.updateOperation(
+                  this.purchaseOrder.id,
+                  row.operationId,
+                  updateData
+                ).subscribe({
+                  next: () => resolve(undefined),
+                  error: (err) => reject(err)
+                });
+              })
+            );
+          }
+        }
+      }
+
+      console.log('Executing save promises. Count:', savePromises.length);
+      await Promise.all(savePromises);
+      console.log('All table data saved successfully');
+      this.dataChanged.emit();
+    } catch (error: any) {
+      console.error('Error saving table data:', error);
+      const errorMessage = error?.error?.message || error?.message || 'Không thể lưu dữ liệu bảng';
+      throw new Error(errorMessage);
+    } finally {
+      this.isSaving = false;
+    }
+  }
+
+  buildCreateOperationDataFromRow(row: any): any {
+    // Get first operation to get required IDs (partId, processingTypeId)
+    const firstOperation = this.purchaseOrder.operations?.[0];
+    if (!firstOperation) {
+      throw new Error('Không tìm thấy operation để lấy thông tin cần thiết');
+    }
+
+    const baseData: any = {
+      partId: firstOperation.partId || '',
+      processingTypeId: firstOperation.processingTypeId || '',
+      sequenceOrder: (this.purchaseOrder.operations?.length || 0) + 1
+    };
+
+    switch (this.processingType) {
+      case 'EP_NHUA':
+        return {
+          ...baseData,
+          operationName: 'EP_NHUA',
+          modelNumber: row.modelNumber || '',
+          material: row.material || '',
+          colorCode: row.colorCode || '',
+          color: row.color || '',
+          cavityQuantity: row.cavityQuantity ?? 0,
+          set: row.set ?? 0,
+          cycleTime: row.cycle ?? 0,
+          netWeight: row.netWeight ?? 0,
+          totalWeight: row.totalWeight ?? 0,
+          machineType: row.machineType || '',
+          chargeCount: row.chargeCount ?? 0,
+          unitPrice: row.unitPrice ?? 0,
+          quantity: row.quantity ?? 0
+        };
+      case 'PHUN_IN':
+        return {
+          ...baseData,
+          operationName: 'PHUN_IN',
+          printContent: row.processingContent || '',
+          sprayPosition: row.sprayPosition || '',
+          chargeCount: row.processingCount ?? 0,
+          unitPrice: row.unitPrice ?? 0,
+          quantity: row.quantity ?? 0,
+          completionDate: row.completionDate ? this.parseDate(row.completionDate) : null,
+          notes: row.notes || ''
+        };
+      case 'LAP_RAP':
+        return {
+          ...baseData,
+          operationName: 'LAP_RAP',
+          assemblyContent: row.processingContent || '',
+          chargeCount: row.processingCount ?? 0,
+          unitPrice: row.unitPrice ?? 0,
+          quantity: row.quantity ?? 0,
+          completionDate: row.completionDate ? this.parseDate(row.completionDate) : null,
+          notes: row.notes || ''
+        };
+      default:
+        return baseData;
+    }
+  }
+
+  buildUpdateDataFromRow(row: any, operation: POOperation): any {
+    switch (this.processingType) {
+      case 'EP_NHUA':
+        return {
+          operationName: operation.operationName || 'EP_NHUA',
+          modelNumber: row.modelNumber !== undefined ? row.modelNumber : operation.modelNumber,
+          material: row.material !== undefined ? row.material : operation.material,
+          colorCode: row.colorCode !== undefined ? row.colorCode : operation.colorCode,
+          color: row.color !== undefined ? row.color : operation.color,
+          cavityQuantity: row.cavityQuantity !== undefined ? row.cavityQuantity : operation.cavityQuantity,
+          set: row.set !== undefined ? row.set : operation.set,
+          cycleTime: row.cycle !== undefined ? row.cycle : operation.cycleTime,
+          netWeight: row.netWeight !== undefined ? row.netWeight : operation.netWeight,
+          totalWeight: row.totalWeight !== undefined ? row.totalWeight : operation.totalWeight,
+          machineType: row.machineType !== undefined ? row.machineType : operation.machineType,
+          chargeCount: row.chargeCount !== undefined ? row.chargeCount : operation.chargeCount,
+          unitPrice: row.unitPrice !== undefined ? row.unitPrice : operation.unitPrice,
+          quantity: row.quantity !== undefined ? row.quantity : operation.quantity
+        };
+      case 'PHUN_IN':
+        return {
+          operationName: operation.operationName || 'PHUN_IN',
+          printContent: row.processingContent !== undefined ? row.processingContent : operation.printContent,
+          sprayPosition: row.sprayPosition !== undefined ? row.sprayPosition : operation.sprayPosition,
+          chargeCount: row.processingCount !== undefined ? row.processingCount : operation.chargeCount,
+          unitPrice: row.unitPrice !== undefined ? row.unitPrice : operation.unitPrice,
+          quantity: row.quantity !== undefined ? row.quantity : operation.quantity,
+          completionDate: row.completionDate !== undefined && row.completionDate !== ''
+            ? this.parseDate(row.completionDate)
+            : operation.completionDate,
+          notes: row.notes !== undefined ? row.notes : operation.notes
+        };
+      case 'LAP_RAP':
+        return {
+          operationName: operation.operationName || 'LAP_RAP',
+          assemblyContent: row.processingContent !== undefined ? row.processingContent : operation.assemblyContent,
+          chargeCount: row.processingCount !== undefined ? row.processingCount : operation.chargeCount,
+          unitPrice: row.unitPrice !== undefined ? row.unitPrice : operation.unitPrice,
+          quantity: row.quantity !== undefined ? row.quantity : operation.quantity,
+          completionDate: row.completionDate !== undefined && row.completionDate !== ''
+            ? this.parseDate(row.completionDate)
+            : operation.completionDate,
+          notes: row.notes !== undefined ? row.notes : operation.notes
+        };
+      default:
+        return {};
+    }
+  }
+
+  parseDate(dateString: string): Date | null {
+    if (!dateString) return null;
+    // Try to parse DD/MM/YYYY format
+    const parts = dateString.split('/');
+    if (parts.length === 3) {
+      const day = parseInt(parts[0], 10);
+      const month = parseInt(parts[1], 10) - 1;
+      const year = parseInt(parts[2], 10);
+      return new Date(year, month, day);
+    }
+    // Try standard date parsing
+    const date = new Date(dateString);
+    return isNaN(date.getTime()) ? null : date;
+  }
+
+  cancel(): void {
+    // Reset form data to original values
+    this.initializeFormData();
+
+    // Clear pending changes
+    this.pendingChanges.clear();
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+    }
+
+    // Reload table data
+    if (this.tabulatorInstance) {
+      this.updateTableData();
+    }
+
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Đã hủy',
+      detail: 'Đã khôi phục dữ liệu ban đầu'
+    });
+  }
+
+  ngOnDestroy(): void {
+    if (this.tabulatorInstance) {
+      this.tabulatorInstance.destroy();
+    }
+    if (this.saveTimeout) {
+      clearTimeout(this.saveTimeout);
+    }
+  }
+}
+

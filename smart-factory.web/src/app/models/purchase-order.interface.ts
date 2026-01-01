@@ -107,6 +107,18 @@ export interface POOperation {
   printContent?: string;
   cycleTime?: number;
   assemblyContent?: string;
+  // ÉP NHỰA specific fields
+  modelNumber?: string;
+  material?: string;
+  colorCode?: string;
+  color?: string;
+  cavityQuantity?: number;
+  set?: number;
+  netWeight?: number;
+  totalWeight?: number;
+  machineType?: string;
+  requiredMaterial?: number;
+  requiredColor?: number;
   notes?: string;
   completionDate?: Date; // Ngày hoàn thành
   sequenceOrder: number;

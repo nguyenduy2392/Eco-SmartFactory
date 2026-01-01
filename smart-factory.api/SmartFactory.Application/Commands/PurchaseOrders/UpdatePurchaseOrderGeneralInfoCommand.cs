@@ -11,6 +11,8 @@ public class UpdatePurchaseOrderGeneralInfoCommand : IRequest<PurchaseOrderDto>
 {
     public Guid Id { get; set; }
     public string? PONumber { get; set; }
+    public Guid? CustomerId { get; set; }
+    public string? ProcessingType { get; set; }
     public DateTime? PODate { get; set; }
     public DateTime? ExpectedDeliveryDate { get; set; }
     public string? Notes { get; set; }
@@ -57,6 +59,23 @@ public class UpdatePurchaseOrderGeneralInfoCommandHandler : IRequestHandler<Upda
                 throw new Exception($"Mã PO '{request.PONumber}' đã tồn tại trong hệ thống");
             }
             po.PONumber = request.PONumber;
+        }
+
+        if (request.CustomerId.HasValue)
+        {
+            // Verify customer exists
+            var customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.Id == request.CustomerId.Value, cancellationToken);
+            if (customer == null)
+            {
+                throw new Exception($"Khách hàng với ID {request.CustomerId.Value} không tồn tại");
+            }
+            po.CustomerId = request.CustomerId.Value;
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.ProcessingType))
+        {
+            po.ProcessingType = request.ProcessingType;
         }
 
         if (request.PODate.HasValue)
