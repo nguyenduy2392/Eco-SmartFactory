@@ -16,7 +16,38 @@
   <p-card class="mb-4">
     <div class="p-fluid">
       <div class="grid">
-        <div class="col-12 md:col-4">
+        <div class="col-12 md:col-4" *ngIf="!customerId">
+          <div class="field">
+            <label for="customer">Chọn chủ hàng <span class="text-red-500">*</span></label>
+            <p-dropdown
+              id="customer"
+              [options]="customers"
+              [(ngModel)]="selectedCustomerId"
+              optionLabel="name"
+              optionValue="id"
+              placeholder="Chọn chủ hàng..."
+              [filter]="true"
+              filterBy="name,code"
+              [style]="{'width': '100%'}"
+              emptyMessage="Không có chủ hàng"
+              [showClear]="true"
+              appendTo="body">
+              <ng-template let-customer pTemplate="item">
+                <div>
+                  <strong>{{ customer.name }}</strong>
+                  <div class="text-sm text-500">{{ customer.code }}</div>
+                </div>
+              </ng-template>
+              <ng-template let-customer pTemplate="selectedItem">
+                <div>
+                  <strong>{{ customer.name }}</strong>
+                </div>
+              </ng-template>
+            </p-dropdown>
+          </div>
+        </div>
+
+        <div class="col-12" [ngClass]="{'md:col-4': !customerId, 'md:col-6': customerId}">
           <div class="field">
             <label for="part">Chọn linh kiện <span class="text-red-500">*</span></label>
             <p-dropdown
@@ -31,7 +62,8 @@
               [style]="{'width': '100%'}"
               [loading]="loading"
               emptyMessage="Không có linh kiện"
-              [showClear]="true">
+              [showClear]="true"
+              appendTo="body">
               <ng-template let-part pTemplate="item">
                 <div class="flex justify-content-between align-items-center">
                   <div>
@@ -49,7 +81,7 @@
           </div>
         </div>
 
-        <div class="col-12 md:col-4">
+        <div class="col-12" [ngClass]="{'md:col-4': !customerId, 'md:col-6': customerId}">
           <div class="field">
             <label for="processingType">Chọn loại gia công <span class="text-red-500">*</span></label>
             <p-dropdown
@@ -63,7 +95,8 @@
               filterBy="name,code"
               [style]="{'width': '100%'}"
               emptyMessage="Không có loại gia công"
-              [showClear]="true">
+              [showClear]="true"
+              appendTo="body">
               <ng-template let-type pTemplate="item">
                 <div>
                   <strong>{{ type.name }}</strong>
@@ -79,7 +112,7 @@
           </div>
         </div>
 
-        <div class="col-12 md:col-4">
+        <div class="col-12" [ngClass]="{'md:col-4': !customerId, 'md:col-6': customerId}">
           <div class="field">
             <label for="quantity">Số lượng <span class="text-red-500">*</span></label>
             <p-inputNumber
@@ -246,8 +279,8 @@
             </td>
             <td class="text-center">
               <p-tag
-                [value]="getPartSeverityLabel(part.severity)"
-                [severity]="getPartSeveritySeverity(part.severity)">
+                [value]="getPartSeverityLabel(part)"
+                [severity]="getPartSeveritySeverity(part)">
               </p-tag>
             </td>
           </tr>

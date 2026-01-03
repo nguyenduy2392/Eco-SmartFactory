@@ -128,7 +128,7 @@
 
       <!-- Tab 4: Kiểm tra tính khả dụng linh kiện -->
       <p-tabPanel header="Kiểm tra tính khả dụng linh kiện" leftIcon="pi pi-check-circle">
-        <app-availability-check></app-availability-check>
+        <app-availability-check [customerId]="customerId || undefined"></app-availability-check>
       </p-tabPanel>
     </p-tabView>
   </div>

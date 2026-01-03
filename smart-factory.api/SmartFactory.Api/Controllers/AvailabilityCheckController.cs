@@ -65,13 +65,19 @@ public class AvailabilityCheckController : BaseApiController
             return BadRequest(new { message = "Quantity must be > 0" });
         }
 
+        if (request.CustomerId == null || request.CustomerId == Guid.Empty)
+        {
+            return BadRequest(new { message = "CustomerId is required" });
+        }
+
         try
         {
             var command = new CheckComponentAvailabilityCommand
             {
                 PartId = request.PartId.Value,
                 ProcessingTypeId = request.ProcessingTypeId.Value,
-                Quantity = request.Quantity.Value
+                Quantity = request.Quantity.Value,
+                CustomerId = request.CustomerId.Value
             };
 
             var result = await Mediator.Send(command);

@@ -23,10 +23,12 @@ public class GetAllPurchaseOrdersQueryHandler : IRequestHandler<GetAllPurchaseOr
 
     public async Task<List<PurchaseOrderListDto>> Handle(GetAllPurchaseOrdersQuery request, CancellationToken cancellationToken)
     {
+        // Only show operation POs (editable), not original POs (readonly)
+        // Operation POs have OriginalPOId != null, Original POs have OriginalPOId == null
         var query = _context.PurchaseOrders
             .Include(p => p.Customer)
             .Include(p => p.POProducts)
-            .Where(p => p.IsActive);
+            .Where(p => p.IsActive && p.OriginalPOId != null); // Only operation POs
 
         // Apply filters
         if (!string.IsNullOrEmpty(request.Status))

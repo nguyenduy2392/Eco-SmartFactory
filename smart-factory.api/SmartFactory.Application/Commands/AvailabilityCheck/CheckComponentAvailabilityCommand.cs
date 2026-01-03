@@ -15,6 +15,7 @@ public class CheckComponentAvailabilityCommand : IRequest<AvailabilityCheckResul
     public Guid PartId { get; set; }
     public Guid ProcessingTypeId { get; set; }
     public int Quantity { get; set; }
+    public Guid CustomerId { get; set; } // Filter materials by customer
 }
 
 public class CheckComponentAvailabilityCommandHandler : IRequestHandler<CheckComponentAvailabilityCommand, AvailabilityCheckResult>
@@ -65,13 +66,8 @@ public class CheckComponentAvailabilityCommandHandler : IRequestHandler<CheckCom
             OverallStatus = "PASS"
         };
 
-        // Try to find customer from POOperations that use this part
-        var customerId = await _context.POOperations
-            .Where(op => op.PartId == request.PartId)
-            .Include(op => op.PurchaseOrder)
-            .OrderByDescending(op => op.PurchaseOrder.CreatedAt)
-            .Select(op => op.PurchaseOrder.CustomerId)
-            .FirstOrDefaultAsync(cancellationToken);
+        // Use customerId from request (required)
+        var customerId = request.CustomerId;
 
         // Check if ACTIVE BOM exists for (Part + ProcessingType) and load details
         var activeBOM = await _context.ProcessBOMs
@@ -120,26 +116,12 @@ public class CheckComponentAvailabilityCommandHandler : IRequestHandler<CheckCom
                 // Calculate required quantity: Quantity × QuantityPerUnit × (1 + ScrapRate)
                 materialDetail.RequiredQuantity = request.Quantity * bomDetail.QuantityPerUnit * (1 + bomDetail.ScrapRate);
 
-                // Find material in warehouse
-                // If we have customerId, prioritize that customer's materials
-                Entities.Material? material = null;
-                if (customerId != Guid.Empty)
-                {
-                    material = await _context.Materials
-                        .Include(m => m.Customer)
-                        .FirstOrDefaultAsync(m => m.Code == bomDetail.MaterialCode 
-                            && m.CustomerId == customerId 
-                            && m.IsActive, cancellationToken);
-                }
-
-                // If not found with customerId, search across all customers
-                if (material == null)
-                {
-                    material = await _context.Materials
-                        .Include(m => m.Customer)
-                        .FirstOrDefaultAsync(m => m.Code == bomDetail.MaterialCode 
-                            && m.IsActive, cancellationToken);
-                }
+                // Find material in warehouse - only search in the specified customer's materials
+                var material = await _context.Materials
+                    .Include(m => m.Customer)
+                    .FirstOrDefaultAsync(m => m.Code == bomDetail.MaterialCode 
+                        && m.CustomerId == customerId 
+                        && m.IsActive, cancellationToken);
 
                 if (material != null)
                 {
@@ -202,8 +184,8 @@ public class CheckComponentAvailabilityCommandHandler : IRequestHandler<CheckCom
 
         result.PartDetails.Add(detail);
 
-        _logger.LogInformation("Component availability check: Part {PartCode} ({ProcessingType}): Quantity={Quantity}, CanProduce={CanProduce}, Severity={Severity}, MaterialCount={MaterialCount}",
-            part.Code, processingType.Code, request.Quantity, detail.CanProduce, detail.Severity, detail.MaterialDetails.Count);
+        _logger.LogInformation("Component availability check: Part {PartCode} ({ProcessingType}): Quantity={Quantity}, CustomerId={CustomerId}, CanProduce={CanProduce}, Severity={Severity}, MaterialCount={MaterialCount}",
+            part.Code, processingType.Code, request.Quantity, customerId, detail.CanProduce, detail.Severity, detail.MaterialDetails.Count);
 
         return result;
     }

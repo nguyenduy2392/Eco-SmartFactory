@@ -259,7 +259,8 @@
             placeholder="Chọn linh kiện"
             [filter]="true"
             filterBy="code,name"
-            [style]="{'width': '100%'}">
+            [style]="{'width': '100%'}"
+            appendTo="body">
             <ng-template let-part pTemplate="item">
               <div><strong>{{ part.code }}</strong> - {{ part.name }}</div>
             </ng-template>
@@ -278,7 +279,8 @@
             optionLabel="label"
             optionValue="value"
             placeholder="Chọn loại gia công"
-            [style]="{'width': '100%'}">
+            [style]="{'width': '100%'}"
+            appendTo="body">
           </p-dropdown>
         </div>
       </div>
@@ -327,6 +329,7 @@
               [filter]="true"
               filterBy="label,code"
               [style]="{'width': '100%'}"
+              appendTo="body"
               (onChange)="onMaterialCodeChange(i)">
             </p-dropdown>
           </div>
@@ -340,7 +343,7 @@
           </div>
           <div class="col-2">
             <label class="text-xs">ĐVT <span class="text-red-500">*</span></label>
-            <p-dropdown [options]="uomOptions" [(ngModel)]="detail.uom" name="uom_{{i}}" optionLabel="label" optionValue="value" [style]="{'width': '100%'}"></p-dropdown>
+            <p-dropdown [options]="uomOptions" [(ngModel)]="detail.uom" name="uom_{{i}}" optionLabel="label" optionValue="value" [style]="{'width': '100%'}" appendTo="body"></p-dropdown>
           </div>
           <div class="col-2">
             <label class="text-xs">Công đoạn</label>

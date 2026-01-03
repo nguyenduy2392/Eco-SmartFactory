@@ -93,16 +93,37 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
                 throw new Exception("No operations found in Excel file");
             }
 
-            // Validate PONumber is unique
+            // Validate PONumber is unique for operation PO (not original)
             var existingPO = await _context.PurchaseOrders
-                .FirstOrDefaultAsync(p => p.PONumber == request.PONumber, cancellationToken);
+                .FirstOrDefaultAsync(p => p.PONumber == request.PONumber && p.OriginalPOId == null, cancellationToken);
             if (existingPO != null)
             {
                 throw new Exception($"Mã PO '{request.PONumber}' đã tồn tại trong hệ thống. Vui lòng sử dụng mã PO khác hoặc xóa PO cũ trước khi import.");
             }
 
-            // Create Purchase Order (PHASE 1: V0 with DRAFT status)
-            var po = new PurchaseOrder
+            // Create Original PO (readonly, locked) - PO gốc
+            var originalPO = new PurchaseOrder
+            {
+                PONumber = $"{request.PONumber}_ORIGINAL",
+                CustomerId = customerId,
+                ProcessingType = request.TemplateType,
+                PODate = request.PODate,
+                ExpectedDeliveryDate = request.ExpectedDeliveryDate,
+                Notes = request.Notes,
+                Version = "V0",
+                VersionNumber = 0,
+                Status = "LOCKED", // Original PO is always locked (readonly)
+                TotalAmount = 0,
+                OriginalPOId = null, // This is the original
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.PurchaseOrders.Add(originalPO);
+            await _context.SaveChangesAsync(cancellationToken); // Save to get the ID
+
+            // Create Operation PO (editable) - PO operation
+            var operationPO = new PurchaseOrder
             {
                 PONumber = request.PONumber,
                 CustomerId = customerId,
@@ -110,15 +131,20 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
                 PODate = request.PODate,
                 ExpectedDeliveryDate = request.ExpectedDeliveryDate,
                 Notes = request.Notes,
-                Version = "V0", // PHASE 1: V0 is the original imported version
+                Version = "V0",
                 VersionNumber = 0,
-                Status = "DRAFT", // PHASE 1: Starts as DRAFT
+                Status = "DRAFT", // Operation PO starts as DRAFT (editable)
                 TotalAmount = 0,
+                OriginalPOId = originalPO.Id, // Link to original PO
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow
             };
 
-            _context.PurchaseOrders.Add(po);
+            _context.PurchaseOrders.Add(operationPO);
+            await _context.SaveChangesAsync(cancellationToken); // Save to get the ID
+
+            // Use operationPO for operations (editable version)
+            var po = operationPO;
 
             // Get or create ProcessingType
             var processingType = await _context.ProcessingTypes
@@ -142,6 +168,10 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
 
             // Dictionary để group operations theo Product và tính tổng quantity, total amount
             var productGroups = new Dictionary<Guid, (Product product, int totalQuantity, decimal totalAmount, string productCode, string productName)>();
+
+            // Lists to store operations and products for copying to original PO
+            var operationsToCopy = new List<POOperation>();
+            var productsToCopy = new List<POProduct>();
 
             foreach (var operationData in importResult.Operations)
             {
@@ -320,6 +350,7 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
                 };
 
                 _context.POOperations.Add(poOperation);
+                operationsToCopy.Add(poOperation); // Store for copying to original PO
                 totalAmount += operationData.TotalAmount;
 
                 // Group theo Product để tạo POProduct
@@ -359,11 +390,51 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
                 };
 
                 _context.POProducts.Add(poProduct);
+                productsToCopy.Add(poProduct); // Store for copying to original PO
             }
 
             po.TotalAmount = totalAmount;
+            originalPO.TotalAmount = totalAmount; // Copy total amount to original
 
-            // Save Material Receipts from Sheet 2 (nhập kho thực tế)
+            // Copy all operations and products to original PO (for reference, readonly)
+            foreach (var operation in operationsToCopy)
+            {
+                var originalOperation = new POOperation
+                {
+                    PurchaseOrderId = originalPO.Id,
+                    PartId = operation.PartId,
+                    ProcessingTypeId = operation.ProcessingTypeId,
+                    OperationName = operation.OperationName,
+                    ChargeCount = operation.ChargeCount,
+                    UnitPrice = operation.UnitPrice,
+                    Quantity = operation.Quantity,
+                    TotalAmount = operation.TotalAmount,
+                    SprayPosition = operation.SprayPosition,
+                    PrintContent = operation.PrintContent,
+                    CycleTime = operation.CycleTime,
+                    AssemblyContent = operation.AssemblyContent,
+                    SequenceOrder = operation.SequenceOrder,
+                    Notes = operation.Notes,
+                    CreatedAt = operation.CreatedAt
+                };
+                _context.POOperations.Add(originalOperation);
+            }
+
+            foreach (var product in productsToCopy)
+            {
+                var originalProduct = new POProduct
+                {
+                    PurchaseOrderId = originalPO.Id,
+                    ProductId = product.ProductId,
+                    Quantity = product.Quantity,
+                    UnitPrice = product.UnitPrice,
+                    TotalAmount = product.TotalAmount,
+                    CreatedAt = product.CreatedAt
+                };
+                _context.POProducts.Add(originalProduct);
+            }
+
+            // Save Material Receipts from Sheet 2 (nhập kho thực tế) - only for original PO
             foreach (var receiptData in importResult.MaterialReceipts)
             {
                 // Get or create Material
@@ -496,25 +567,27 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
 
             await _context.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("Imported PO from Excel: {PONumber} with {OperationCount} operations and {MaterialCount} material receipts",
-                po.PONumber, importResult.Operations.Count, importResult.MaterialReceipts.Count);
+            _logger.LogInformation("Imported PO from Excel: {PONumber} (Original: {OriginalPONumber}) with {OperationCount} operations and {MaterialCount} material receipts",
+                operationPO.PONumber, originalPO.PONumber, importResult.Operations.Count, importResult.MaterialReceipts.Count);
 
+            // Return operation PO (editable version)
             return new PurchaseOrderDto
             {
-                Id = po.Id,
-                PONumber = po.PONumber,
-                CustomerId = po.CustomerId,
+                Id = operationPO.Id,
+                PONumber = operationPO.PONumber,
+                CustomerId = operationPO.CustomerId,
                 CustomerName = customer.Name,
-                Version = po.Version,
-                ProcessingType = po.ProcessingType,
-                PODate = po.PODate,
-                ExpectedDeliveryDate = po.ExpectedDeliveryDate,
-                Status = po.Status,
-                TotalAmount = po.TotalAmount,
-                Notes = po.Notes,
-                VersionNumber = po.VersionNumber,
-                IsActive = po.IsActive,
-                CreatedAt = po.CreatedAt
+                Version = operationPO.Version,
+                ProcessingType = operationPO.ProcessingType,
+                PODate = operationPO.PODate,
+                ExpectedDeliveryDate = operationPO.ExpectedDeliveryDate,
+                Status = operationPO.Status,
+                TotalAmount = operationPO.TotalAmount,
+                Notes = operationPO.Notes,
+                VersionNumber = operationPO.VersionNumber,
+                OriginalPOId = originalPO.Id, // Include reference to original PO
+                IsActive = operationPO.IsActive,
+                CreatedAt = operationPO.CreatedAt
             };
         }
         catch (Exception ex)

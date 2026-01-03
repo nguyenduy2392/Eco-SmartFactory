@@ -1,13 +1,15 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { AvailabilityCheckService } from '../../services/availability-check.service';
 import { PartService, PartDetail } from '../../services/part.service';
 import { ProcessingTypeService } from '../../services/processing-type.service';
+import { CustomerService } from '../../services/customer.service';
 import {
   AvailabilityCheckRequest,
   AvailabilityCheckResult,
   PartAvailabilityResult
 } from '../../models/purchase-order.interface';
 import { ProcessingType } from '../../models/processing-type.interface';
+import { Customer } from '../../models/customer.interface';
 import { MessageService } from 'primeng/api';
 import { SharedModule } from '../../shared.module';
 import { PrimengModule } from '../../primeng.module';
@@ -19,12 +21,16 @@ import { PrimengModule } from '../../primeng.module';
   standalone: true,
   imports: [SharedModule, PrimengModule]
 })
-export class AvailabilityCheckComponent implements OnInit {
+export class AvailabilityCheckComponent implements OnInit, OnChanges {
+  @Input() customerId?: string; // Customer ID from parent component (when used in customer detail page)
+
   parts: PartDetail[] = [];
   processingTypes: ProcessingType[] = [];
+  customers: Customer[] = [];
   loading = false;
 
   // Check form
+  selectedCustomerId: string = '';
   selectedPartId: string = '';
   selectedProcessingTypeId: string = '';
   quantity: number = 0;
@@ -37,13 +43,38 @@ export class AvailabilityCheckComponent implements OnInit {
   constructor(
     private partService: PartService,
     private processingTypeService: ProcessingTypeService,
+    private customerService: CustomerService,
     private availabilityService: AvailabilityCheckService,
     private messageService: MessageService
   ) { }
 
   ngOnInit(): void {
+    this.loadCustomers();
     this.loadParts();
     this.loadProcessingTypes();
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['customerId'] && this.customerId) {
+      // Auto-select customer when passed from parent component
+      this.selectedCustomerId = this.customerId;
+    }
+  }
+
+  loadCustomers(): void {
+    this.customerService.getAll(true).subscribe({
+      next: (customers) => {
+        this.customers = customers;
+      },
+      error: (error) => {
+        console.error('Error loading customers:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: 'Không thể tải danh sách chủ hàng'
+        });
+      }
+    });
   }
 
   loadParts(): void {
@@ -90,7 +121,8 @@ export class AvailabilityCheckComponent implements OnInit {
     const request: AvailabilityCheckRequest = {
       partId: this.selectedPartId,
       processingTypeId: this.selectedProcessingTypeId,
-      quantity: this.quantity
+      quantity: this.quantity,
+      customerId: this.selectedCustomerId
     };
 
         this.availabilityService.checkAvailabilityByComponent(request).subscribe({
@@ -168,6 +200,15 @@ export class AvailabilityCheckComponent implements OnInit {
   }
 
   validateForm(): boolean {
+    if (!this.selectedCustomerId) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Cảnh báo',
+        detail: 'Vui lòng chọn chủ hàng'
+      });
+      return false;
+    }
+
     if (!this.selectedPartId) {
       this.messageService.add({
         severity: 'warn',
@@ -199,6 +240,12 @@ export class AvailabilityCheckComponent implements OnInit {
   }
 
   resetForm(): void {
+    // Only reset customerId if it's not provided from parent component
+    if (!this.customerId) {
+      this.selectedCustomerId = '';
+    } else {
+      this.selectedCustomerId = this.customerId;
+    }
     this.selectedPartId = '';
     this.selectedProcessingTypeId = '';
     this.quantity = 0;
@@ -234,22 +281,30 @@ export class AvailabilityCheckComponent implements OnInit {
     return iconMap[status] || 'pi pi-info-circle';
   }
 
-  getPartSeverityLabel(severity: string): string {
+  getPartSeverityLabel(part: PartAvailabilityResult): string {
+    // Nếu CRITICAL, cần phân biệt giữa "Không có BOM" và "Thiếu nguyên vật liệu"
+    if (part.severity === 'CRITICAL') {
+      if (!part.hasActiveBOM) {
+        return 'Không có BOM';
+      } else {
+        return 'Thiếu nguyên vật liệu';
+      }
+    }
+    
     const severityMap: { [key: string]: string } = {
       'OK': 'Có thể sản xuất',
-      'WARNING': 'Cảnh báo',
-      'CRITICAL': 'Không có BOM'
+      'WARNING': 'Cảnh báo'
     };
-    return severityMap[severity] || severity;
+    return severityMap[part.severity] || part.severity;
   }
 
-  getPartSeveritySeverity(severity: string): string {
+  getPartSeveritySeverity(part: PartAvailabilityResult): string {
     const severityMap: { [key: string]: string } = {
       'OK': 'success',
       'WARNING': 'warning',
       'CRITICAL': 'danger'
     };
-    return severityMap[severity] || 'info';
+    return severityMap[part.severity] || 'info';
   }
 
   get canCreateProductionPlan(): boolean {

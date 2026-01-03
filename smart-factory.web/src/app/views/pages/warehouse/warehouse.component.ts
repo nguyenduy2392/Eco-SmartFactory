@@ -16,7 +16,7 @@ import {
   CreateMaterialIssueRequest,
   CreateMaterialAdjustmentRequest
 } from '../../../models/warehouse.interface';
-import { Material } from '../../../models/material.interface';
+import { Material, CreateMaterialRequest } from '../../../models/material.interface';
 import { Customer } from '../../../models/customer.interface';
 
 @Component({
@@ -77,6 +77,17 @@ export class WarehouseComponent implements OnInit {
   materialStock: MaterialStock | null = null;
   showStockDialog = false;
 
+  // Create material dialog
+  showCreateMaterialDialog = false;
+  currentMaterialDialogSource: 'receipt' | 'issue' | 'adjustment' | null = null;
+  newMaterialForm: Partial<CreateMaterialRequest> = {
+    code: '',
+    name: '',
+    type: '',
+    unit: 'kg',
+    customerId: ''
+  };
+
   loading = false;
 
   transactionTypes = [
@@ -97,6 +108,14 @@ export class WarehouseComponent implements OnInit {
     { label: 'm³', value: 'm3' },
     { label: 'g', value: 'g' },
     { label: 'tấn', value: 'ton' }
+  ];
+
+  // Danh sách loại vật tư
+  materialTypes = [
+    { label: 'Nhựa nguyên sinh', value: 'PLASTIC' },
+    { label: 'Mực in', value: 'INK' },
+    { label: 'Vật tư phụ', value: 'AUXILIARY' },
+    { label: 'Khác', value: 'OTHER' }
   ];
 
   constructor(
@@ -499,6 +518,109 @@ export class WarehouseComponent implements OnInit {
           severity: 'error',
           summary: 'Lỗi',
           detail: error.error?.error || 'Không thể xuất file Excel'
+        });
+      }
+    });
+  }
+
+  // Material creation methods
+  openCreateMaterialDialog(source: 'receipt' | 'issue' | 'adjustment'): void {
+    this.currentMaterialDialogSource = source;
+    
+    // Lấy customerId từ form hiện tại
+    let customerId = '';
+    if (source === 'receipt' && this.receiptForm.customerId) {
+      customerId = this.receiptForm.customerId;
+    } else if (source === 'issue' && this.issueForm.customerId) {
+      customerId = this.issueForm.customerId;
+    } else if (source === 'adjustment' && this.adjustmentForm.customerId) {
+      customerId = this.adjustmentForm.customerId;
+    }
+
+    // Khởi tạo form tạo mới
+    this.newMaterialForm = {
+      code: '',
+      name: '',
+      type: '',
+      unit: 'kg',
+      customerId: customerId
+    };
+
+    this.showCreateMaterialDialog = true;
+  }
+
+  closeCreateMaterialDialog(): void {
+    this.showCreateMaterialDialog = false;
+    this.currentMaterialDialogSource = null;
+    this.newMaterialForm = {
+      code: '',
+      name: '',
+      type: '',
+      unit: 'kg',
+      customerId: ''
+    };
+  }
+
+  saveNewMaterial(): void {
+    // Validate form
+    if (!this.newMaterialForm.code || !this.newMaterialForm.name || !this.newMaterialForm.customerId) {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Cảnh báo',
+        detail: 'Vui lòng nhập đầy đủ thông tin bắt buộc (Mã vật tư, Tên vật tư, Chủ hàng)'
+      });
+      return;
+    }
+
+    // Tự động gán tên chủ hàng vào supplier (mặc định chủ hàng là nhà cung cấp)
+    const selectedCustomer = this.customers.find(c => c.id === this.newMaterialForm.customerId);
+
+    // Gán giá trị mặc định cho các trường bắt buộc
+    const materialRequest: CreateMaterialRequest = {
+      code: this.newMaterialForm.code!,
+      name: this.newMaterialForm.name!,
+      type: this.newMaterialForm.type || '',
+      unit: this.newMaterialForm.unit || 'kg',
+      currentStock: 0,
+      minStock: 0,
+      customerId: this.newMaterialForm.customerId!,
+      supplier: selectedCustomer?.name // Mặc định supplier = tên chủ hàng
+    };
+
+    this.loading = true;
+    this.materialService.create(materialRequest).subscribe({
+      next: (newMaterial) => {
+        this.loading = false;
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Thành công',
+          detail: 'Tạo nguyên vật liệu mới thành công'
+        });
+        
+        // Reload danh sách materials
+        this.loadMaterials();
+        
+        // Tự động chọn nguyên vật liệu vừa tạo vào form hiện tại
+        if (this.currentMaterialDialogSource === 'receipt') {
+          this.receiptForm.materialId = newMaterial.id;
+          this.onReceiptMaterialChange();
+        } else if (this.currentMaterialDialogSource === 'issue') {
+          this.issueForm.materialId = newMaterial.id;
+          this.onIssueMaterialChange();
+        } else if (this.currentMaterialDialogSource === 'adjustment') {
+          this.adjustmentForm.materialId = newMaterial.id;
+          this.onAdjustmentMaterialChange();
+        }
+
+        // Đóng dialog
+        this.closeCreateMaterialDialog();
+      },
+      error: (error) => {
+        this.loading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: error.error?.message || error.error?.error || 'Không thể tạo nguyên vật liệu'
         });
       }
     });

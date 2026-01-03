@@ -10,11 +10,12 @@ namespace SmartFactory.Application.Commands.Warehouse;
 /// <summary>
 /// Command để tạo phiếu nhập kho nguyên vật liệu
 /// Tự động cập nhật tồn kho và tạo lịch sử giao dịch
+/// Nếu MaterialId = Guid.Empty, sẽ tự động tạo nguyên vật liệu mới từ NewMaterialInfo
 /// </summary>
 public class CreateMaterialReceiptCommand : IRequest<MaterialReceiptDto>
 {
     public Guid CustomerId { get; set; }
-    public Guid MaterialId { get; set; }
+    public Guid MaterialId { get; set; } // Nếu = Guid.Empty, sẽ tạo mới từ NewMaterialInfo
     public Guid WarehouseId { get; set; }
     public decimal Quantity { get; set; }
     public string Unit { get; set; } = string.Empty;
@@ -25,6 +26,20 @@ public class CreateMaterialReceiptCommand : IRequest<MaterialReceiptDto>
     public string ReceiptNumber { get; set; } = string.Empty;
     public string? Notes { get; set; }
     public string? CreatedBy { get; set; }
+    
+    // Thông tin để tạo nguyên vật liệu mới (nếu MaterialId = Guid.Empty)
+    public NewMaterialInfo? NewMaterialInfo { get; set; }
+}
+
+public class NewMaterialInfo
+{
+    public string Code { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Type { get; set; } = string.Empty;
+    public string? ColorCode { get; set; }
+    public string? Supplier { get; set; }
+    public decimal MinStock { get; set; }
+    public string? Description { get; set; }
 }
 
 public class CreateMaterialReceiptCommandHandler : IRequestHandler<CreateMaterialReceiptCommand, MaterialReceiptDto>
@@ -61,16 +76,66 @@ public class CreateMaterialReceiptCommandHandler : IRequestHandler<CreateMateria
             throw new Exception($"Customer with ID {request.CustomerId} not found");
         }
 
-        var material = await _context.Materials
-            .FirstOrDefaultAsync(m => m.Id == request.MaterialId, cancellationToken);
-        if (material == null)
+        // Nếu MaterialId = Guid.Empty, tạo nguyên vật liệu mới
+        Material? material;
+        if (request.MaterialId == Guid.Empty)
         {
-            throw new Exception($"Material with ID {request.MaterialId} not found");
-        }
+            // Validate NewMaterialInfo
+            if (request.NewMaterialInfo == null || 
+                string.IsNullOrWhiteSpace(request.NewMaterialInfo.Code) ||
+                string.IsNullOrWhiteSpace(request.NewMaterialInfo.Name))
+            {
+                throw new Exception("NewMaterialInfo is required when MaterialId is empty. Code and Name are required.");
+            }
 
-        if (material.CustomerId != request.CustomerId)
+            // Kiểm tra xem mã nguyên vật liệu đã tồn tại chưa
+            var existingMaterial = await _context.Materials
+                .FirstOrDefaultAsync(m => m.Code == request.NewMaterialInfo.Code 
+                    && m.CustomerId == request.CustomerId, cancellationToken);
+            
+            if (existingMaterial != null)
+            {
+                throw new Exception($"Material with code {request.NewMaterialInfo.Code} already exists for this customer");
+            }
+
+            // Tạo nguyên vật liệu mới
+            material = new Material
+            {
+                Code = request.NewMaterialInfo.Code,
+                Name = request.NewMaterialInfo.Name,
+                Type = request.NewMaterialInfo.Type ?? "OTHER",
+                ColorCode = request.NewMaterialInfo.ColorCode,
+                Supplier = request.NewMaterialInfo.Supplier,
+                Unit = request.Unit,
+                CurrentStock = 0, // Sẽ được cập nhật sau khi nhập kho
+                MinStock = request.NewMaterialInfo.MinStock,
+                Description = request.NewMaterialInfo.Description,
+                CustomerId = request.CustomerId,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            _context.Materials.Add(material);
+            await _context.SaveChangesAsync(cancellationToken);
+            
+            _logger.LogInformation(
+                "Created new Material {MaterialCode} ({MaterialName}) for Customer {CustomerId}",
+                material.Code, material.Name, request.CustomerId);
+        }
+        else
         {
-            throw new Exception("Material does not belong to the specified customer");
+            // Sử dụng nguyên vật liệu đã có
+            material = await _context.Materials
+                .FirstOrDefaultAsync(m => m.Id == request.MaterialId, cancellationToken);
+            if (material == null)
+            {
+                throw new Exception($"Material with ID {request.MaterialId} not found");
+            }
+
+            if (material.CustomerId != request.CustomerId)
+            {
+                throw new Exception("Material does not belong to the specified customer");
+            }
         }
 
         var warehouse = await _context.Warehouses
@@ -100,7 +165,7 @@ public class CreateMaterialReceiptCommandHandler : IRequestHandler<CreateMateria
         var receipt = new MaterialReceipt
         {
             CustomerId = request.CustomerId,
-            MaterialId = request.MaterialId,
+            MaterialId = material.Id, // Sử dụng material.Id (có thể là mới tạo hoặc đã có)
             WarehouseId = request.WarehouseId,
             Quantity = request.Quantity,
             Unit = request.Unit,
@@ -127,7 +192,7 @@ public class CreateMaterialReceiptCommandHandler : IRequestHandler<CreateMateria
         var history = new MaterialTransactionHistory
         {
             CustomerId = request.CustomerId,
-            MaterialId = request.MaterialId,
+            MaterialId = material.Id, // Sử dụng material.Id
             WarehouseId = request.WarehouseId,
             BatchNumber = request.BatchNumber,
             TransactionType = "RECEIPT",

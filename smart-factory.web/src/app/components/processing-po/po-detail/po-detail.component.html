@@ -19,6 +19,26 @@
           PO: {{ purchaseOrder.poNumber }}
         </h2>
       </div>
+      <div class="flex align-items-center gap-2">
+        <p-button
+          *ngIf="!isViewingOriginal && purchaseOrder.originalPOId"
+          label="Xem PO gốc"
+          icon="pi pi-eye"
+          [outlined]="true"
+          severity="info"
+          (onClick)="viewOriginalPO()"
+          pTooltip="Xem PO gốc (chỉ xem)">
+        </p-button>
+        <p-button
+          *ngIf="isViewingOriginal"
+          label="Quay lại PO operation"
+          icon="pi pi-arrow-left"
+          [outlined]="true"
+          severity="secondary"
+          (onClick)="backToOperationPO()"
+          pTooltip="Quay lại PO operation">
+        </p-button>
+      </div>
     </div>
 
     <!-- Excel Table with PO Form -->
@@ -26,6 +46,7 @@
       <app-po-excel-table
         [purchaseOrder]="purchaseOrder"
         [processingType]="purchaseOrder.processingType"
+        [readonly]="isViewingOriginal"
         (dataChanged)="onExcelDataChanged()"
         (saved)="onPOSaved($event)">
       </app-po-excel-table>

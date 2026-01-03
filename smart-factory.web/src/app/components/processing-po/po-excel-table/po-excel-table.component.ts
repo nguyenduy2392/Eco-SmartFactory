@@ -26,6 +26,7 @@ Tabulator.registerModule([EditModule, FormatModule, InteractionModule, SortModul
 export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, OnDestroy {
   @Input() purchaseOrder!: PurchaseOrder;
   @Input() processingType!: 'EP_NHUA' | 'PHUN_IN' | 'LAP_RAP';
+  @Input() readonly = false; // If true, disable all editing
   @Output() dataChanged = new EventEmitter<void>();
   @Output() saved = new EventEmitter<PurchaseOrder>();
 
@@ -333,8 +334,8 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
   }
 
   prepareColumns(): void {
-    // Add action column for add and delete buttons
-    const actionColumn = {
+    // Add action column for add and delete buttons (only if not readonly)
+    const actionColumn = this.readonly ? null : {
       title: 'Thao tác',
       width: 120,
       formatter: (cell: any) => {
@@ -369,28 +370,31 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
       resizable: false
     };
 
+    // Helper function to get editor based on readonly flag
+    const getEditor = (editorType: string) => this.readonly ? false : editorType;
+
     switch (this.processingType) {
       case 'EP_NHUA':
         this.tableColumns = [
-          actionColumn,
-          { title: 'Mã sản phẩm', field: 'productNumber', width: 120, editor: 'input' },
-          { title: 'Số khuôn/Mẫu', field: 'modelNumber', editor: 'input', width: 120 },
-          { title: 'Mã linh kiện', field: 'partNumber', width: 150, editor: 'input' },
-          { title: 'Tên sản phẩm & Chi tiết', field: 'partName', width: 200, editor: 'input' },
-          { title: 'Vật liệu', field: 'material', editor: 'input', width: 120 },
-          { title: 'Mã màu', field: 'colorCode', editor: 'input', width: 100 },
-          { title: 'Màu sắc', field: 'color', editor: 'input', width: 120 },
-          { title: 'Số lỗ khuôn', field: 'cavityQuantity', editor: 'number', width: 100, editorParams: { min: 0 } },
-          { title: 'Bộ', field: 'set', editor: 'number', width: 80, editorParams: { min: 0 } },
-          { title: 'Chu kỳ', field: 'cycle', editor: 'number', width: 100, editorParams: { min: 0 } },
-          { title: 'Trọng lượng tịnh', field: 'netWeight', editor: 'number', width: 120, editorParams: { min: 0, step: 0.01 } },
-          { title: 'Tổng trọng lượng', field: 'totalWeight', width: 140, editor: 'number', editorParams: { min: 0, step: 0.01 } },
-          { title: 'Số máy ép', field: 'machineType', editor: 'input', width: 120 },
-          { title: 'Vật liệu cần', field: 'requiredMaterial', width: 120, editor: 'input' },
-          { title: 'Màu cần', field: 'requiredColor', width: 100, editor: 'input' },
-          { title: 'Số lượng hợp đồng (PCS)', field: 'quantity', editor: 'number', width: 130, editorParams: { min: 0 } },
-          { title: 'Số lần ép', field: 'chargeCount', editor: 'number', width: 80, editorParams: { min: 0 } },
-          { title: 'Đơn giá (VND)', field: 'unitPrice', editor: 'number', width: 120, editorParams: { min: 0, step: 0.01 } },
+          ...(actionColumn ? [actionColumn] : []),
+          { title: 'Mã sản phẩm', field: 'productNumber', width: 120, editor: getEditor('input') },
+          { title: 'Số khuôn/Mẫu', field: 'modelNumber', editor: getEditor('input'), width: 120 },
+          { title: 'Mã linh kiện', field: 'partNumber', width: 150, editor: getEditor('input') },
+          { title: 'Tên sản phẩm & Chi tiết', field: 'partName', width: 200, editor: getEditor('input') },
+          { title: 'Vật liệu', field: 'material', editor: getEditor('input'), width: 120 },
+          { title: 'Mã màu', field: 'colorCode', editor: getEditor('input'), width: 100 },
+          { title: 'Màu sắc', field: 'color', editor: getEditor('input'), width: 120 },
+          { title: 'Số lỗ khuôn', field: 'cavityQuantity', editor: getEditor('number'), width: 100, editorParams: { min: 0 } },
+          { title: 'Bộ', field: 'set', editor: getEditor('number'), width: 80, editorParams: { min: 0 } },
+          { title: 'Chu kỳ', field: 'cycle', editor: getEditor('number'), width: 100, editorParams: { min: 0 } },
+          { title: 'Trọng lượng tịnh', field: 'netWeight', editor: getEditor('number'), width: 120, editorParams: { min: 0, step: 0.01 } },
+          { title: 'Tổng trọng lượng', field: 'totalWeight', width: 140, editor: getEditor('number'), editorParams: { min: 0, step: 0.01 } },
+          { title: 'Số máy ép', field: 'machineType', editor: getEditor('input'), width: 120 },
+          { title: 'Vật liệu cần', field: 'requiredMaterial', width: 120, editor: getEditor('input') },
+          { title: 'Màu cần', field: 'requiredColor', width: 100, editor: getEditor('input') },
+          { title: 'Số lượng hợp đồng (PCS)', field: 'quantity', editor: getEditor('number'), width: 130, editorParams: { min: 0 } },
+          { title: 'Số lần ép', field: 'chargeCount', editor: getEditor('number'), width: 80, editorParams: { min: 0 } },
+          { title: 'Đơn giá (VND)', field: 'unitPrice', editor: getEditor('number'), width: 120, editorParams: { min: 0, step: 0.01 } },
           { title: 'Tổng đơn giá (VND)', field: 'totalPrice', width: 130, editor: false, formatter: (cell: any) => {
             const value = cell.getValue();
             return value ? this.formatCurrency(value) : '';
@@ -399,52 +403,52 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         break;
       case 'PHUN_IN':
         this.tableColumns = [
-          actionColumn,
-          { title: 'Mã sản phẩm', field: 'productNumber', width: 120, editor: 'input' },
-          { title: 'Mã linh kiện', field: 'partNumber', width: 120, editor: 'input' },
-          { title: 'Vị trí phun sơn', field: 'sprayPosition', editor: 'input', width: 150 },
-          { title: 'Công đoạn', field: 'processingContent', editor: 'input', width: 120 },
-          { title: 'Số lần gia công', field: 'processingCount', editor: 'number', width: 100, editorParams: { min: 0 } },
-          { title: 'Giá mỗi lần (VND)', field: 'unitPrice', editor: 'number', width: 130, editorParams: { min: 0, step: 0.01 } },
+          ...(actionColumn ? [actionColumn] : []),
+          { title: 'Mã sản phẩm', field: 'productNumber', width: 120, editor: getEditor('input') },
+          { title: 'Mã linh kiện', field: 'partNumber', width: 120, editor: getEditor('input') },
+          { title: 'Vị trí phun sơn', field: 'sprayPosition', editor: getEditor('input'), width: 150 },
+          { title: 'Công đoạn', field: 'processingContent', editor: getEditor('input'), width: 120 },
+          { title: 'Số lần gia công', field: 'processingCount', editor: getEditor('number'), width: 100, editorParams: { min: 0 } },
+          { title: 'Giá mỗi lần (VND)', field: 'unitPrice', editor: getEditor('number'), width: 130, editorParams: { min: 0, step: 0.01 } },
           { title: 'Tổng đơn giá (VND)', field: 'totalUnitPrice', width: 130, editor: false, formatter: (cell: any) => {
             const value = cell.getValue();
             return value ? this.formatCurrency(value) : '';
           }},
-          { title: 'Số lượng hợp đồng (PCS)', field: 'quantity', editor: 'number', width: 130, editorParams: { min: 0 } },
+          { title: 'Số lượng hợp đồng (PCS)', field: 'quantity', editor: getEditor('number'), width: 130, editorParams: { min: 0 } },
           { title: 'Thành tiền (VND)', field: 'amount', width: 130, editor: false, formatter: (cell: any) => {
             const value = cell.getValue();
             return value ? this.formatCurrency(value) : '';
           }},
-          { title: 'Ngày hoàn thành', field: 'completionDate', editor: 'input', width: 120 },
-          { title: 'Ghi chú', field: 'notes', editor: 'input', width: 200 }
+          { title: 'Ngày hoàn thành', field: 'completionDate', editor: getEditor('input'), width: 120 },
+          { title: 'Ghi chú', field: 'notes', editor: getEditor('input'), width: 200 }
         ];
         break;
       case 'LAP_RAP':
         this.tableColumns = [
-          actionColumn,
-          { title: 'Mã sản phẩm', field: 'productNumber', width: 120, editor: 'input' },
-          { title: 'Mã linh kiện', field: 'partNumber', width: 150, editor: 'input' },
-          { title: 'Nội dung gia công', field: 'processingContent', editor: 'input', width: 200 },
-          { title: 'Số lần gia công', field: 'processingCount', editor: 'number', width: 100, editorParams: { min: 0 } },
-          { title: 'Đơn giá (VND)', field: 'unitPrice', editor: 'number', width: 120, editorParams: { min: 0, step: 0.01 } },
+          ...(actionColumn ? [actionColumn] : []),
+          { title: 'Mã sản phẩm', field: 'productNumber', width: 120, editor: getEditor('input') },
+          { title: 'Mã linh kiện', field: 'partNumber', width: 150, editor: getEditor('input') },
+          { title: 'Nội dung gia công', field: 'processingContent', editor: getEditor('input'), width: 200 },
+          { title: 'Số lần gia công', field: 'processingCount', editor: getEditor('number'), width: 100, editorParams: { min: 0 } },
+          { title: 'Đơn giá (VND)', field: 'unitPrice', editor: getEditor('number'), width: 120, editorParams: { min: 0, step: 0.01 } },
           { title: 'Tổng số tiền (VND)', field: 'totalAmount1', width: 140, editor: false, formatter: (cell: any) => {
             const value = cell.getValue();
             return value ? this.formatCurrency(value) : '';
           }},
-          { title: 'Số lượng hợp đồng (PCS)', field: 'quantity', editor: 'number', width: 130, editorParams: { min: 0 } },
+          { title: 'Số lượng hợp đồng (PCS)', field: 'quantity', editor: getEditor('number'), width: 130, editorParams: { min: 0 } },
           { title: 'Tổng tất số tiền (VND)', field: 'totalAmount2', width: 140, editor: false, formatter: (cell: any) => {
             const value = cell.getValue();
             return value ? this.formatCurrency(value) : '';
           }},
-          { title: 'Ngày hoàn thành', field: 'completionDate', editor: 'input', width: 120 },
-          { title: 'Ghi chú', field: 'notes', editor: 'input', width: 200 }
+          { title: 'Ngày hoàn thành', field: 'completionDate', editor: getEditor('input'), width: 120 },
+          { title: 'Ghi chú', field: 'notes', editor: getEditor('input'), width: 200 }
         ];
         break;
     }
   }
 
   onCellEdit(cell: any): void {
-    if (this.isSaving) return;
+    if (this.isSaving || this.readonly) return; // Disable editing if readonly
 
     try {
       const field = cell.getField();
@@ -1052,29 +1056,105 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
   insertRowAfter(afterRowData: any): void {
     if (!this.tabulatorInstance || !this.purchaseOrder) return;
 
+    // Calculate sequenceOrder based on the position
+    // This ensures that when a row is inserted after another row, it maintains its position after save
+    let calculatedSequenceOrder: number;
+    
+    // Find the index of the row to insert after
+    const afterRowIndex = this.tableData.findIndex((r: any) => r.id === afterRowData.id);
+    
+    if (afterRowIndex >= 0) {
+      // Find the sequenceOrder of the row we're inserting after
+      let afterRowSequenceOrder: number | undefined;
+      
+      if (afterRowData.operationId) {
+        // Row has an existing operation - get its sequenceOrder
+        const afterOperation = this.purchaseOrder.operations?.find(op => op.id === afterRowData.operationId);
+        afterRowSequenceOrder = afterOperation?.sequenceOrder;
+      } else if (afterRowData._sequenceOrder !== undefined) {
+        // Row is a new row with pre-calculated sequenceOrder
+        afterRowSequenceOrder = afterRowData._sequenceOrder;
+      }
+      
+      // If we have sequenceOrder from the after row, use it
+      if (afterRowSequenceOrder !== undefined) {
+        // Find the next row's sequenceOrder to check if we're inserting between rows
+        const nextRowIndex = afterRowIndex + 1;
+        let nextRowSequenceOrder: number | undefined;
+        
+        if (nextRowIndex < this.tableData.length) {
+          const nextRow = this.tableData[nextRowIndex];
+          if (nextRow.operationId) {
+            const nextOperation = this.purchaseOrder.operations?.find(op => op.id === nextRow.operationId);
+            nextRowSequenceOrder = nextOperation?.sequenceOrder;
+          } else if (nextRow._sequenceOrder !== undefined) {
+            // Next row is also a new row with calculated sequenceOrder
+            nextRowSequenceOrder = nextRow._sequenceOrder;
+          }
+        }
+        
+        // Calculate new sequenceOrder
+        // If next row exists and has a higher sequenceOrder, we insert between them
+        // Otherwise, we insert after the last row
+        if (nextRowSequenceOrder !== undefined && nextRowSequenceOrder > afterRowSequenceOrder) {
+          // Insert between two rows - use afterRowSequenceOrder + 1
+          // Note: If there are conflicts, backend will handle sorting
+          calculatedSequenceOrder = afterRowSequenceOrder + 1;
+        } else {
+          // Insert after the last row or no next row - increment by 1
+          calculatedSequenceOrder = afterRowSequenceOrder + 1;
+        }
+      } else {
+        // Fallback: calculate based on position in tableData
+        // Get all operations sorted by sequenceOrder
+        const sortedOperations = [...(this.purchaseOrder.operations || [])].sort((a, b) => a.sequenceOrder - b.sequenceOrder);
+        
+        // Count how many existing operations are before this position
+        let operationsBeforePosition = 0;
+        for (let i = 0; i < afterRowIndex && i < this.tableData.length; i++) {
+          if (this.tableData[i].operationId && !this.tableData[i].id.startsWith('new_')) {
+            operationsBeforePosition++;
+          }
+        }
+        
+        if (sortedOperations.length > 0 && operationsBeforePosition < sortedOperations.length) {
+          // Use sequenceOrder of operation at the calculated position
+          calculatedSequenceOrder = sortedOperations[operationsBeforePosition].sequenceOrder + 1;
+        } else {
+          // Default: use length + 1
+          calculatedSequenceOrder = (this.purchaseOrder.operations?.length || 0) + 1;
+        }
+      }
+    } else {
+      // If row not found, add at end
+      calculatedSequenceOrder = (this.purchaseOrder.operations?.length || 0) + 1;
+    }
+
     // Create a new empty row based on processing type
     const newRow: any = {
       id: `new_${Date.now()}`,
       operationId: '',
-      rowIndex: this.tableData.length
+      rowIndex: this.tableData.length,
+      _sequenceOrder: calculatedSequenceOrder // Store calculated sequenceOrder
     };
 
+    // Create empty row with all fields empty/zero (don't copy from afterRowData)
     switch (this.processingType) {
       case 'EP_NHUA':
         Object.assign(newRow, {
-          productNumber: afterRowData.productNumber || '',
-          modelNumber: afterRowData.modelNumber || '',
-          partNumber: afterRowData.partNumber || '',
-          partName: afterRowData.partName || '',
-          material: afterRowData.material || '',
-          colorCode: afterRowData.colorCode || '',
-          color: afterRowData.color || '',
+          productNumber: '',
+          modelNumber: '',
+          partNumber: '',
+          partName: '',
+          material: '',
+          colorCode: '',
+          color: '',
           cavityQuantity: 0,
           set: 0,
           cycle: 0,
           netWeight: 0,
           totalWeight: 0,
-          machineType: afterRowData.machineType || '',
+          machineType: '',
           requiredMaterial: '',
           requiredColor: '',
           quantity: 0,
@@ -1085,9 +1165,9 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         break;
       case 'PHUN_IN':
         Object.assign(newRow, {
-          productNumber: afterRowData.productNumber || '',
+          productNumber: '',
           sequenceNumber: '',
-          partNumber: afterRowData.partNumber || '',
+          partNumber: '',
           sprayPosition: '',
           processingContent: '',
           processingCount: 0,
@@ -1101,8 +1181,8 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         break;
       case 'LAP_RAP':
         Object.assign(newRow, {
-          productNumber: afterRowData.productNumber || '',
-          partNumber: afterRowData.partNumber || '',
+          productNumber: '',
+          partNumber: '',
           processingContent: '',
           processingCount: 0,
           unitPrice: 0,
@@ -1114,9 +1194,6 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         });
         break;
     }
-
-    // Find the index of the row to insert after
-    const afterRowIndex = this.tableData.findIndex((r: any) => r.id === afterRowData.id);
 
     if (afterRowIndex >= 0) {
       // Insert after the found row
@@ -1265,6 +1342,58 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
     }
   }
 
+  isRowEmpty(row: any): boolean {
+    // Check if all editable fields in the row are empty/zero
+    switch (this.processingType) {
+      case 'EP_NHUA':
+        return (
+          (!row.productNumber || row.productNumber.trim() === '') &&
+          (!row.modelNumber || row.modelNumber.trim() === '') &&
+          (!row.partNumber || row.partNumber.trim() === '') &&
+          (!row.partName || row.partName.trim() === '') &&
+          (!row.material || row.material.trim() === '') &&
+          (!row.colorCode || row.colorCode.trim() === '') &&
+          (!row.color || row.color.trim() === '') &&
+          (!row.machineType || row.machineType.trim() === '') &&
+          (!row.requiredMaterial || row.requiredMaterial.trim() === '') &&
+          (!row.requiredColor || row.requiredColor.trim() === '') &&
+          (this.toNumberOrNull(row.cavityQuantity) ?? 0) === 0 &&
+          (this.toNumberOrNull(row.set) ?? 0) === 0 &&
+          (this.toNumberOrNull(row.cycle) ?? 0) === 0 &&
+          (this.toNumberOrNull(row.netWeight) ?? 0) === 0 &&
+          (this.toNumberOrNull(row.totalWeight) ?? 0) === 0 &&
+          (this.toNumberOrNull(row.quantity) ?? 0) === 0 &&
+          (this.toNumberOrNull(row.chargeCount) ?? 0) === 0 &&
+          (this.toNumberOrNull(row.unitPrice) ?? 0) === 0
+        );
+      case 'PHUN_IN':
+        return (
+          (!row.productNumber || row.productNumber.trim() === '') &&
+          (!row.partNumber || row.partNumber.trim() === '') &&
+          (!row.sprayPosition || row.sprayPosition.trim() === '') &&
+          (!row.processingContent || row.processingContent.trim() === '') &&
+          (this.toNumberOrNull(row.processingCount) ?? 0) === 0 &&
+          (this.toNumberOrNull(row.unitPrice) ?? 0) === 0 &&
+          (this.toNumberOrNull(row.quantity) ?? 0) === 0 &&
+          (!row.completionDate || row.completionDate.trim() === '') &&
+          (!row.notes || row.notes.trim() === '')
+        );
+      case 'LAP_RAP':
+        return (
+          (!row.productNumber || row.productNumber.trim() === '') &&
+          (!row.partNumber || row.partNumber.trim() === '') &&
+          (!row.processingContent || row.processingContent.trim() === '') &&
+          (this.toNumberOrNull(row.processingCount) ?? 0) === 0 &&
+          (this.toNumberOrNull(row.unitPrice) ?? 0) === 0 &&
+          (this.toNumberOrNull(row.quantity) ?? 0) === 0 &&
+          (!row.completionDate || row.completionDate.trim() === '') &&
+          (!row.notes || row.notes.trim() === '')
+        );
+      default:
+        return false;
+    }
+  }
+
   async saveAllTableData(allTableData: any[]): Promise<void> {
     if (!allTableData || allTableData.length === 0) {
       console.log('No table data to save');
@@ -1284,11 +1413,38 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         (this.purchaseOrder.operations || []).map((op: POOperation) => op.id)
       );
 
+      const rowsToDelete: string[] = []; // Track rows to delete after successful save
+
       for (const row of allTableData) {
+        const isNewRow = !row.operationId || row.id.startsWith('new_') || !existingOperationIds.has(row.operationId);
+        
+        // Handle empty rows
+        if (this.isRowEmpty(row)) {
+          if (isNewRow) {
+            // Skip empty new rows (don't create them)
+            console.log('Skipping empty new row:', row.id);
+            continue;
+          } else {
+            // Delete empty existing rows
+            console.log('Deleting empty existing row:', row.id, row.operationId);
+            rowsToDelete.push(row.id);
+            savePromises.push(
+              new Promise((resolve, reject) => {
+                this.poService.deleteOperation(this.purchaseOrder.id, row.operationId).subscribe({
+                  next: () => resolve(undefined),
+                  error: (err) => {
+                    console.error('Error deleting empty row:', err);
+                    reject(err);
+                  }
+                });
+              })
+            );
+            continue;
+          }
+        }
+
         // Recalculate totals before saving to ensure data consistency
         this.recalculateRow(row);
-
-        const isNewRow = !row.operationId || row.id.startsWith('new_') || !existingOperationIds.has(row.operationId);
 
         if (isNewRow) {
           // Validate required fields for new rows
@@ -1349,6 +1505,23 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
       console.log('Executing save promises. Count:', savePromises.length);
       await Promise.all(savePromises);
       console.log('All table data saved successfully');
+      
+      // Delete empty rows from table after successful save
+      if (rowsToDelete.length > 0 && this.tabulatorInstance) {
+        rowsToDelete.forEach(rowId => {
+          try {
+            this.tabulatorInstance.deleteRow(rowId);
+            // Also remove from tableData
+            const index = this.tableData.findIndex((r: any) => r.id === rowId);
+            if (index >= 0) {
+              this.tableData.splice(index, 1);
+            }
+          } catch (error) {
+            console.warn('Error deleting row from table:', rowId, error);
+          }
+        });
+      }
+      
       this.dataChanged.emit();
     } catch (error: any) {
       console.error('Error saving table data:', error);
@@ -1378,10 +1551,20 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
       }
     }
 
+    // Use calculated sequenceOrder from row if available, otherwise calculate
+    let sequenceOrder: number;
+    if (row._sequenceOrder !== undefined) {
+      // Use the pre-calculated sequenceOrder from insertRowAfter
+      sequenceOrder = row._sequenceOrder;
+    } else {
+      // Fallback: use length + 1 (for rows added via addRow() at the end)
+      sequenceOrder = (this.purchaseOrder.operations?.length || 0) + 1;
+    }
+
     const baseData: any = {
       partId: partId, // Optional - can use ProductCode and PartCode instead
       processingTypeId: firstOperation.processingTypeId || '',
-      sequenceOrder: (this.purchaseOrder.operations?.length || 0) + 1,
+      sequenceOrder: sequenceOrder,
       // Send ProductCode and PartCode to let backend find or create Product/Part
       productCode: row.productNumber || undefined,
       partCode: row.partNumber || undefined

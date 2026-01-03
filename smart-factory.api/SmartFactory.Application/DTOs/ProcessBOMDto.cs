@@ -78,6 +78,7 @@ public class AvailabilityCheckRequest
     public Guid? PartId { get; set; }
     public Guid? ProcessingTypeId { get; set; }
     public int? Quantity { get; set; }
+    public Guid? CustomerId { get; set; } // Filter materials by customer
 }
 
 /// <summary>

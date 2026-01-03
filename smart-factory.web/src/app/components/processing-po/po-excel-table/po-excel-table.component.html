@@ -19,7 +19,7 @@
               </label>
               <div class="p-inputgroup">
                 <span class="p-inputgroup-addon"><i class="pi pi-hashtag"></i></span>
-                <input pInputText [(ngModel)]="poFormData.poNumber" class="w-full">
+                <input pInputText [(ngModel)]="poFormData.poNumber" [readonly]="readonly" class="w-full">
               </div>
             </div>
 
@@ -36,6 +36,7 @@
                   dateFormat="dd/mm/yy"
                   [showButtonBar]="true"
                   [appendTo]="'body'"
+                  [disabled]="readonly"
                   styleClass="w-full">
                 </p-calendar>
               </div>
@@ -56,6 +57,7 @@
                   placeholder="Chọn loại gia công"
                   [loading]="loadingProcessingTypes"
                   [appendTo]="'body'"
+                  [disabled]="readonly"
                   styleClass="w-full">
                 </p-dropdown>
               </div>
@@ -81,6 +83,7 @@
                   placeholder="Chọn khách hàng"
                   [loading]="loadingCustomers"
                   [appendTo]="'body'"
+                  [disabled]="readonly"
                   styleClass="w-full">
                 </p-dropdown>
               </div>
@@ -99,6 +102,7 @@
                   dateFormat="dd/mm/yy"
                   [showButtonBar]="true"
                   [appendTo]="'body'"
+                  [disabled]="readonly"
                   styleClass="w-full">
                 </p-calendar>
               </div>
@@ -129,6 +133,7 @@
               [(ngModel)]="poFormData.notes"
               [rows]="3"
               placeholder="Nhập ghi chú..."
+              [readonly]="readonly"
               class="w-full">
             </textarea>
           </div>
@@ -153,7 +158,7 @@
   </div>
 
   <!-- Save/Cancel Buttons -->
-  <div class="action-footer">
+  <div class="action-footer" *ngIf="!readonly">
     <p-button
       label="Hủy"
       icon="pi pi-times"

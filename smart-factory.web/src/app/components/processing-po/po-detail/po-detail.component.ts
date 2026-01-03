@@ -29,6 +29,8 @@ export class PODetailComponent implements OnInit {
   purchaseOrder: PurchaseOrder | null = null;
   loading = false;
   poId: string | null = null;
+  isViewingOriginal = false; // Flag to track if viewing original PO (readonly)
+  operationPOId: string | null = null; // Store operation PO ID when viewing original
 
   // Edit mode flags
   editingGeneralInfo = false;
@@ -700,6 +702,48 @@ export class PODetailComponent implements OnInit {
 
   onPOSaved(updatedPO: PurchaseOrder): void {
     this.purchaseOrder = updatedPO;
+    this.loadPODetail();
+  }
+
+  // View Original PO (readonly)
+  viewOriginalPO(): void {
+    if (!this.purchaseOrder?.originalPOId) return;
+
+    // Store current operation PO ID
+    this.operationPOId = this.poId;
+
+    this.isViewingOriginal = true;
+    this.loading = true;
+    this.poService.getById(this.purchaseOrder.originalPOId).subscribe({
+      next: (originalPO) => {
+        this.purchaseOrder = originalPO;
+        this.loading = false;
+        this.messageService.add({
+          severity: 'info',
+          summary: 'Thông báo',
+          detail: 'Đang xem PO gốc (chỉ xem, không thể chỉnh sửa)'
+        });
+      },
+      error: (error) => {
+        console.error('Error loading original PO:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: 'Không thể tải PO gốc'
+        });
+        this.loading = false;
+        this.isViewingOriginal = false;
+      }
+    });
+  }
+
+  // Back to Operation PO
+  backToOperationPO(): void {
+    if (!this.operationPOId) return;
+
+    this.isViewingOriginal = false;
+    this.poId = this.operationPOId;
+    this.operationPOId = null;
     this.loadPODetail();
   }
 

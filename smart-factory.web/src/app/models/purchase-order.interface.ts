@@ -145,6 +145,7 @@ export interface AvailabilityCheckRequest {
   partId?: string;
   processingTypeId?: string;
   quantity?: number;
+  customerId?: string; // Filter materials by customer
 }
 
 export interface AvailabilityCheckResult {

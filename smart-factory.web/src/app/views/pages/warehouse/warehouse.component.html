@@ -389,17 +389,28 @@
 
       <div class="col-12">
         <label class="block mb-2">Nguyên vật liệu <span class="text-red-500">*</span></label>
-        <p-dropdown 
-          [options]="materials" 
-          [(ngModel)]="receiptForm.materialId"
-          name="materialId"
-          optionLabel="name" 
-          optionValue="id"
-          placeholder="Chọn nguyên vật liệu"
-          styleClass="w-full"
-          (onChange)="onReceiptMaterialChange()"
-          [required]="true">
-        </p-dropdown>
+        <div class="flex gap-2">
+          <p-dropdown 
+            [options]="materials" 
+            [(ngModel)]="receiptForm.materialId"
+            name="materialId"
+            optionLabel="name" 
+            optionValue="id"
+            placeholder="Chọn nguyên vật liệu"
+            styleClass="flex-1"
+            (onChange)="onReceiptMaterialChange()"
+            [required]="true">
+          </p-dropdown>
+          <button pButton type="button" 
+                  icon="pi pi-plus" 
+                  label="Tạo mới"
+                  class="p-button-outlined"
+                  (click)="openCreateMaterialDialog('receipt')"
+                  [disabled]="!receiptForm.customerId"
+                  pTooltip="Tạo nguyên vật liệu mới"
+                  tooltipPosition="top">
+          </button>
+        </div>
       </div>
 
       <div class="col-6">
@@ -515,17 +526,28 @@
 
       <div class="col-12">
         <label class="block mb-2">Nguyên vật liệu <span class="text-red-500">*</span></label>
-        <p-dropdown 
-          [options]="materials" 
-          [(ngModel)]="issueForm.materialId"
-          name="issueMaterialId"
-          optionLabel="name" 
-          optionValue="id"
-          placeholder="Chọn nguyên vật liệu"
-          styleClass="w-full"
-          (onChange)="onIssueMaterialChange()"
-          [required]="true">
-        </p-dropdown>
+        <div class="flex gap-2">
+          <p-dropdown 
+            [options]="materials" 
+            [(ngModel)]="issueForm.materialId"
+            name="issueMaterialId"
+            optionLabel="name" 
+            optionValue="id"
+            placeholder="Chọn nguyên vật liệu"
+            styleClass="flex-1"
+            (onChange)="onIssueMaterialChange()"
+            [required]="true">
+          </p-dropdown>
+          <button pButton type="button" 
+                  icon="pi pi-plus" 
+                  label="Tạo mới"
+                  class="p-button-outlined"
+                  (click)="openCreateMaterialDialog('issue')"
+                  [disabled]="!issueForm.customerId"
+                  pTooltip="Tạo nguyên vật liệu mới"
+                  tooltipPosition="top">
+          </button>
+        </div>
       </div>
 
       <div class="col-6">
@@ -650,17 +672,28 @@
 
       <div class="col-12">
         <label class="block mb-2">Nguyên vật liệu <span class="text-red-500">*</span></label>
-        <p-dropdown 
-          [options]="materials" 
-          [(ngModel)]="adjustmentForm.materialId"
-          name="adjustmentMaterialId"
-          optionLabel="name" 
-          optionValue="id"
-          placeholder="Chọn nguyên vật liệu"
-          styleClass="w-full"
-          (onChange)="onAdjustmentMaterialChange()"
-          [required]="true">
-        </p-dropdown>
+        <div class="flex gap-2">
+          <p-dropdown 
+            [options]="materials" 
+            [(ngModel)]="adjustmentForm.materialId"
+            name="adjustmentMaterialId"
+            optionLabel="name" 
+            optionValue="id"
+            placeholder="Chọn nguyên vật liệu"
+            styleClass="flex-1"
+            (onChange)="onAdjustmentMaterialChange()"
+            [required]="true">
+          </p-dropdown>
+          <button pButton type="button" 
+                  icon="pi pi-plus" 
+                  label="Tạo mới"
+                  class="p-button-outlined"
+                  (click)="openCreateMaterialDialog('adjustment')"
+                  [disabled]="!adjustmentForm.customerId"
+                  pTooltip="Tạo nguyên vật liệu mới"
+                  tooltipPosition="top">
+          </button>
+        </div>
       </div>
 
       <div class="col-6">
@@ -838,6 +871,85 @@
   <ng-template pTemplate="footer">
     <button pButton type="button" label="Đóng" icon="pi pi-times" 
             class="p-button-text" (click)="showStockDialog = false"></button>
+  </ng-template>
+</p-dialog>
+
+<!-- Dialog Tạo mới nguyên vật liệu -->
+<p-dialog 
+  [(visible)]="showCreateMaterialDialog" 
+  header="Tạo mới nguyên vật liệu"
+  [modal]="true" 
+  [style]="{width: '600px'}"
+  [closable]="true">
+  
+  <form>
+    <div class="grid">
+      <div class="col-12">
+        <label class="block mb-2">Chủ hàng <span class="text-red-500">*</span></label>
+        <p-dropdown 
+          [options]="customers" 
+          [(ngModel)]="newMaterialForm.customerId"
+          name="newMaterialCustomerId"
+          optionLabel="name" 
+          optionValue="id"
+          placeholder="Chọn chủ hàng"
+          styleClass="w-full"
+          [required]="true">
+        </p-dropdown>
+      </div>
+
+      <div class="col-6">
+        <label class="block mb-2">Mã vật tư <span class="text-red-500">*</span></label>
+        <input pInputText [(ngModel)]="newMaterialForm.code" 
+               name="newMaterialCode"
+               placeholder="Nhập mã vật tư"
+               class="w-full"
+               [required]="true">
+      </div>
+
+      <div class="col-6">
+        <label class="block mb-2">Tên vật tư <span class="text-red-500">*</span></label>
+        <input pInputText [(ngModel)]="newMaterialForm.name" 
+               name="newMaterialName"
+               placeholder="Nhập tên vật tư"
+               class="w-full"
+               [required]="true">
+      </div>
+
+      <div class="col-6">
+        <label class="block mb-2">Loại vật tư</label>
+        <p-dropdown 
+          [options]="materialTypes" 
+          [(ngModel)]="newMaterialForm.type"
+          name="newMaterialType"
+          optionLabel="label" 
+          optionValue="value"
+          placeholder="Chọn loại"
+          styleClass="w-full">
+        </p-dropdown>
+      </div>
+
+      <div class="col-6">
+        <label class="block mb-2">Đơn vị tính</label>
+        <p-dropdown 
+          [options]="units" 
+          [(ngModel)]="newMaterialForm.unit"
+          name="newMaterialUnit"
+          optionLabel="label" 
+          optionValue="value"
+          placeholder="Chọn đơn vị"
+          styleClass="w-full">
+        </p-dropdown>
+      </div>
+
+    </div>
+  </form>
+
+  <ng-template pTemplate="footer">
+    <button pButton type="button" label="Hủy" icon="pi pi-times" 
+            class="p-button-text" (click)="closeCreateMaterialDialog()"></button>
+    <button pButton type="button" label="Tạo mới" 
+            icon="pi pi-check" class="p-button-primary" (click)="saveNewMaterial()"></button>
   </ng-template>
 </p-dialog>
 
