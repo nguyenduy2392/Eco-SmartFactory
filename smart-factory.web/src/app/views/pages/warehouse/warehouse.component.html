@@ -884,20 +884,6 @@
   
   <form>
     <div class="grid">
-      <div class="col-12">
-        <label class="block mb-2">Chủ hàng <span class="text-red-500">*</span></label>
-        <p-dropdown 
-          [options]="customers" 
-          [(ngModel)]="newMaterialForm.customerId"
-          name="newMaterialCustomerId"
-          optionLabel="name" 
-          optionValue="id"
-          placeholder="Chọn chủ hàng"
-          styleClass="w-full"
-          [required]="true">
-        </p-dropdown>
-      </div>
-
       <div class="col-6">
         <label class="block mb-2">Mã vật tư <span class="text-red-500">*</span></label>
         <input pInputText [(ngModel)]="newMaterialForm.code" 
@@ -925,7 +911,8 @@
           optionLabel="label" 
           optionValue="value"
           placeholder="Chọn loại"
-          styleClass="w-full">
+          styleClass="w-full"
+          appendTo="body">
         </p-dropdown>
       </div>
 
@@ -938,7 +925,8 @@
           optionLabel="label" 
           optionValue="value"
           placeholder="Chọn đơn vị"
-          styleClass="w-full">
+          styleClass="w-full"
+          appendTo="body">
         </p-dropdown>
       </div>
 

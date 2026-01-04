@@ -168,9 +168,11 @@ export class WarehouseComponent implements OnInit {
     this.materialService.getAll(true, this.selectedCustomerId || undefined).subscribe({
       next: (materials) => {
         this.materials = materials;
+        this.loading = false;
       },
       error: (error) => {
         console.error('Error loading materials:', error);
+        this.loading = false;
       }
     });
   }
@@ -227,7 +229,11 @@ export class WarehouseComponent implements OnInit {
           detail: 'Nhập kho thành công'
         });
         this.showReceiptDialog = false;
-        this.loadMaterials(); // Reload to update stock
+        this.loadMaterials(); // Reload to update stock - will set loading = false
+        // Reload receipts list if on receipt tab
+        if (this.activeTabIndex === 0) {
+          this.loadReceipts();
+        }
       },
       error: (error) => {
         this.loading = false;
@@ -285,7 +291,11 @@ export class WarehouseComponent implements OnInit {
           detail: 'Xuất kho thành công'
         });
         this.showIssueDialog = false;
-        this.loadMaterials(); // Reload to update stock
+        this.loadMaterials(); // Reload to update stock - will set loading = false
+        // Reload issues list if on issue tab
+        if (this.activeTabIndex === 1) {
+          this.loadIssues();
+        }
       },
       error: (error) => {
         this.loading = false;
@@ -354,7 +364,11 @@ export class WarehouseComponent implements OnInit {
           detail: 'Điều chỉnh kho thành công'
         });
         this.showAdjustmentDialog = false;
-        this.loadMaterials(); // Reload to update stock
+        this.loadMaterials(); // Reload to update stock - will set loading = false
+        // Reload adjustments list if on adjustment tab
+        if (this.activeTabIndex === 2) {
+          this.loadAdjustments();
+        }
       },
       error: (error) => {
         this.loading = false;
@@ -400,6 +414,22 @@ export class WarehouseComponent implements OnInit {
       this.historyFilters.customerId = this.selectedCustomerId;
       this.loadHistory();
     }
+  }
+
+  // Load methods for receipts, issues, adjustments (stub functions - can be implemented if needed)
+  loadReceipts(): void {
+    // TODO: Implement if needed to reload receipts list
+    // For now, receipts are loaded on demand or can be refreshed manually
+  }
+
+  loadIssues(): void {
+    // TODO: Implement if needed to reload issues list
+    // For now, issues are loaded on demand or can be refreshed manually
+  }
+
+  loadAdjustments(): void {
+    // TODO: Implement if needed to reload adjustments list
+    // For now, adjustments are loaded on demand or can be refreshed manually
   }
 
   // Stock methods
@@ -563,11 +593,21 @@ export class WarehouseComponent implements OnInit {
 
   saveNewMaterial(): void {
     // Validate form
-    if (!this.newMaterialForm.code || !this.newMaterialForm.name || !this.newMaterialForm.customerId) {
+    if (!this.newMaterialForm.code || !this.newMaterialForm.name) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Cảnh báo',
-        detail: 'Vui lòng nhập đầy đủ thông tin bắt buộc (Mã vật tư, Tên vật tư, Chủ hàng)'
+        detail: 'Vui lòng nhập đầy đủ thông tin bắt buộc (Mã vật tư, Tên vật tư)'
+      });
+      return;
+    }
+
+    // Kiểm tra customerId (nên luôn có vì nút chỉ hiện khi đã chọn chủ hàng)
+    if (!this.newMaterialForm.customerId) {
+      this.messageService.add({
+        severity: 'error',
+        summary: 'Lỗi',
+        detail: 'Không tìm thấy thông tin chủ hàng. Vui lòng chọn chủ hàng trước khi tạo nguyên vật liệu.'
       });
       return;
     }

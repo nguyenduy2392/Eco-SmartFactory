@@ -294,9 +294,76 @@ public class WarehouseController : BaseApiController
         }
     }
 
-    // Placeholder methods for CreatedAtAction
-    private IActionResult GetMaterialReceipt(Guid id) => Ok();
-    private IActionResult GetMaterialIssue(Guid id) => Ok();
-    private IActionResult GetMaterialAdjustment(Guid id) => Ok();
+    /// <summary>
+    /// Lấy chi tiết phiếu nhập kho theo ID
+    /// </summary>
+    [HttpGet("receipt/{id}")]
+    public async Task<IActionResult> GetMaterialReceipt(Guid id)
+    {
+        try
+        {
+            var query = new GetMaterialReceiptByIdQuery { Id = id };
+            var result = await Mediator.Send(query);
+            
+            if (result == null)
+            {
+                return NotFound(new { message = $"Material receipt with ID {id} not found" });
+            }
+            
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Lấy chi tiết phiếu xuất kho theo ID
+    /// </summary>
+    [HttpGet("issue/{id}")]
+    public async Task<IActionResult> GetMaterialIssue(Guid id)
+    {
+        try
+        {
+            var query = new GetMaterialIssueByIdQuery { Id = id };
+            var result = await Mediator.Send(query);
+            
+            if (result == null)
+            {
+                return NotFound(new { message = $"Material issue with ID {id} not found" });
+            }
+            
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
+    /// Lấy chi tiết phiếu điều chỉnh kho theo ID
+    /// </summary>
+    [HttpGet("adjustment/{id}")]
+    public async Task<IActionResult> GetMaterialAdjustment(Guid id)
+    {
+        try
+        {
+            var query = new GetMaterialAdjustmentByIdQuery { Id = id };
+            var result = await Mediator.Send(query);
+            
+            if (result == null)
+            {
+                return NotFound(new { message = $"Material adjustment with ID {id} not found" });
+            }
+            
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
 }
 

@@ -394,7 +394,10 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           { title: 'Màu cần', field: 'requiredColor', width: 100, editor: getEditor('input') },
           { title: 'Số lượng hợp đồng (PCS)', field: 'quantity', editor: getEditor('number'), width: 130, editorParams: { min: 0 } },
           { title: 'Số lần ép', field: 'chargeCount', editor: getEditor('number'), width: 80, editorParams: { min: 0 } },
-          { title: 'Đơn giá (VND)', field: 'unitPrice', editor: getEditor('number'), width: 120, editorParams: { min: 0, step: 0.01 } },
+          { title: 'Đơn giá (VND)', field: 'unitPrice', editor: getEditor('number'), width: 120, editorParams: { min: 0, step: 0.01 }, formatter: (cell: any) => {
+            const value = cell.getValue();
+            return value ? this.formatCurrency(value) : '';
+          }},
           { title: 'Tổng đơn giá (VND)', field: 'totalPrice', width: 130, editor: false, formatter: (cell: any) => {
             const value = cell.getValue();
             return value ? this.formatCurrency(value) : '';
@@ -409,7 +412,10 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           { title: 'Vị trí phun sơn', field: 'sprayPosition', editor: getEditor('input'), width: 150 },
           { title: 'Công đoạn', field: 'processingContent', editor: getEditor('input'), width: 120 },
           { title: 'Số lần gia công', field: 'processingCount', editor: getEditor('number'), width: 100, editorParams: { min: 0 } },
-          { title: 'Giá mỗi lần (VND)', field: 'unitPrice', editor: getEditor('number'), width: 130, editorParams: { min: 0, step: 0.01 } },
+          { title: 'Giá mỗi lần (VND)', field: 'unitPrice', editor: getEditor('number'), width: 130, editorParams: { min: 0, step: 0.01 }, formatter: (cell: any) => {
+            const value = cell.getValue();
+            return value ? this.formatCurrency(value) : '';
+          }},
           { title: 'Tổng đơn giá (VND)', field: 'totalUnitPrice', width: 130, editor: false, formatter: (cell: any) => {
             const value = cell.getValue();
             return value ? this.formatCurrency(value) : '';
@@ -430,7 +436,10 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           { title: 'Mã linh kiện', field: 'partNumber', width: 150, editor: getEditor('input') },
           { title: 'Nội dung gia công', field: 'processingContent', editor: getEditor('input'), width: 200 },
           { title: 'Số lần gia công', field: 'processingCount', editor: getEditor('number'), width: 100, editorParams: { min: 0 } },
-          { title: 'Đơn giá (VND)', field: 'unitPrice', editor: getEditor('number'), width: 120, editorParams: { min: 0, step: 0.01 } },
+          { title: 'Đơn giá (VND)', field: 'unitPrice', editor: getEditor('number'), width: 120, editorParams: { min: 0, step: 0.01 }, formatter: (cell: any) => {
+            const value = cell.getValue();
+            return value ? this.formatCurrency(value) : '';
+          }},
           { title: 'Tổng số tiền (VND)', field: 'totalAmount1', width: 140, editor: false, formatter: (cell: any) => {
             const value = cell.getValue();
             return value ? this.formatCurrency(value) : '';

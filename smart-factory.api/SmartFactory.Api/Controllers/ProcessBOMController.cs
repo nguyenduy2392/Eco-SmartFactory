@@ -6,6 +6,7 @@ using SmartFactory.Application.DTOs;
 namespace SmartFactory.Api.Controllers;
 
 [Authorize]
+[Route("api/processbom")]
 public class ProcessBOMController : BaseApiController
 {
     /// <summary>
@@ -45,17 +46,6 @@ public class ProcessBOMController : BaseApiController
     }
 
     /// <summary>
-    /// Get Process BOM by ID
-    /// </summary>
-    [HttpGet("{id}")]
-    public async Task<IActionResult> GetById(Guid id)
-    {
-        var query = new GetProcessBOMByIdQuery { Id = id };
-        var result = await Mediator.Send(query);
-        return HandleResult(result);
-    }
-
-    /// <summary>
     /// Get ACTIVE BOM for a (Part + ProcessingType)
     /// </summary>
     [HttpGet("active")]
@@ -74,6 +64,54 @@ public class ProcessBOMController : BaseApiController
 
         var result = await Mediator.Send(query);
         return HandleResult(result);
+    }
+
+    /// <summary>
+    /// Get Process BOM by ID
+    /// </summary>
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var query = new GetProcessBOMByIdQuery { Id = id };
+        var result = await Mediator.Send(query);
+        return HandleResult(result);
+    }
+
+    /// <summary>
+    /// Get BOM history for a part + processing type
+    /// </summary>
+    [HttpGet("history")]
+    public async Task<IActionResult> GetBOMHistory([FromQuery] Guid? partId, [FromQuery] string? processingType)
+    {
+        if (!partId.HasValue || string.IsNullOrEmpty(processingType))
+        {
+            return BadRequest(new { message = "PartId and ProcessingType are required" });
+        }
+
+        var query = new GetAllProcessBOMQuery
+        {
+            PartId = partId,
+            ProcessingType = processingType
+        };
+        var result = await Mediator.Send(query);
+        return Ok(result);
+    }
+
+    /// <summary>
+    /// Delete Process BOM (only if not ACTIVE)
+    /// </summary>
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var command = new DeleteProcessBOMCommand { Id = id };
+        var result = await Mediator.Send(command);
+        
+        if (!result.Success)
+        {
+            return BadRequest(new { success = false, message = result.Message });
+        }
+        
+        return Ok(new { success = true, message = result.Message });
     }
 }
 
