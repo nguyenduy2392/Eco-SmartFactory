@@ -291,13 +291,19 @@ public class ExcelImportService
                     continue;
                 }
 
+                var productCode = GetValueByColumn(worksheet, currentRow, columnMap, "ProductCode", "Mã sản phẩm", "产品代码");
+                var assemblyContent = GetValueByColumn(worksheet, currentRow, columnMap, "AssemblyContent", "Nội dung gia công", "加工内容", "Nội dung lắp ráp", "装配内容");
+                
+                _logger.LogDebug("LAP_RAP Row {Row}: ProductCode='{ProductCode}', AssemblyContent='{AssemblyContent}'",
+                    currentRow, productCode, assemblyContent);
+                
                 var operation = new POOperationData
                 {
                     // Thông tin sản phẩm
-                    ProductCode = GetValueByColumn(worksheet, currentRow, columnMap, "ProductCode", "Mã sản phẩm", "产品代码"),
+                    ProductCode = productCode,
                     
                     // Nội dung lắp ráp
-                    AssemblyContent = GetValueByColumn(worksheet, currentRow, columnMap, "AssemblyContent", "Nội dung gia công", "加工内容", "Nội dung lắp ráp", "装配内容"),
+                    AssemblyContent = assemblyContent,
                     
                     // Số lần gia công (Charge Count)
                     ChargeCount = GetIntValueByColumn(worksheet, currentRow, columnMap, "ChargeCount", "Số lần gia công", "加工次数"),

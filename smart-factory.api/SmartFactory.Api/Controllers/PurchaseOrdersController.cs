@@ -135,7 +135,15 @@ public class PurchaseOrdersController : BaseApiController
         try
         {
             var result = await Mediator.Send(command);
-            return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
+            var response = new
+            {
+                success = true,
+                purchaseOrderId = result.Id.ToString(),
+                version = result.Version,
+                status = result.Status,
+                errors = new object[] { }
+            };
+            return CreatedAtAction(nameof(GetById), new { id = result.Id }, response);
         }
         catch (Exception ex)
         {

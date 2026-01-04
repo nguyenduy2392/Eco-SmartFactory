@@ -15,9 +15,9 @@ public class POOperation
     public Guid PurchaseOrderId { get; set; }
     
     /// <summary>
-    /// Linh kiện được gia công
+    /// Linh kiện được gia công (nullable cho LAP_RAP - đôi lúc không cần linh kiện)
     /// </summary>
-    public Guid PartId { get; set; }
+    public Guid? PartId { get; set; }
     
     /// <summary>
     /// Loại hình gia công (ÉP/SƠN/LẮP)
@@ -151,7 +151,7 @@ public class POOperation
     
     // Navigation properties
     public virtual PurchaseOrder PurchaseOrder { get; set; } = null!;
-    public virtual Part Part { get; set; } = null!;
+    public virtual Part? Part { get; set; }
     public virtual ProcessingType ProcessingType { get; set; } = null!;
     public virtual ProcessMethod? ProcessMethod { get; set; }
     public virtual ICollection<MappingPOProduction> MappingPOProductions { get; set; } = new List<MappingPOProduction>();

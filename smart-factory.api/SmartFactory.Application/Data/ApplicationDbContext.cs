@@ -296,7 +296,8 @@ public class ApplicationDbContext : DbContext
             entity.HasOne(e => e.Part)
                 .WithMany(p => p.POOperations)
                 .HasForeignKey(e => e.PartId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.Restrict)
+                .IsRequired(false); // PartId is optional for LAP_RAP
 
             entity.HasOne(e => e.ProcessingType)
                 .WithMany()

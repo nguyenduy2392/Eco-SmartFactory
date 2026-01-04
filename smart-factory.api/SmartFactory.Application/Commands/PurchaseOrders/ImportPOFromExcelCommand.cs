@@ -323,11 +323,28 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
                 var notes = notesParts.Any() ? string.Join("; ", notesParts) : operationData.Notes;
 
                 // Xác định OperationName
-                var operationName = !string.IsNullOrWhiteSpace(operationData.OperationStep)
-                    ? $"{processingType.Name} - {operationData.OperationStep}"
-                    : (!string.IsNullOrWhiteSpace(operationData.PrintContent)
-                        ? $"{processingType.Name} - {operationData.PrintContent}"
-                        : $"{processingType.Name} - {operationData.PartName}");
+                // Với LAP_RAP, ưu tiên dùng AssemblyContent không cần tiền tố
+                var operationName = string.Empty;
+                if (request.TemplateType == "LAP_RAP" && !string.IsNullOrWhiteSpace(operationData.AssemblyContent))
+                {
+                    operationName = operationData.AssemblyContent;
+                }
+                else if (!string.IsNullOrWhiteSpace(operationData.OperationStep))
+                {
+                    operationName = $"{processingType.Name} - {operationData.OperationStep}";
+                }
+                else if (!string.IsNullOrWhiteSpace(operationData.PrintContent))
+                {
+                    operationName = $"{processingType.Name} - {operationData.PrintContent}";
+                }
+                else if (!string.IsNullOrWhiteSpace(operationData.AssemblyContent))
+                {
+                    operationName = operationData.AssemblyContent;
+                }
+                else
+                {
+                    operationName = string.IsNullOrWhiteSpace(operationData.PartName) ? processingType.Name : $"{processingType.Name} - {operationData.PartName}";
+                }
 
                 // Create PO Operation
                 var poOperation = new POOperation

@@ -149,11 +149,6 @@ public class CreatePOOperationCommandHandler : IRequestHandler<CreatePOOperation
                 .FirstOrDefaultAsync(p => p.Id == request.PartId.Value, cancellationToken);
         }
 
-        if (part == null)
-        {
-            throw new Exception("Part not found. Please provide either PartId, or ProductCode and PartCode.");
-        }
-
         var processingType = await _context.ProcessingTypes
             .FirstOrDefaultAsync(pt => pt.Id == request.ProcessingTypeId, cancellationToken);
 
@@ -162,12 +157,19 @@ public class CreatePOOperationCommandHandler : IRequestHandler<CreatePOOperation
             throw new Exception($"Processing Type with ID {request.ProcessingTypeId} not found");
         }
 
+        // Với LAP_RAP, cho phép part == null (đôi lúc không cần linh kiện)
+        // Với các loại khác, vẫn yêu cầu part
+        if (part == null && processingType.Code != "LAP_RAP")
+        {
+            throw new Exception("Part not found. Please provide either PartId, or ProductCode and PartCode.");
+        }
+
         var totalAmount = request.ChargeCount * request.UnitPrice * request.Quantity;
 
         var operation = new Entities.POOperation
         {
             PurchaseOrderId = request.PurchaseOrderId,
-            PartId = part.Id, // Use the part we found/created, not request.PartId
+            PartId = part?.Id, // Use the part we found/created (can be null for LAP_RAP)
             ProcessingTypeId = request.ProcessingTypeId,
             ProcessMethodId = request.ProcessMethodId,
             OperationName = request.OperationName,
@@ -217,12 +219,12 @@ public class CreatePOOperationCommandHandler : IRequestHandler<CreatePOOperation
         {
             Id = operation.Id,
             PurchaseOrderId = operation.PurchaseOrderId,
-            PartId = operation.PartId,
-            PartCode = part.Code,
-            PartName = part.Name,
-            ProductId = part.ProductId,
-            ProductCode = part.Product?.Code ?? string.Empty,
-            ProductName = part.Product?.Name,
+            PartId = operation.PartId ?? Guid.Empty,
+            PartCode = part?.Code ?? string.Empty,
+            PartName = part?.Name ?? string.Empty,
+            ProductId = part?.ProductId,
+            ProductCode = part?.Product?.Code ?? string.Empty,
+            ProductName = part?.Product?.Name,
             ProcessingTypeId = operation.ProcessingTypeId,
             ProcessingTypeName = processingType.Name,
             ProcessMethodId = operation.ProcessMethodId,

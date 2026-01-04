@@ -87,12 +87,18 @@ public class CheckMaterialAvailabilityCommandHandler : IRequestHandler<CheckMate
         // Step 1: Check availability for each part in PO Operations
         foreach (var operation in po.POOperations)
         {
+            // Skip operations without PartId (e.g., LAP_RAP operations that don't require parts)
+            if (!operation.PartId.HasValue)
+            {
+                continue;
+            }
+
             // Required quantity = Planned_Qty × PO_Operation_Quantity
             var requiredQty = request.PlannedQuantity * operation.Quantity;
 
             // Get ACTIVE BOM for this (Part + ProcessingType)
             var activeBOM = await _context.ProcessBOMs
-                .Where(b => b.PartId == operation.PartId 
+                .Where(b => b.PartId == operation.PartId.Value
                     && b.ProcessingTypeId == operation.ProcessingTypeId 
                     && b.Status == "ACTIVE")
                 .FirstOrDefaultAsync(cancellationToken);
@@ -113,9 +119,9 @@ public class CheckMaterialAvailabilityCommandHandler : IRequestHandler<CheckMate
 
             var detail = new PartAvailabilityDetail
             {
-                PartId = operation.PartId,
-                PartCode = operation.Part.Code,
-                PartName = operation.Part.Name,
+                PartId = operation.PartId ?? Guid.Empty,
+                PartCode = operation.Part?.Code ?? string.Empty,
+                PartName = operation.Part?.Name ?? string.Empty,
                 ProcessingType = operation.ProcessingType.Code,
                 ProcessingTypeName = operation.ProcessingType.Name,
                 RequiredQuantity = requiredQty,

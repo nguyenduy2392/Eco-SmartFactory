@@ -433,7 +433,6 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         this.tableColumns = [
           ...(actionColumn ? [actionColumn] : []),
           { title: 'Mã sản phẩm', field: 'productNumber', width: 120, editor: getEditor('input') },
-          { title: 'Mã linh kiện', field: 'partNumber', width: 150, editor: getEditor('input') },
           { title: 'Nội dung gia công', field: 'processingContent', editor: getEditor('input'), width: 200 },
           { title: 'Số lần gia công', field: 'processingCount', editor: getEditor('number'), width: 100, editorParams: { min: 0 } },
           { title: 'Đơn giá (VND)', field: 'unitPrice', editor: getEditor('number'), width: 120, editorParams: { min: 0, step: 0.01 }, formatter: (cell: any) => {
@@ -1628,9 +1627,10 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
 
   buildUpdateDataFromRow(row: any, operation: POOperation): any {
     // Base data with ProductCode and PartCode
+    // For LAP_RAP, always send productCode if it exists in row (even if empty, send it to allow clearing)
     const baseData: any = {
-      productCode: row.productNumber !== undefined && row.productNumber !== '' ? row.productNumber : operation.productCode,
-      partCode: row.partNumber !== undefined && row.partNumber !== '' ? row.partNumber : operation.partCode
+      productCode: row.productNumber !== undefined ? (row.productNumber || undefined) : operation.productCode,
+      partCode: row.partNumber !== undefined ? (row.partNumber || undefined) : operation.partCode
     };
 
     switch (this.processingType) {
