@@ -20,6 +20,11 @@ public class POOperation
     public Guid? PartId { get; set; }
     
     /// <summary>
+    /// Sản phẩm được gia công (nullable - có thể chỉ có Product mà chưa xác định Part cụ thể)
+    /// </summary>
+    public Guid? ProductId { get; set; }
+    
+    /// <summary>
     /// Loại hình gia công (ÉP/SƠN/LẮP)
     /// </summary>
     public Guid ProcessingTypeId { get; set; }
@@ -152,6 +157,7 @@ public class POOperation
     // Navigation properties
     public virtual PurchaseOrder PurchaseOrder { get; set; } = null!;
     public virtual Part? Part { get; set; }
+    public virtual Product? Product { get; set; }
     public virtual ProcessingType ProcessingType { get; set; } = null!;
     public virtual ProcessMethod? ProcessMethod { get; set; }
     public virtual ICollection<MappingPOProduction> MappingPOProductions { get; set; } = new List<MappingPOProduction>();

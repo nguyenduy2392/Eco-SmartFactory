@@ -70,12 +70,11 @@ public class CreatePOOperationCommandHandler : IRequestHandler<CreatePOOperation
         // }
 
         Entities.Part? part = null;
+        Entities.Product? product = null;
 
         // Handle ProductCode and PartCode - find or create Product and Part
         if (!string.IsNullOrWhiteSpace(request.ProductCode) || !string.IsNullOrWhiteSpace(request.PartCode))
         {
-            Entities.Product? product = null;
-
             // Get or create Product if ProductCode is provided
             if (!string.IsNullOrWhiteSpace(request.ProductCode))
             {
@@ -139,6 +138,17 @@ public class CreatePOOperationCommandHandler : IRequestHandler<CreatePOOperation
                         .LoadAsync(cancellationToken);
                 }
             }
+            
+            // If we have product but no part, store product reference
+            if (product != null && part != null)
+            {
+                // Both product and part available - part already has product reference
+            }
+            else if (product != null)
+            {
+                // Only product available, no part - we'll store ProductId directly in operation
+                _logger.LogInformation("Operation will be linked to Product without specific Part: ProductCode={ProductCode}", product.Code);
+            }
         }
 
         // If PartId is provided, use it (fallback if ProductCode/PartCode not provided)
@@ -157,11 +167,11 @@ public class CreatePOOperationCommandHandler : IRequestHandler<CreatePOOperation
             throw new Exception($"Processing Type with ID {request.ProcessingTypeId} not found");
         }
 
-        // Với LAP_RAP, cho phép part == null (đôi lúc không cần linh kiện)
-        // Với các loại khác, vẫn yêu cầu part
-        if (part == null && processingType.Code != "LAP_RAP")
+        // Sản phẩm không nhất thiết phải có part
+        // Cho phép operation có Product mà không có Part cụ thể
+        if (part == null && product == null && !request.PartId.HasValue)
         {
-            throw new Exception("Part not found. Please provide either PartId, or ProductCode and PartCode.");
+            throw new Exception("Operation must be linked to either a Product or a Part. Please provide ProductCode, PartCode, or PartId.");
         }
 
         var totalAmount = request.ChargeCount * request.UnitPrice * request.Quantity;
@@ -170,6 +180,7 @@ public class CreatePOOperationCommandHandler : IRequestHandler<CreatePOOperation
         {
             PurchaseOrderId = request.PurchaseOrderId,
             PartId = part?.Id, // Use the part we found/created (can be null for LAP_RAP)
+            ProductId = product?.Id ?? part?.ProductId, // Use product if available, or get from part
             ProcessingTypeId = request.ProcessingTypeId,
             ProcessMethodId = request.ProcessMethodId,
             OperationName = request.OperationName,
@@ -222,9 +233,9 @@ public class CreatePOOperationCommandHandler : IRequestHandler<CreatePOOperation
             PartId = operation.PartId ?? Guid.Empty,
             PartCode = part?.Code ?? string.Empty,
             PartName = part?.Name ?? string.Empty,
-            ProductId = part?.ProductId,
-            ProductCode = part?.Product?.Code ?? string.Empty,
-            ProductName = part?.Product?.Name,
+            ProductId = product?.Id ?? part?.ProductId,
+            ProductCode = product?.Code ?? part?.Product?.Code ?? string.Empty,
+            ProductName = product?.Name ?? part?.Product?.Name,
             ProcessingTypeId = operation.ProcessingTypeId,
             ProcessingTypeName = processingType.Name,
             ProcessMethodId = operation.ProcessMethodId,

@@ -73,9 +73,10 @@ public class UpdatePurchaseOrderGeneralInfoCommandHandler : IRequestHandler<Upda
             po.CustomerId = request.CustomerId.Value;
         }
 
-        if (!string.IsNullOrWhiteSpace(request.ProcessingType))
+        // Allow updating ProcessingType even if null (to clear it)
+        if (request.ProcessingType != null)
         {
-            po.ProcessingType = request.ProcessingType;
+            po.ProcessingType = string.IsNullOrWhiteSpace(request.ProcessingType) ? null : request.ProcessingType;
         }
 
         if (request.PODate.HasValue)
@@ -99,7 +100,10 @@ public class UpdatePurchaseOrderGeneralInfoCommandHandler : IRequestHandler<Upda
 
         _logger.LogInformation("Updated PO general info: {PONumber} with ID: {POId}", po.PONumber, po.Id);
 
-        // Return updated PO using query
+        // Detach all tracked entities to ensure fresh query
+        _context.ChangeTracker.Clear();
+
+        // Return updated PO using query with fresh data
         var query = new GetPurchaseOrderByIdQuery { Id = po.Id };
         var queryHandler = new GetPurchaseOrderByIdQueryHandler(_context);
         return await queryHandler.Handle(query, cancellationToken) 
