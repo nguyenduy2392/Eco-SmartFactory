@@ -244,6 +244,7 @@ public class UpdatePOOperationCommandHandler : IRequestHandler<UpdatePOOperation
             OperationName = operation.OperationName,
             ChargeCount = operation.ChargeCount,
             UnitPrice = operation.UnitPrice,
+            ContractUnitPrice = operation.ContractUnitPrice,
             Quantity = operation.Quantity,
             TotalAmount = operation.TotalAmount,
             SprayPosition = operation.SprayPosition,

@@ -88,6 +88,7 @@ public class UpdatePOOperationRequest
     public string OperationName { get; set; } = string.Empty;
     public int ChargeCount { get; set; } = 1;
     public decimal UnitPrice { get; set; }
+    public decimal? ContractUnitPrice { get; set; } // Đơn giá hợp đồng (PCS) - for PHUN_IN
     public int Quantity { get; set; }
     public string? SprayPosition { get; set; }
     public string? PrintContent { get; set; }

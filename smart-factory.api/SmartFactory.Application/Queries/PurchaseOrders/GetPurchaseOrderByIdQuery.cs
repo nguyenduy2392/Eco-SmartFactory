@@ -87,6 +87,7 @@ public class GetPurchaseOrderByIdQueryHandler : IRequestHandler<GetPurchaseOrder
                 OperationName = op.OperationName,
                 ChargeCount = op.ChargeCount,
                 UnitPrice = op.UnitPrice,
+                ContractUnitPrice = op.ContractUnitPrice,
                 Quantity = op.Quantity,
                 TotalAmount = op.TotalAmount,
                 SprayPosition = op.SprayPosition,

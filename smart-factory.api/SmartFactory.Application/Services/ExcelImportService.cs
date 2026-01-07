@@ -375,49 +375,82 @@ public class ExcelImportService
         int startRow = headerRow + 1;
         int currentRow = startRow;
 
+        // Biến lưu giá trị merged cells gần nhất (để fill cho các dòng con)
+        string? lastProductCode = null;
+        string? lastProductName = null;
+        string? lastPartCode = null;
+        string? lastPartName = null;
+        int? lastQuantity = null;
+        decimal? lastContractUnitPrice = null;
+        decimal? lastTotalAmount = null;
+
         while (!IsEmptyRow(worksheet, currentRow))
         {
             try
             {
+                // Đọc giá trị từ dòng hiện tại
+                var currentProductCode = GetValueByColumn(worksheet, currentRow, columnMap, "ProductCode", "Mã sản phẩm", "产品代码");
+                var currentProductName = GetValueByColumn(worksheet, currentRow, columnMap, "ProductName", "Tên sản phẩm", "产品名称");
+                var currentPartCode = GetValueByColumn(worksheet, currentRow, columnMap, "PartCode", "Mã linh kiện", "零件代码");
+                var currentPartName = GetValueByColumn(worksheet, currentRow, columnMap, "PartName", "Mô tả linh kiện", "零件描述", "Tên linh kiện", "零件名称");
+                
+                // Đọc các cột số có thể bị merge
+                var currentQuantity = GetIntValueByColumn(worksheet, currentRow, columnMap, "Quantity", "Số lượng", "数量");
+                var currentContractUnitPrice = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "ContractUnitPrice", "Đơn giá hợp đồng", "合同单价", "Đơn giá hợp đồng (PCS)", "合同单价(PCS)");
+                var currentTotalAmount = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "TotalAmount", "Thành tiền", "总金额", "Thành tiền (VND)", "总金额(VND)");
+
+                // Nếu cell trống (do merge), lấy giá trị gần nhất
+                if (!string.IsNullOrWhiteSpace(currentProductCode))
+                    lastProductCode = currentProductCode;
+                if (!string.IsNullOrWhiteSpace(currentProductName))
+                    lastProductName = currentProductName;
+                if (!string.IsNullOrWhiteSpace(currentPartCode))
+                    lastPartCode = currentPartCode;
+                if (!string.IsNullOrWhiteSpace(currentPartName))
+                    lastPartName = currentPartName;
+                
+                // Fill giá trị merge cho các cột số
+                if (currentQuantity > 0)
+                    lastQuantity = currentQuantity;
+                if (currentContractUnitPrice > 0)
+                    lastContractUnitPrice = currentContractUnitPrice;
+                if (currentTotalAmount > 0)
+                    lastTotalAmount = currentTotalAmount;
+
                 var operation = new POOperationData
                 {
-                    // Thông tin sản phẩm
-                    ProductCode = GetValueByColumn(worksheet, currentRow, columnMap, "ProductCode", "Mã sản phẩm", "产品代码"),
-                    ProductName = GetValueByColumn(worksheet, currentRow, columnMap, "ProductName", "Tên sản phẩm", "产品名称"),
+                    // Sử dụng giá trị đã fill (từ merge hoặc dòng hiện tại)
+                    ProductCode = lastProductCode ?? string.Empty,
+                    ProductName = lastProductName ?? string.Empty,
+                    PartCode = lastPartCode ?? string.Empty,
+                    PartName = lastPartName ?? string.Empty,
                     
-                    // Thông tin linh kiện
-                    PartCode = GetValueByColumn(worksheet, currentRow, columnMap, "PartCode", "Mã linh kiện", "零件代码"),
-                    PartName = GetValueByColumn(worksheet, currentRow, columnMap, "PartName", "Mô tả linh kiện", "零件描述", "Tên linh kiện", "零件名称"),
+                    // Vị trí gia công / Vị trí phun - Thêm ProcessingPosition vào alternative keys
+                    SprayPosition = GetValueByColumn(worksheet, currentRow, columnMap, "SprayPosition", "ProcessingPosition", "Vị trí gia công", "加工位置", "Vị trí phun", "喷涂位置"),
                     
-                    // Vị trí gia công / Vị trí phun
-                    SprayPosition = GetValueByColumn(worksheet, currentRow, columnMap, "SprayPosition", "Vị trí gia công", "加工位置", "Vị trí phun", "喷涂位置"),
+                    // Công đoạn / Nội dung in - Thêm OperationStep vào alternative keys
+                    PrintContent = GetValueByColumn(worksheet, currentRow, columnMap, "PrintContent", "OperationStep", "Công đoạn", "工序", "Nội dung in", "印刷内容"),
                     
-                    // Công đoạn / Nội dung in
-                    PrintContent = GetValueByColumn(worksheet, currentRow, columnMap, "PrintContent", "Công đoạn", "工序", "Nội dung in", "印刷内容"),
-                    
-                    // Số lần gia công (Charge Count)
+                    // Số lần gia công (Charge Count) - giữ nguyên giá trị từ Excel, không đặt mặc định
                     ChargeCount = GetIntValueByColumn(worksheet, currentRow, columnMap, "ChargeCount", "Số lần gia công", "加工次数"),
                     
-                    // Đơn giá (ưu tiên Đơn giá hợp đồng, nếu không có thì dùng Đơn giá)
-                    UnitPrice = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "ContractUnitPrice", "Đơn giá hợp đồng", "合同单价", "Đơn giá hợp đồng (PCS)", "合同单价(PCS)"),
+                    // Đơn giá (ưu tiên Gía mỗi lần / Đơn giá thông thường)
+                    UnitPrice = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "UnitPrice", "Gía mỗi lần", "Giá mỗi lần", "Đơn giá", "单价", "Đơn giá (VND)", "单价(VND)"),
                     
                     // Đơn giá chuẩn
                     StandardUnitPrice = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "StandardUnitPrice", "Đơn giá chuẩn", "标准单价", "Đơn giá chuẩn (VND)", "标准单价(VND)"),
                     
-                    // Số lượng
-                    Quantity = GetIntValueByColumn(worksheet, currentRow, columnMap, "Quantity", "Số lượng", "数量"),
+                    // Đơn giá hợp đồng (sử dụng giá trị merged)
+                    ContractUnitPrice = lastContractUnitPrice ?? 0,
                     
-                    // Thành tiền
-                    TotalAmount = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "TotalAmount", "Thành tiền", "总金额", "Thành tiền (VND)", "总金额(VND)"),
+                    // Số lượng (sử dụng giá trị merged)
+                    Quantity = lastQuantity ?? 0,
+                    
+                    // Thành tiền (sử dụng giá trị merged)
+                    TotalAmount = lastTotalAmount ?? 0,
                     
                     ProcessingTypeName = "PHUN IN"
                 };
-
-                // Nếu không có đơn giá hợp đồng, dùng đơn giá thông thường
-                if (operation.UnitPrice == 0)
-                {
-                    operation.UnitPrice = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "UnitPrice", "Đơn giá", "单价", "Đơn giá (VND)", "单价(VND)");
-                }
 
                 // Tự động đánh số thứ tự
                 operation.SequenceOrder = result.Operations.Count + 1;
@@ -665,8 +698,11 @@ public class ExcelImportService
                 }
             }
             
-            // Đơn giá / Unit Price
-            if (headerLower.Contains("đơn giá") || headerLower.Contains("单价") || 
+            // Đơn giá / Unit Price / Gía mỗi lần
+            // Chỉ match các cột có "đơn giá" mà KHÔNG phải "đơn giá chuẩn" hay "đơn giá hợp đồng"
+            if ((headerLower.Contains("đơn giá") && !headerLower.Contains("chuẩn") && !headerLower.Contains("hợp đồng")) || 
+                headerLower.Contains("gía mỗi lần") || headerLower.Contains("giá mỗi lần") ||
+                headerLower.Contains("单价") || 
                 headerLower.Contains("unit price") || headerLower.Contains("unitprice"))
             {
                 columnMap["UnitPrice"] = col;
@@ -982,8 +1018,9 @@ public class ExcelImportService
 
     private bool IsEmptyRow(ExcelWorksheet worksheet, int row)
     {
-        // Check if first 3 columns are empty
-        for (int col = 1; col <= 3; col++)
+        // Check nhiều cột hơn để tránh bỏ sót dòng con có merged cells
+        // Check tối đa 15 cột đầu tiên
+        for (int col = 1; col <= 15; col++)
         {
             var value = worksheet.Cells[row, col].Value;
             if (value != null && !string.IsNullOrWhiteSpace(value.ToString()))

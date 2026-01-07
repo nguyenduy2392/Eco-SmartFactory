@@ -351,24 +351,40 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
                 {
                     PurchaseOrderId = po.Id,
                     PartId = part.Id,
+                    ProductId = product.Id,
                     ProcessingTypeId = processingType.Id,
                     OperationName = operationName,
-                    ChargeCount = operationData.ChargeCount ?? 1,
+                    ChargeCount = operationData.ChargeCount ?? 0,  // Giữ nguyên giá trị từ Excel, kể cả 0
                     UnitPrice = operationData.UnitPrice,
+                    ContractUnitPrice = operationData.ContractUnitPrice,
                     Quantity = operationData.Quantity,
-                    TotalAmount = operationData.TotalAmount,
+                    // Tính TotalAmount = ChargeCount × UnitPrice × Quantity (không dùng từ Excel nữa)
+                    TotalAmount = (operationData.ChargeCount ?? 0) * operationData.UnitPrice * operationData.Quantity,
                     SprayPosition = operationData.SprayPosition ?? operationData.ProcessingPosition,
                     PrintContent = operationData.PrintContent ?? operationData.OperationStep,
                     CycleTime = operationData.CycleTime,
                     AssemblyContent = operationData.AssemblyContent ?? operationData.ProcessingContent,
                     SequenceOrder = operationData.SequenceOrder,
                     Notes = notes,
+                    // ÉP NHỰA specific fields from Excel
+                    ModelNumber = operationData.MoldCode,
+                    Material = operationData.Material,
+                    ColorCode = operationData.ColorCode,
+                    Color = operationData.Color,
+                    CavityQuantity = operationData.NumberOfCavities,
+                    Set = operationData.Set,
+                    NetWeight = operationData.Weight,
+                    TotalWeight = operationData.TotalWeight,
+                    MachineType = operationData.PressMachine,
+                    RequiredMaterial = operationData.RequiredPlasticQuantity,
+                    RequiredColor = operationData.RequiredColorQuantity,
                     CreatedAt = DateTime.UtcNow
                 };
 
                 _context.POOperations.Add(poOperation);
                 operationsToCopy.Add(poOperation); // Store for copying to original PO
-                totalAmount += operationData.TotalAmount;
+                // Tính lại totalAmount để tránh sai số từ Excel
+                totalAmount += (operationData.ChargeCount ?? 0) * operationData.UnitPrice * operationData.Quantity;
 
                 // Group theo Product để tạo POProduct
                 if (!productGroups.ContainsKey(product.Id))
@@ -384,10 +400,11 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
 
                 // Cập nhật tổng quantity và total amount cho product
                 var group = productGroups[product.Id];
+                var operationTotalAmount = (operationData.ChargeCount ?? 0) * operationData.UnitPrice * operationData.Quantity;
                 productGroups[product.Id] = (
                     group.product,
                     group.totalQuantity + operationData.Quantity,
-                    group.totalAmount + operationData.TotalAmount,
+                    group.totalAmount + operationTotalAmount,  // Dùng giá trị đã tính lại
                     group.productCode,
                     group.productName
                 );
@@ -432,6 +449,18 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
                     AssemblyContent = operation.AssemblyContent,
                     SequenceOrder = operation.SequenceOrder,
                     Notes = operation.Notes,
+                    // ÉP NHỰA specific fields
+                    ModelNumber = operation.ModelNumber,
+                    Material = operation.Material,
+                    ColorCode = operation.ColorCode,
+                    Color = operation.Color,
+                    CavityQuantity = operation.CavityQuantity,
+                    Set = operation.Set,
+                    NetWeight = operation.NetWeight,
+                    TotalWeight = operation.TotalWeight,
+                    MachineType = operation.MachineType,
+                    RequiredMaterial = operation.RequiredMaterial,
+                    RequiredColor = operation.RequiredColor,
                     CreatedAt = operation.CreatedAt
                 };
                 _context.POOperations.Add(originalOperation);

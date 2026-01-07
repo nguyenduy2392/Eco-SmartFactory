@@ -268,35 +268,38 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
   }
 
   preparePhunInData(): void {
-    const grouped = this.groupOperationsByProductAndPart();
     this.tableData = [];
 
-    grouped.forEach((group) => {
-      const processingMethods = this.getProcessingMethodsForPart(group.partId);
+    // Hiển thị trực tiếp từ operations đã import, không dùng BOM processing methods
+    this.purchaseOrder.operations?.forEach((op: POOperation) => {
+      // Tính toán tổng đơn giá = Số lần gia công * Đơn giá
+      const processingCount = op.chargeCount || 0;
+      const unitPrice = op.unitPrice || 0;
+      const totalUnitPrice = processingCount * unitPrice;
+      
+      // Tính toán thành tiền = Số lượng × Đơn giá hợp đồng (PCS)
+      const quantity = op.quantity || 0;
+      const contractUnitPrice = op.contractUnitPrice || 0;
+      const amount = quantity * contractUnitPrice;
 
-      processingMethods.forEach((method: any) => {
-        const op = group.operations.find((o: POOperation) =>
-          o.printContent === method.name || o.operationName.includes(method.name)
-        );
-
-        this.tableData.push({
-          id: `${group.partId}_${method.name}`,
-          operationId: op?.id || '',
-          rowIndex: this.tableData.length,
-          productNumber: group.productCode || '',
-          sequenceNumber: '',
-          partNumber: group.partCode || '',
-          sprayPosition: op?.sprayPosition || group.partName || '',
-          processingContent: method.name || '',
-          processingCount: method.count || (op?.chargeCount || 0),
-          unitPrice: method.unitPrice || (op?.unitPrice || 0),
-          totalUnitPrice: method.totalPrice || (op?.totalAmount || 0),
-          quantity: op?.quantity || group.quantity || 0,
-          amount: method.totalAmount || (op?.totalAmount || 0),
-          completionDate: op?.completionDate ? this.formatDate(op.completionDate) : '',
-          notes: op?.notes || '',
-          _groupKey: `${group.productCode}_${group.partCode}`
-        });
+      this.tableData.push({
+        id: op.id,
+        operationId: op.id,
+        rowIndex: this.tableData.length,
+        productNumber: op.productCode || '',
+        sequenceNumber: '',
+        partNumber: op.partCode || '',
+        sprayPosition: op.sprayPosition || '',
+        processingContent: op.printContent || '',  // Hiển thị công đoạn từ Excel (tiếng Việt)
+        processingCount: processingCount,
+        unitPrice: unitPrice,
+        totalUnitPrice: totalUnitPrice,  // Tính lại đúng
+        quantity: quantity,
+        contractUnitPrice: contractUnitPrice,  // Đơn giá hợp đồng (PCS)
+        amount: amount,  // Thành tiền = Số lượng × Đơn giá hợp đồng (PCS)
+        completionDate: op.completionDate ? this.formatDate(op.completionDate) : '',
+        notes: op.notes || '',
+        _groupKey: `${op.productCode}_${op.partCode}`
       });
     });
   }
@@ -421,6 +424,10 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
             return value ? this.formatCurrency(value) : '';
           }},
           { title: 'Số lượng hợp đồng (PCS)', field: 'quantity', editor: getEditor('number'), width: 130, editorParams: { min: 0 } },
+          { title: 'Đơn giá hợp đồng (PCS)', field: 'contractUnitPrice', editor: getEditor('number'), width: 150, editorParams: { min: 0, step: 0.01 }, formatter: (cell: any) => {
+            const value = cell.getValue();
+            return value ? this.formatCurrency(value) : '';
+          }},
           { title: 'Thành tiền (VND)', field: 'amount', width: 130, editor: false, formatter: (cell: any) => {
             const value = cell.getValue();
             return value ? this.formatCurrency(value) : '';
@@ -520,8 +527,10 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           const processingCount = this.toNumberOrNull(row.processingCount) ?? 0;
           const unitPricePhun = this.toNumberOrNull(row.unitPrice) ?? 0;
           const quantityPhun = this.toNumberOrNull(row.quantity) ?? 0;
+          const contractUnitPricePhun = this.toNumberOrNull(row.contractUnitPrice) ?? 0;
           const totalUnitPrice = processingCount * unitPricePhun;
-          const amount = totalUnitPrice * quantityPhun;
+          // Thành tiền = Số lượng × Đơn giá hợp đồng (PCS)
+          const amount = quantityPhun * contractUnitPricePhun;
           row.totalUnitPrice = totalUnitPrice;
           row.amount = amount;
           rowComponent.update({ totalUnitPrice, amount });
@@ -1605,6 +1614,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           sprayPosition: row.sprayPosition || '',
           chargeCount: (this.toNumberOrNull(row.processingCount) ?? 0),
           unitPrice: (this.toNumberOrNull(row.unitPrice) ?? 0),
+          contractUnitPrice: (this.toNumberOrNull(row.contractUnitPrice) ?? 0),
           quantity: (this.toNumberOrNull(row.quantity) ?? 0),
           completionDate: row.completionDate ? this.parseDate(row.completionDate) : null,
           notes: row.notes || ''
@@ -1660,6 +1670,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           sprayPosition: row.sprayPosition !== undefined ? row.sprayPosition : operation.sprayPosition,
           chargeCount: row.processingCount !== undefined ? (this.toNumberOrNull(row.processingCount) ?? 0) : operation.chargeCount,
           unitPrice: row.unitPrice !== undefined ? (this.toNumberOrNull(row.unitPrice) ?? 0) : operation.unitPrice,
+          contractUnitPrice: row.contractUnitPrice !== undefined ? (this.toNumberOrNull(row.contractUnitPrice) ?? 0) : operation.contractUnitPrice,
           quantity: row.quantity !== undefined ? (this.toNumberOrNull(row.quantity) ?? 0) : operation.quantity,
           completionDate: row.completionDate !== undefined && row.completionDate !== ''
             ? this.parseDate(row.completionDate)

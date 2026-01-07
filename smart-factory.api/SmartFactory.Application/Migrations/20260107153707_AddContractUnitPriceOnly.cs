@@ -5,11 +5,19 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace SmartFactory.Application.Migrations
 {
-    public partial class AddProductIdToPOOperation : Migration
+    public partial class AddContractUnitPriceOnly : Migration
     {
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            // Check if ProductId column already exists before adding
+            // Add ContractUnitPrice if it doesn't exist
+            migrationBuilder.Sql(@"
+                IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[POOperations]') AND name = 'ContractUnitPrice')
+                BEGIN
+                    ALTER TABLE [POOperations] ADD [ContractUnitPrice] decimal(18,2) NULL;
+                END
+            ");
+
+            // Add ProductId if it doesn't exist (for backward compatibility)
             migrationBuilder.Sql(@"
                 IF NOT EXISTS (SELECT * FROM sys.columns WHERE object_id = OBJECT_ID(N'[dbo].[POOperations]') AND name = 'ProductId')
                 BEGIN
@@ -17,7 +25,7 @@ namespace SmartFactory.Application.Migrations
                 END
             ");
 
-            // Check if index already exists before creating
+            // Create index if it doesn't exist
             migrationBuilder.Sql(@"
                 IF NOT EXISTS (SELECT * FROM sys.indexes WHERE object_id = OBJECT_ID(N'[dbo].[POOperations]') AND name = 'IX_POOperations_ProductId')
                 BEGIN
@@ -25,7 +33,7 @@ namespace SmartFactory.Application.Migrations
                 END
             ");
 
-            // Check if foreign key already exists before creating
+            // Create foreign key if it doesn't exist
             migrationBuilder.Sql(@"
                 IF NOT EXISTS (SELECT * FROM sys.foreign_keys WHERE object_id = OBJECT_ID(N'[dbo].[FK_POOperations_Products_ProductId]') AND parent_object_id = OBJECT_ID(N'[dbo].[POOperations]'))
                 BEGIN
@@ -42,6 +50,10 @@ namespace SmartFactory.Application.Migrations
 
             migrationBuilder.DropIndex(
                 name: "IX_POOperations_ProductId",
+                table: "POOperations");
+
+            migrationBuilder.DropColumn(
+                name: "ContractUnitPrice",
                 table: "POOperations");
 
             migrationBuilder.DropColumn(

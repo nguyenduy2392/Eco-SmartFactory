@@ -116,6 +116,19 @@ public class ClonePOVersionCommandHandler : IRequestHandler<ClonePOVersionComman
                 AssemblyContent = originalOperation.AssemblyContent,
                 SequenceOrder = originalOperation.SequenceOrder,
                 Notes = originalOperation.Notes,
+                // ÉP NHỰA specific fields
+                ModelNumber = originalOperation.ModelNumber,
+                Material = originalOperation.Material,
+                ColorCode = originalOperation.ColorCode,
+                Color = originalOperation.Color,
+                CavityQuantity = originalOperation.CavityQuantity,
+                Set = originalOperation.Set,
+                NetWeight = originalOperation.NetWeight,
+                TotalWeight = originalOperation.TotalWeight,
+                MachineType = originalOperation.MachineType,
+                RequiredMaterial = originalOperation.RequiredMaterial,
+                RequiredColor = originalOperation.RequiredColor,
+                CompletionDate = originalOperation.CompletionDate,
                 CreatedAt = DateTime.UtcNow
             };
             _context.POOperations.Add(newOperation);

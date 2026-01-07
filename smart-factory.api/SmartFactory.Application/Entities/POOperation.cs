@@ -51,6 +51,12 @@ public class POOperation
     public decimal UnitPrice { get; set; }
     
     /// <summary>
+    /// Đơn giá hợp đồng (PCS) - for PHUN_IN template
+    /// Dùng để tính Thành tiền = Quantity × ContractUnitPrice
+    /// </summary>
+    public decimal? ContractUnitPrice { get; set; }
+    
+    /// <summary>
     /// Số lượng sản phẩm (quantity)
     /// </summary>
     public int Quantity { get; set; }

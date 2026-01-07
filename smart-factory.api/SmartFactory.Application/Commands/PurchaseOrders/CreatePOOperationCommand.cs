@@ -243,6 +243,7 @@ public class CreatePOOperationCommandHandler : IRequestHandler<CreatePOOperation
             OperationName = operation.OperationName,
             ChargeCount = operation.ChargeCount,
             UnitPrice = operation.UnitPrice,
+            ContractUnitPrice = operation.ContractUnitPrice,
             Quantity = operation.Quantity,
             TotalAmount = operation.TotalAmount,
             SprayPosition = operation.SprayPosition,

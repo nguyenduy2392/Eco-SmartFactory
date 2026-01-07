@@ -101,6 +101,7 @@ export interface POOperation {
   operationName: string; // Tên công đoạn
   chargeCount: number; // Số lần (加工次数)
   unitPrice: number; // Đơn giá (VND)
+  contractUnitPrice?: number; // Đơn giá hợp đồng (PCS) - for PHUN_IN
   quantity: number; // Số lượng hợp đồng (SL HỢP ĐỒNG)
   totalAmount: number; // Thành tiền
   sprayPosition?: string;
