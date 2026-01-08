@@ -263,6 +263,7 @@ public class UpdatePOOperationCommandHandler : IRequestHandler<UpdatePOOperation
             MachineType = operation.MachineType,
             RequiredMaterial = operation.RequiredMaterial,
             RequiredColor = operation.RequiredColor,
+            NumberOfPresses = operation.NumberOfPresses,
             Notes = operation.Notes,
             CompletionDate = operation.CompletionDate,
             SequenceOrder = operation.SequenceOrder

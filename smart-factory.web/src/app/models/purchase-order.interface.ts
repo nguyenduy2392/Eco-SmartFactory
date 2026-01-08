@@ -120,6 +120,7 @@ export interface POOperation {
   machineType?: string;
   requiredMaterial?: number;
   requiredColor?: number;
+  numberOfPresses?: number; // Số lần ép
   notes?: string;
   completionDate?: Date; // Ngày hoàn thành
   sequenceOrder: number;

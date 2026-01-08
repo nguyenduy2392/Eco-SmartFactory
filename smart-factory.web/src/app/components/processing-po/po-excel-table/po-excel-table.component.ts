@@ -199,7 +199,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
     this.tabulatorInstance = new Tabulator(container, {
       data: this.tableData,
       columns: this.tableColumns,
-      layout: 'fitColumns',
+      layout: 'fitDataFill',
       height: 'auto',
       editableTitleCancel: true,
       cellEdited: (cell: any) => {
@@ -268,38 +268,45 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
   }
 
   preparePhunInData(): void {
+    const grouped = this.groupOperationsByProductAndPart();
     this.tableData = [];
 
-    // Hiển thị trực tiếp từ operations đã import, không dùng BOM processing methods
-    this.purchaseOrder.operations?.forEach((op: POOperation) => {
-      // Tính toán tổng đơn giá = Số lần gia công * Đơn giá
-      const processingCount = op.chargeCount || 0;
-      const unitPrice = op.unitPrice || 0;
-      const totalUnitPrice = processingCount * unitPrice;
-      
-      // Tính toán thành tiền = Số lượng × Đơn giá hợp đồng (PCS)
-      const quantity = op.quantity || 0;
-      const contractUnitPrice = op.contractUnitPrice || 0;
-      const amount = quantity * contractUnitPrice;
+    grouped.forEach((group) => {
+      const processingMethods = this.getProcessingMethodsForPart(group.partId);
 
-      this.tableData.push({
-        id: op.id,
-        operationId: op.id,
-        rowIndex: this.tableData.length,
-        productNumber: op.productCode || '',
-        sequenceNumber: '',
-        partNumber: op.partCode || '',
-        sprayPosition: op.sprayPosition || '',
-        processingContent: op.printContent || '',  // Hiển thị công đoạn từ Excel (tiếng Việt)
-        processingCount: processingCount,
-        unitPrice: unitPrice,
-        totalUnitPrice: totalUnitPrice,  // Tính lại đúng
-        quantity: quantity,
-        contractUnitPrice: contractUnitPrice,  // Đơn giá hợp đồng (PCS)
-        amount: amount,  // Thành tiền = Số lượng × Đơn giá hợp đồng (PCS)
-        completionDate: op.completionDate ? this.formatDate(op.completionDate) : '',
-        notes: op.notes || '',
-        _groupKey: `${op.productCode}_${op.partCode}`
+      processingMethods.forEach((method: any) => {
+        const op = group.operations.find((o: POOperation) =>
+          o.printContent === method.name || o.operationName.includes(method.name)
+        );
+
+        // Get values from operation if available, otherwise use method defaults
+        const processingCount = op?.chargeCount ?? method.count ?? 0;
+        const unitPrice = op?.unitPrice ?? method.unitPrice ?? 0;
+        const quantity = op?.quantity ?? group.quantity ?? 0;
+        
+        // Calculate correctly: Tổng đơn giá = Số lần gia công × Giá mỗi lần
+        const totalUnitPrice = processingCount * unitPrice;
+        // Calculate correctly: Thành tiền = Tổng đơn giá × Số lượng hợp đồng
+        const amount = totalUnitPrice * quantity;
+
+        this.tableData.push({
+          id: `${group.partId}_${method.name}`,
+          operationId: op?.id || '',
+          rowIndex: this.tableData.length,
+          productNumber: group.productCode || '',
+          sequenceNumber: '',
+          partNumber: group.partCode || '',
+          sprayPosition: op?.sprayPosition || group.partName || '',
+          processingContent: method.name || '',
+          processingCount: processingCount,
+          unitPrice: unitPrice,
+          totalUnitPrice: totalUnitPrice,
+          quantity: quantity,
+          amount: amount,
+          completionDate: op?.completionDate ? this.formatDate(op.completionDate) : '',
+          notes: op?.notes || '',
+          _groupKey: `${group.productCode}_${group.partCode}`
+        });
       });
     });
   }
@@ -340,7 +347,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
     // Add action column for add and delete buttons (only if not readonly)
     const actionColumn = this.readonly ? null : {
       title: 'Thao tác',
-      width: 120,
+      minWidth: 100,
       formatter: (cell: any) => {
         const row = cell.getRow();
         return `
@@ -370,7 +377,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         }
       },
       headerSort: false,
-      resizable: false
+      resizable: true
     };
 
     // Helper function to get editor based on readonly flag
@@ -380,28 +387,28 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
       case 'EP_NHUA':
         this.tableColumns = [
           ...(actionColumn ? [actionColumn] : []),
-          { title: 'Mã sản phẩm', field: 'productNumber', width: 120, editor: getEditor('input') },
-          { title: 'Số khuôn/Mẫu', field: 'modelNumber', editor: getEditor('input'), width: 120 },
-          { title: 'Mã linh kiện', field: 'partNumber', width: 150, editor: getEditor('input') },
-          { title: 'Tên sản phẩm & Chi tiết', field: 'partName', width: 200, editor: getEditor('input') },
-          { title: 'Vật liệu', field: 'material', editor: getEditor('input'), width: 120 },
-          { title: 'Mã màu', field: 'colorCode', editor: getEditor('input'), width: 100 },
-          { title: 'Màu sắc', field: 'color', editor: getEditor('input'), width: 120 },
-          { title: 'Số lỗ khuôn', field: 'cavityQuantity', editor: getEditor('number'), width: 100, editorParams: { min: 0 } },
-          { title: 'Bộ', field: 'set', editor: getEditor('number'), width: 80, editorParams: { min: 0 } },
-          { title: 'Chu kỳ', field: 'cycle', editor: getEditor('number'), width: 100, editorParams: { min: 0 } },
-          { title: 'Trọng lượng tịnh', field: 'netWeight', editor: getEditor('number'), width: 120, editorParams: { min: 0, step: 0.01 } },
-          { title: 'Tổng trọng lượng', field: 'totalWeight', width: 140, editor: getEditor('number'), editorParams: { min: 0, step: 0.01 } },
-          { title: 'Số máy ép', field: 'machineType', editor: getEditor('input'), width: 120 },
-          { title: 'Vật liệu cần', field: 'requiredMaterial', width: 120, editor: getEditor('input') },
-          { title: 'Màu cần', field: 'requiredColor', width: 100, editor: getEditor('input') },
-          { title: 'Số lượng hợp đồng (PCS)', field: 'quantity', editor: getEditor('number'), width: 130, editorParams: { min: 0 } },
-          { title: 'Số lần ép', field: 'chargeCount', editor: getEditor('number'), width: 80, editorParams: { min: 0 } },
-          { title: 'Đơn giá (VND)', field: 'unitPrice', editor: getEditor('number'), width: 120, editorParams: { min: 0, step: 0.01 }, formatter: (cell: any) => {
+          { title: 'Mã sản phẩm', field: 'productNumber', minWidth: 100, resizable: true, editor: getEditor('input') },
+          { title: 'Số khuôn/Mẫu', field: 'modelNumber', minWidth: 100, resizable: true, editor: getEditor('input') },
+          { title: 'Mã linh kiện', field: 'partNumber', minWidth: 120, resizable: true, editor: getEditor('input') },
+          { title: 'Tên sản phẩm & Chi tiết', field: 'partName', minWidth: 150, resizable: true, editor: getEditor('input') },
+          { title: 'Vật liệu', field: 'material', minWidth: 100, resizable: true, editor: getEditor('input') },
+          { title: 'Mã màu', field: 'colorCode', minWidth: 80, resizable: true, editor: getEditor('input') },
+          { title: 'Màu sắc', field: 'color', minWidth: 100, resizable: true, editor: getEditor('input') },
+          { title: 'Số lỗ khuôn', field: 'cavityQuantity', minWidth: 90, resizable: true, editor: getEditor('number'), editorParams: { min: 0 } },
+          { title: 'Bộ', field: 'set', minWidth: 60, resizable: true, editor: getEditor('number'), editorParams: { min: 0 } },
+          { title: 'Chu kỳ', field: 'cycle', minWidth: 80, resizable: true, editor: getEditor('number'), editorParams: { min: 0 } },
+          { title: 'Trọng lượng tịnh', field: 'netWeight', minWidth: 100, resizable: true, editor: getEditor('number'), editorParams: { min: 0, step: 0.01 } },
+          { title: 'Tổng trọng lượng', field: 'totalWeight', minWidth: 120, resizable: true, editor: getEditor('number'), editorParams: { min: 0, step: 0.01 } },
+          { title: 'Số máy ép', field: 'machineType', minWidth: 100, resizable: true, editor: getEditor('input') },
+          { title: 'Vật liệu cần', field: 'requiredMaterial', minWidth: 100, resizable: true, editor: getEditor('input') },
+          { title: 'Màu cần', field: 'requiredColor', minWidth: 80, resizable: true, editor: getEditor('input') },
+          { title: 'Số lượng hợp đồng (PCS)', field: 'quantity', minWidth: 120, resizable: true, editor: getEditor('number'), editorParams: { min: 0 } },
+          { title: 'Số lần ép', field: 'chargeCount', minWidth: 80, resizable: true, editor: getEditor('number'), editorParams: { min: 0 } },
+          { title: 'Đơn giá (VND)', field: 'unitPrice', minWidth: 100, resizable: true, editor: getEditor('number'), editorParams: { min: 0, step: 0.01 }, formatter: (cell: any) => {
             const value = cell.getValue();
             return value ? this.formatCurrency(value) : '';
           }},
-          { title: 'Tổng đơn giá (VND)', field: 'totalPrice', width: 130, editor: false, formatter: (cell: any) => {
+          { title: 'Tổng đơn giá (VND)', field: 'totalPrice', minWidth: 120, resizable: true, editor: false, formatter: (cell: any) => {
             const value = cell.getValue();
             return value ? this.formatCurrency(value) : '';
           }}
@@ -410,53 +417,49 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
       case 'PHUN_IN':
         this.tableColumns = [
           ...(actionColumn ? [actionColumn] : []),
-          { title: 'Mã sản phẩm', field: 'productNumber', width: 120, editor: getEditor('input') },
-          { title: 'Mã linh kiện', field: 'partNumber', width: 120, editor: getEditor('input') },
-          { title: 'Vị trí phun sơn', field: 'sprayPosition', editor: getEditor('input'), width: 150 },
-          { title: 'Công đoạn', field: 'processingContent', editor: getEditor('input'), width: 120 },
-          { title: 'Số lần gia công', field: 'processingCount', editor: getEditor('number'), width: 100, editorParams: { min: 0 } },
-          { title: 'Giá mỗi lần (VND)', field: 'unitPrice', editor: getEditor('number'), width: 130, editorParams: { min: 0, step: 0.01 }, formatter: (cell: any) => {
+          { title: 'Mã sản phẩm', field: 'productNumber', minWidth: 100, resizable: true, editor: getEditor('input') },
+          { title: 'Mã linh kiện', field: 'partNumber', minWidth: 100, resizable: true, editor: getEditor('input') },
+          { title: 'Vị trí phun sơn', field: 'sprayPosition', minWidth: 120, resizable: true, editor: getEditor('input') },
+          { title: 'Công đoạn', field: 'processingContent', minWidth: 100, resizable: true, editor: getEditor('input') },
+          { title: 'Số lần gia công', field: 'processingCount', minWidth: 100, resizable: true, editor: getEditor('number'), editorParams: { min: 0 } },
+          { title: 'Giá mỗi lần (VND)', field: 'unitPrice', minWidth: 110, resizable: true, editor: getEditor('number'), editorParams: { min: 0, step: 0.01 }, formatter: (cell: any) => {
             const value = cell.getValue();
             return value ? this.formatCurrency(value) : '';
           }},
-          { title: 'Tổng đơn giá (VND)', field: 'totalUnitPrice', width: 130, editor: false, formatter: (cell: any) => {
+          { title: 'Tổng đơn giá (VND)', field: 'totalUnitPrice', minWidth: 120, resizable: true, editor: false, formatter: (cell: any) => {
             const value = cell.getValue();
             return value ? this.formatCurrency(value) : '';
           }},
-          { title: 'Số lượng hợp đồng (PCS)', field: 'quantity', editor: getEditor('number'), width: 130, editorParams: { min: 0 } },
-          { title: 'Đơn giá hợp đồng (PCS)', field: 'contractUnitPrice', editor: getEditor('number'), width: 150, editorParams: { min: 0, step: 0.01 }, formatter: (cell: any) => {
+          { title: 'Số lượng hợp đồng (PCS)', field: 'quantity', minWidth: 120, resizable: true, editor: getEditor('number'), editorParams: { min: 0 } },
+          { title: 'Thành tiền (VND)', field: 'amount', minWidth: 120, resizable: true, editor: false, formatter: (cell: any) => {
             const value = cell.getValue();
             return value ? this.formatCurrency(value) : '';
           }},
-          { title: 'Thành tiền (VND)', field: 'amount', width: 130, editor: false, formatter: (cell: any) => {
-            const value = cell.getValue();
-            return value ? this.formatCurrency(value) : '';
-          }},
-          { title: 'Ngày hoàn thành', field: 'completionDate', editor: getEditor('input'), width: 120 },
-          { title: 'Ghi chú', field: 'notes', editor: getEditor('input'), width: 200 }
+          { title: 'Ngày hoàn thành', field: 'completionDate', minWidth: 100, resizable: true, editor: getEditor('input') },
+          { title: 'Ghi chú', field: 'notes', minWidth: 150, resizable: true, editor: getEditor('input') }
         ];
         break;
       case 'LAP_RAP':
         this.tableColumns = [
           ...(actionColumn ? [actionColumn] : []),
-          { title: 'Mã sản phẩm', field: 'productNumber', width: 120, editor: getEditor('input') },
-          { title: 'Nội dung gia công', field: 'processingContent', editor: getEditor('input'), width: 200 },
-          { title: 'Số lần gia công', field: 'processingCount', editor: getEditor('number'), width: 100, editorParams: { min: 0 } },
-          { title: 'Đơn giá (VND)', field: 'unitPrice', editor: getEditor('number'), width: 120, editorParams: { min: 0, step: 0.01 }, formatter: (cell: any) => {
+          { title: 'Mã sản phẩm', field: 'productNumber', minWidth: 100, resizable: true, editor: getEditor('input') },
+          { title: 'Nội dung gia công', field: 'processingContent', minWidth: 150, resizable: true, editor: getEditor('input') },
+          { title: 'Số lần gia công', field: 'processingCount', minWidth: 100, resizable: true, editor: getEditor('number'), editorParams: { min: 0 } },
+          { title: 'Đơn giá (VND)', field: 'unitPrice', minWidth: 100, resizable: true, editor: getEditor('number'), editorParams: { min: 0, step: 0.01 }, formatter: (cell: any) => {
             const value = cell.getValue();
             return value ? this.formatCurrency(value) : '';
           }},
-          { title: 'Tổng số tiền (VND)', field: 'totalAmount1', width: 140, editor: false, formatter: (cell: any) => {
+          { title: 'Tổng số tiền (VND)', field: 'totalAmount1', minWidth: 120, resizable: true, editor: false, formatter: (cell: any) => {
             const value = cell.getValue();
             return value ? this.formatCurrency(value) : '';
           }},
-          { title: 'Số lượng hợp đồng (PCS)', field: 'quantity', editor: getEditor('number'), width: 130, editorParams: { min: 0 } },
-          { title: 'Tổng tất số tiền (VND)', field: 'totalAmount2', width: 140, editor: false, formatter: (cell: any) => {
+          { title: 'Số lượng hợp đồng (PCS)', field: 'quantity', minWidth: 120, resizable: true, editor: getEditor('number'), editorParams: { min: 0 } },
+          { title: 'Tổng tất số tiền (VND)', field: 'totalAmount2', minWidth: 120, resizable: true, editor: false, formatter: (cell: any) => {
             const value = cell.getValue();
             return value ? this.formatCurrency(value) : '';
           }},
-          { title: 'Ngày hoàn thành', field: 'completionDate', editor: getEditor('input'), width: 120 },
-          { title: 'Ghi chú', field: 'notes', editor: getEditor('input'), width: 200 }
+          { title: 'Ngày hoàn thành', field: 'completionDate', minWidth: 100, resizable: true, editor: getEditor('input') },
+          { title: 'Ghi chú', field: 'notes', minWidth: 150, resizable: true, editor: getEditor('input') }
         ];
         break;
     }
@@ -527,10 +530,8 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           const processingCount = this.toNumberOrNull(row.processingCount) ?? 0;
           const unitPricePhun = this.toNumberOrNull(row.unitPrice) ?? 0;
           const quantityPhun = this.toNumberOrNull(row.quantity) ?? 0;
-          const contractUnitPricePhun = this.toNumberOrNull(row.contractUnitPrice) ?? 0;
           const totalUnitPrice = processingCount * unitPricePhun;
-          // Thành tiền = Số lượng × Đơn giá hợp đồng (PCS)
-          const amount = quantityPhun * contractUnitPricePhun;
+          const amount = totalUnitPrice * quantityPhun;
           row.totalUnitPrice = totalUnitPrice;
           row.amount = amount;
           rowComponent.update({ totalUnitPrice, amount });
@@ -1614,7 +1615,6 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           sprayPosition: row.sprayPosition || '',
           chargeCount: (this.toNumberOrNull(row.processingCount) ?? 0),
           unitPrice: (this.toNumberOrNull(row.unitPrice) ?? 0),
-          contractUnitPrice: (this.toNumberOrNull(row.contractUnitPrice) ?? 0),
           quantity: (this.toNumberOrNull(row.quantity) ?? 0),
           completionDate: row.completionDate ? this.parseDate(row.completionDate) : null,
           notes: row.notes || ''
@@ -1670,7 +1670,6 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           sprayPosition: row.sprayPosition !== undefined ? row.sprayPosition : operation.sprayPosition,
           chargeCount: row.processingCount !== undefined ? (this.toNumberOrNull(row.processingCount) ?? 0) : operation.chargeCount,
           unitPrice: row.unitPrice !== undefined ? (this.toNumberOrNull(row.unitPrice) ?? 0) : operation.unitPrice,
-          contractUnitPrice: row.contractUnitPrice !== undefined ? (this.toNumberOrNull(row.contractUnitPrice) ?? 0) : operation.contractUnitPrice,
           quantity: row.quantity !== undefined ? (this.toNumberOrNull(row.quantity) ?? 0) : operation.quantity,
           completionDate: row.completionDate !== undefined && row.completionDate !== ''
             ? this.parseDate(row.completionDate)

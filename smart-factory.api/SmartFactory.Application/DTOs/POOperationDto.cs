@@ -36,6 +36,7 @@ public class POOperationDto
     public string? MachineType { get; set; }
     public decimal? RequiredMaterial { get; set; }
     public decimal? RequiredColor { get; set; }
+    public int? NumberOfPresses { get; set; } // Số lần ép
     public string? Notes { get; set; }
     public DateTime? CompletionDate { get; set; }
     public int SequenceOrder { get; set; }
@@ -73,6 +74,7 @@ public class CreatePOOperationRequest
     public string? MachineType { get; set; }
     public decimal? RequiredMaterial { get; set; }
     public decimal? RequiredColor { get; set; }
+    public int? NumberOfPresses { get; set; } // Số lần ép
 }
 
 

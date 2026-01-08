@@ -378,6 +378,7 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
                     MachineType = operationData.PressMachine,
                     RequiredMaterial = operationData.RequiredPlasticQuantity,
                     RequiredColor = operationData.RequiredColorQuantity,
+                    NumberOfPresses = operationData.NumberOfPresses,
                     CreatedAt = DateTime.UtcNow
                 };
 
@@ -461,6 +462,7 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
                     MachineType = operation.MachineType,
                     RequiredMaterial = operation.RequiredMaterial,
                     RequiredColor = operation.RequiredColor,
+                    NumberOfPresses = operation.NumberOfPresses,
                     CreatedAt = operation.CreatedAt
                 };
                 _context.POOperations.Add(originalOperation);

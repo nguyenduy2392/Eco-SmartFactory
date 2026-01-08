@@ -143,6 +143,11 @@ public class POOperation
     public decimal? RequiredColor { get; set; }
     
     /// <summary>
+    /// Số lần ép (压次数)
+    /// </summary>
+    public int? NumberOfPresses { get; set; }
+    
+    /// <summary>
     /// Ghi chú
     /// </summary>
     public string? Notes { get; set; }

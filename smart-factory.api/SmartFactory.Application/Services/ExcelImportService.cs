@@ -95,6 +95,7 @@ public class ExcelImportService
     /// Trọng lượng tổng, Số máy ép, Lượng nhựa cần, Lượng màu cần,
     /// Số lượng (PCS), Số lần ép, Đơn giá (VND), Thành tiền (VND)
     /// Parse theo header động để hỗ trợ cả template cũ và mới
+    /// HỖ TRỢ MERGE CELLS: Các cột có merged cells sẽ tự động fill giá trị xuống các dòng con
     /// </summary>
     private async Task<ExcelImportResult> ParseEpNhuaTemplate(ExcelWorksheet worksheet)
     {
@@ -129,57 +130,169 @@ public class ExcelImportService
         int startRow = headerRow + 1;
         int currentRow = startRow;
 
+        // ===== MERGE CELL HANDLING =====
+        // Lưu giá trị gần nhất của các cột có thể bị merge
+        // Khi gặp cell rỗng, sẽ dùng giá trị này để fill
+        string? lastProductCode = null;
+        string? lastProductName = null;
+        string? lastMoldCode = null;
+        string? lastPartCode = null;
+        string? lastPartName = null;
+        string? lastMaterial = null;
+        string? lastColorCode = null;
+        string? lastColor = null;
+        int? lastNumberOfCavities = null;
+        int? lastSet = null;
+        decimal? lastCycleTime = null;
+        decimal? lastWeight = null;
+        decimal? lastTotalWeight = null;
+        string? lastPressMachine = null;
+        decimal? lastRequiredPlasticQuantity = null;
+        decimal? lastRequiredColorQuantity = null;
+        int? lastQuantity = null;
+        int? lastNumberOfPresses = null;
+        decimal? lastUnitPrice = null;
+        decimal? lastTotalAmount = null;
+
         while (!IsEmptyRow(worksheet, currentRow))
         {
             try
             {
-                // Đọc ProductCode và ProductName
-                var productCode = GetValueByColumn(worksheet, currentRow, columnMap, "ProductCode", "Mã sản phẩm", "产品代码");
-                var productName = GetValueByColumn(worksheet, currentRow, columnMap, "ProductName", "Tên sản phẩm", "产品名称");
+                // Đọc giá trị từ dòng hiện tại
+                var currentProductCode = GetValueByColumn(worksheet, currentRow, columnMap, "ProductCode", "Mã sản phẩm", "产品代码");
+                var currentProductName = GetValueByColumn(worksheet, currentRow, columnMap, "ProductName", "Tên sản phẩm", "产品名称");
+                var currentMoldCode = GetValueByColumn(worksheet, currentRow, columnMap, "MoldCode", "Mã khuôn", "模具代码", "Model");
+                var currentPartCode = GetValueByColumn(worksheet, currentRow, columnMap, "PartCode", "Mã linh kiện", "零件代码");
+                var currentPartName = GetValueByColumn(worksheet, currentRow, columnMap, "PartName", "Tên linh kiện", "零件名称");
+                var currentMaterial = GetValueByColumn(worksheet, currentRow, columnMap, "Material", "Vật liệu", "材料");
+                var currentColorCode = GetValueByColumn(worksheet, currentRow, columnMap, "ColorCode", "Mã màu", "颜色代码");
+                var currentColor = GetValueByColumn(worksheet, currentRow, columnMap, "Color", "Màu sắc", "颜色");
                 
+                // Đọc các cột số có thể bị merge
+                var currentNumberOfCavities = GetIntValueByColumn(worksheet, currentRow, columnMap, "NumberOfCavities", "Số lòng khuôn", "模腔数");
+                var currentSet = GetIntValueByColumn(worksheet, currentRow, columnMap, "Set", "Bộ", "套");
+                var currentCycleTime = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "CycleTime", "Chu kỳ", "周期", "Chu kỳ (s)", "周期(s)");
+                var currentWeight = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "Weight", "Trọng lượng tịnh", "净重", "Trọng lượng (g)", "重量(g)", "Trọng lượng", "重量");
+                var currentTotalWeight = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "TotalWeight", "Trọng lượng tổng", "总重量");
+                var currentPressMachine = GetValueByColumn(worksheet, currentRow, columnMap, "PressMachine", "Số máy ép", "压机号", "Máy ép", "压机");
+                var currentRequiredPlasticQuantity = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "RequiredPlasticQuantity", "Lượng nhựa cần", "所需塑料量", "Lượng nhựa", "塑料量");
+                var currentRequiredColorQuantity = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "RequiredColorQuantity", "Lượng màu cần", "所需颜色量", "Lượng màu", "颜色量");
+                var currentQuantity = GetIntValueByColumn(worksheet, currentRow, columnMap, "Quantity", "Số lượng", "数量", "Số lượng (PCS)", "数量(PCS)");
+                var currentNumberOfPresses = GetIntValueByColumn(worksheet, currentRow, columnMap, "NumberOfPresses", "Số lần ép", "压次数", "Số lần", "次数");
+                var currentUnitPrice = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "UnitPrice", "Đơn giá", "单价", "Đơn giá (VND)", "单价(VND)");
+                var currentTotalAmount = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "TotalAmount", "Thành tiền", "总金额", "Thành tiền (VND)", "总金额(VND)");
+
+                // ===== FILL LOGIC FOR MERGED CELLS =====
+                // Nếu cell không rỗng, cập nhật giá trị gần nhất
+                // Nếu cell rỗng (do merge), sử dụng giá trị gần nhất
+                
+                if (!string.IsNullOrWhiteSpace(currentProductCode))
+                    lastProductCode = currentProductCode;
+                
+                if (!string.IsNullOrWhiteSpace(currentProductName))
+                    lastProductName = currentProductName;
+                
+                if (!string.IsNullOrWhiteSpace(currentMoldCode))
+                    lastMoldCode = currentMoldCode;
+                
+                if (!string.IsNullOrWhiteSpace(currentPartCode))
+                    lastPartCode = currentPartCode;
+                
+                if (!string.IsNullOrWhiteSpace(currentPartName))
+                    lastPartName = currentPartName;
+                
+                if (!string.IsNullOrWhiteSpace(currentMaterial))
+                    lastMaterial = currentMaterial;
+                
+                if (!string.IsNullOrWhiteSpace(currentColorCode))
+                    lastColorCode = currentColorCode;
+                
+                if (!string.IsNullOrWhiteSpace(currentColor))
+                    lastColor = currentColor;
+                
+                if (currentNumberOfCavities > 0)
+                    lastNumberOfCavities = currentNumberOfCavities;
+                
+                if (currentSet > 0)
+                    lastSet = currentSet;
+                
+                if (currentCycleTime > 0)
+                    lastCycleTime = currentCycleTime;
+                
+                if (currentWeight > 0)
+                    lastWeight = currentWeight;
+                
+                if (currentTotalWeight > 0)
+                    lastTotalWeight = currentTotalWeight;
+                
+                if (!string.IsNullOrWhiteSpace(currentPressMachine))
+                    lastPressMachine = currentPressMachine;
+                
+                if (currentRequiredPlasticQuantity > 0)
+                    lastRequiredPlasticQuantity = currentRequiredPlasticQuantity;
+                
+                if (currentRequiredColorQuantity > 0)
+                    lastRequiredColorQuantity = currentRequiredColorQuantity;
+                
+                if (currentQuantity > 0)
+                    lastQuantity = currentQuantity;
+                
+                if (currentNumberOfPresses > 0)
+                    lastNumberOfPresses = currentNumberOfPresses;
+                
+                if (currentUnitPrice > 0)
+                    lastUnitPrice = currentUnitPrice;
+                
+                if (currentTotalAmount > 0)
+                    lastTotalAmount = currentTotalAmount;
+
                 // Log nếu không tìm thấy ở dòng đầu tiên
-                if (string.IsNullOrWhiteSpace(productCode) && currentRow == startRow)
+                if (currentRow == startRow)
                 {
-                    _logger.LogWarning("EP_NHUA Row {Row}: ProductCode is empty", currentRow);
-                }
-                if (string.IsNullOrWhiteSpace(productName) && currentRow == startRow)
-                {
-                    _logger.LogWarning("EP_NHUA Row {Row}: ProductName is empty", currentRow);
+                    if (string.IsNullOrWhiteSpace(lastProductCode))
+                    {
+                        _logger.LogWarning("EP_NHUA Row {Row}: ProductCode is empty", currentRow);
+                    }
+                    if (string.IsNullOrWhiteSpace(lastProductName))
+                    {
+                        _logger.LogWarning("EP_NHUA Row {Row}: ProductName is empty", currentRow);
+                    }
                 }
                 
+                // ===== TẠO OPERATION VỚI GIÁ TRỊ ĐÃ FILL =====
                 var operation = new POOperationData
                 {
-                    // Thông tin sản phẩm
-                    ProductCode = productCode,
-                    ProductName = productName,
+                    // Thông tin sản phẩm - sử dụng giá trị đã fill
+                    ProductCode = lastProductCode ?? string.Empty,
+                    ProductName = lastProductName ?? string.Empty,
                     
-                    // Thông tin khuôn
-                    MoldCode = GetValueByColumn(worksheet, currentRow, columnMap, "MoldCode", "Mã khuôn", "模具代码", "Model"),
+                    // Thông tin khuôn - sử dụng giá trị đã fill
+                    MoldCode = lastMoldCode,
                     
-                    // Thông tin linh kiện
-                    PartCode = GetValueByColumn(worksheet, currentRow, columnMap, "PartCode", "Mã linh kiện", "零件代码"),
-                    PartName = GetValueByColumn(worksheet, currentRow, columnMap, "PartName", "Tên linh kiện", "零件名称"),
+                    // Thông tin linh kiện - sử dụng giá trị đã fill
+                    PartCode = lastPartCode ?? string.Empty,
+                    PartName = lastPartName ?? string.Empty,
                     
-                    // Thông tin vật liệu và màu
-                    Material = GetValueByColumn(worksheet, currentRow, columnMap, "Material", "Vật liệu", "材料"),
-                    ColorCode = GetValueByColumn(worksheet, currentRow, columnMap, "ColorCode", "Mã màu", "颜色代码"),
-                    Color = GetValueByColumn(worksheet, currentRow, columnMap, "Color", "Màu sắc", "颜色"),
+                    // Thông tin vật liệu và màu - sử dụng giá trị đã fill
+                    Material = lastMaterial,
+                    ColorCode = lastColorCode,
+                    Color = lastColor,
                     
-                    // Thông tin kỹ thuật
-                    NumberOfCavities = GetIntValueByColumn(worksheet, currentRow, columnMap, "NumberOfCavities", "Số lòng khuôn", "模腔数"),
-                    Set = GetIntValueByColumn(worksheet, currentRow, columnMap, "Set", "Bộ", "套"),
-                    CycleTime = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "CycleTime", "Chu kỳ", "周期", "Chu kỳ (s)", "周期(s)"),
-                    Weight = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "Weight", "Trọng lượng tịnh", "净重", "Trọng lượng (g)", "重量(g)", "Trọng lượng", "重量"),
-                    TotalWeight = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "TotalWeight", "Trọng lượng tổng", "总重量"),
-                    PressMachine = GetValueByColumn(worksheet, currentRow, columnMap, "PressMachine", "Số máy ép", "压机号", "Máy ép", "压机"),
-                    RequiredPlasticQuantity = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "RequiredPlasticQuantity", "Lượng nhựa cần", "所需塑料量", "Lượng nhựa", "塑料量"),
-                    RequiredColorQuantity = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "RequiredColorQuantity", "Lượng màu cần", "所需颜色量", "Lượng màu", "颜色量"),
+                    // Thông tin kỹ thuật - sử dụng giá trị đã fill
+                    NumberOfCavities = lastNumberOfCavities,
+                    Set = lastSet,
+                    CycleTime = lastCycleTime,
+                    Weight = lastWeight,
+                    TotalWeight = lastTotalWeight,
+                    PressMachine = lastPressMachine,
+                    RequiredPlasticQuantity = lastRequiredPlasticQuantity,
+                    RequiredColorQuantity = lastRequiredColorQuantity,
                     
-                    // Thông tin số lượng và giá
-                    Quantity = GetIntValueByColumn(worksheet, currentRow, columnMap, "Quantity", "Số lượng", "数量", "Số lượng (PCS)", "数量(PCS)"),
-                    NumberOfPresses = GetIntValueByColumn(worksheet, currentRow, columnMap, "NumberOfPresses", "Số lần ép", "压次数", "Số lần", "次数"),
-                    UnitPrice = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "UnitPrice", "Đơn giá", "单价", "Đơn giá (VND)", "单价(VND)"),
-                    TotalAmount = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "TotalAmount", "Thành tiền", "总金额", "Thành tiền (VND)", "总金额(VND)"),
+                    // Thông tin số lượng và giá - sử dụng giá trị đã fill
+                    Quantity = lastQuantity ?? 0,
+                    NumberOfPresses = lastNumberOfPresses,
+                    UnitPrice = lastUnitPrice ?? 0,
+                    TotalAmount = lastTotalAmount ?? 0,
                     
                     // STT nếu có
                     SequenceOrder = GetIntValueByColumn(worksheet, currentRow, columnMap, "SequenceOrder", "STT", "序号"),
@@ -547,18 +660,20 @@ public class ExcelImportService
                     columnMap["ProductName"] = col;
                 }
             }
+            var headerNormalized = NormalizeVietnamese(headerLower);
             
-            // Mã khuôn / Mold Code / Model
+            // Mã khuôn / Mold Code / Model / Số seri / Mã thuần
             if (headerLower.Contains("mã khuôn") || headerLower.Contains("model") || 
                 headerLower.Contains("模具代码") || headerLower.Contains("mold code") ||
-                headerLower.Contains("moldcode"))
+                headerLower.Contains("moldcode") || headerLower.Contains("số seri") ||
+                headerLower.Contains("so seri") || headerNormalized.Contains("so seri") ||
+                headerLower.Contains("mã thuần") || headerNormalized.Contains("ma thuan"))
             {
                 columnMap["MoldCode"] = col;
             }
             
             // Mã linh kiện / Part Code
             // Loại bỏ dấu tiếng Việt để so sánh tốt hơn
-            var headerNormalized = NormalizeVietnamese(headerLower);
             if (headerNormalized.Contains("ma linh kien") || headerLower.Contains("mã linh kiện") || 
                 headerLower.Contains("零件代码") || headerLower.Contains("零件代碼") ||
                 headerLower == "part code" || headerLower.Contains("partcode") ||
@@ -626,15 +741,17 @@ public class ExcelImportService
                 columnMap["CycleTime"] = col;
             }
             
-            // Trọng lượng tịnh / Net Weight
-            if ((headerLower.Contains("trọng lượng tịnh") || headerLower.Contains("净重")) && 
+            // Trọng lượng tịnh / Net Weight (hỗ trợ nhiều cách viết)
+            if ((headerLower.Contains("trọng lượng tịnh") || headerLower.Contains("trong luong tinh") ||
+                 headerNormalized.Contains("trong luong tinh") || headerLower.Contains("净重")) && 
                 !headerLower.Contains("trọng lượng tổng") && !headerLower.Contains("总重量"))
             {
                 columnMap["Weight"] = col;
             }
             
-            // Trọng lượng tổng / Total Weight
+            // Trọng lượng tổng / Total Weight (hỗ trợ nhiều cách viết)
             if (headerLower.Contains("trọng lượng tổng") || headerLower.Contains("总重量") ||
+                headerNormalized.Contains("trong luong tong") ||
                 (headerLower.Contains("trọng lượng") && headerLower.Contains("tổng")) ||
                 (headerLower.Contains("重量") && headerLower.Contains("总")))
             {
@@ -642,7 +759,8 @@ public class ExcelImportService
             }
             
             // Trọng lượng (chung, nếu không có trọng lượng tịnh)
-            if (headerLower.Contains("trọng lượng") && !columnMap.ContainsKey("Weight") && 
+            if ((headerLower.Contains("trọng lượng") || headerNormalized.Contains("trong luong")) && 
+                !columnMap.ContainsKey("Weight") && 
                 !headerLower.Contains("tổng") && !headerLower.Contains("总"))
             {
                 columnMap["Weight"] = col;
@@ -680,11 +798,18 @@ public class ExcelImportService
                 columnMap["NumberOfPresses"] = col;
             }
             
-            // Số lượng / Quantity
-            if (headerLower.Contains("số lượng") || headerLower.Contains("数量") || 
-                headerLower == "quantity" || headerLower.Contains("qty"))
+            // Số lượng / Quantity (hỗ trợ nhiều biến thể)
+            // Ưu tiên "Số lượng (PCS)" trước, sau đó "Số lượng" thông thường
+            if ((headerLower.Contains("số lượng") || headerLower.Contains("数量") || 
+                headerNormalized.Contains("so luong") ||
+                headerLower == "quantity" || headerLower.Contains("qty")) &&
+                !headerLower.Contains("hợp đồng") && // Loại trừ "Số lượng hợp đồng"
+                !headerLower.Contains("nhập"))      // Loại trừ "Số lượng nhập"
             {
-                columnMap["Quantity"] = col;
+                if (!columnMap.ContainsKey("Quantity"))
+                {
+                    columnMap["Quantity"] = col;
+                }
             }
             
             // Đơn vị tính / Unit

@@ -262,6 +262,7 @@ public class CreatePOOperationCommandHandler : IRequestHandler<CreatePOOperation
             MachineType = operation.MachineType,
             RequiredMaterial = operation.RequiredMaterial,
             RequiredColor = operation.RequiredColor,
+            NumberOfPresses = operation.NumberOfPresses,
             Notes = operation.Notes,
             CompletionDate = operation.CompletionDate,
             SequenceOrder = operation.SequenceOrder

@@ -106,6 +106,7 @@ public class GetPurchaseOrderByIdQueryHandler : IRequestHandler<GetPurchaseOrder
                 MachineType = op.MachineType,
                 RequiredMaterial = op.RequiredMaterial,
                 RequiredColor = op.RequiredColor,
+                NumberOfPresses = op.NumberOfPresses,
                 Notes = op.Notes,
                 CompletionDate = op.CompletionDate,
                 SequenceOrder = op.SequenceOrder
