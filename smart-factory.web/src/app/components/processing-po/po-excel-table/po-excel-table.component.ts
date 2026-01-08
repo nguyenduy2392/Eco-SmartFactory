@@ -521,22 +521,21 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
 
       switch (this.processingType) {
         case 'EP_NHUA':
-          const quantity = this.toNumberOrNull(row.quantity) ?? 0;
-          const chargeCount = this.toNumberOrNull(row.chargeCount) ?? 0;
+          const numberOfPresses = this.toNumberOrNull(row.numberOfPresses) ?? 0;
           const unitPrice = this.toNumberOrNull(row.unitPrice) ?? 0;
-          const totalPrice = quantity * chargeCount * unitPrice;
-          row.totalPrice = totalPrice;
-          rowComponent.update({ totalPrice });
+          const totalUnitPriceEp = numberOfPresses * unitPrice;
+          row.totalUnitPrice = totalUnitPriceEp;
+          rowComponent.update({ totalUnitPrice: totalUnitPriceEp });
           break;
         case 'PHUN_IN':
           const processingCount = this.toNumberOrNull(row.processingCount) ?? 0;
           const unitPricePhun = this.toNumberOrNull(row.unitPrice) ?? 0;
           const quantityPhun = this.toNumberOrNull(row.quantity) ?? 0;
-          const totalUnitPrice = processingCount * unitPricePhun;
-          const amount = totalUnitPrice * quantityPhun;
-          row.totalUnitPrice = totalUnitPrice;
+          const totalUnitPricePhun = processingCount * unitPricePhun;
+          const amount = totalUnitPricePhun * quantityPhun;
+          row.totalUnitPrice = totalUnitPricePhun;
           row.amount = amount;
-          rowComponent.update({ totalUnitPrice, amount });
+          rowComponent.update({ totalUnitPrice: totalUnitPricePhun, amount });
           break;
         case 'LAP_RAP':
           // Tổng số tiền = Số lần gia công * Đơn giá
@@ -740,9 +739,12 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           netWeight: this.toNumberOrNull(updates.netWeight ?? row.netWeight),
           totalWeight: this.toNumberOrNull(updates.totalWeight ?? row.totalWeight),
           machineType: updates.machineType || row.machineType || '',
+          requiredMaterial: updates.requiredMaterial || row.requiredMaterial || '',
+          requiredColor: updates.requiredColor || row.requiredColor || '',
+          quantity: (this.toNumberOrNull(updates.quantity ?? row.quantity) ?? 0),
+          numberOfPresses: (this.toNumberOrNull(updates.numberOfPresses ?? row.numberOfPresses) ?? 0),
           chargeCount: (this.toNumberOrNull(updates.chargeCount ?? row.chargeCount) ?? 0),
-          unitPrice: (this.toNumberOrNull(updates.unitPrice ?? row.unitPrice) ?? 0),
-          quantity: (this.toNumberOrNull(updates.quantity ?? row.quantity) ?? 0)
+          unitPrice: (this.toNumberOrNull(updates.unitPrice ?? row.unitPrice) ?? 0)
         };
       case 'PHUN_IN':
         return {
@@ -788,7 +790,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
   isNumericField(field: string): boolean {
     switch (this.processingType) {
       case 'EP_NHUA':
-        return ['quantity', 'chargeCount', 'unitPrice', 'cavityQuantity', 'set', 'cycle', 'netWeight', 'totalWeight'].includes(field);
+        return ['quantity', 'numberOfPresses', 'chargeCount', 'unitPrice', 'cavityQuantity', 'set', 'cycle', 'netWeight', 'totalWeight'].includes(field);
       case 'PHUN_IN':
         return ['processingCount', 'unitPrice', 'quantity'].includes(field);
       case 'LAP_RAP':
@@ -820,6 +822,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         else if (field === 'requiredMaterial') updates.requiredMaterial = value;
         else if (field === 'requiredColor') updates.requiredColor = value;
         else if (field === 'quantity') updates.quantity = this.toNumberOrNull(value) ?? 0;
+        else if (field === 'numberOfPresses') updates.numberOfPresses = this.toNumberOrNull(value) ?? 0;
         else if (field === 'chargeCount') updates.chargeCount = this.toNumberOrNull(value) ?? 0;
         else if (field === 'unitPrice') updates.unitPrice = this.toNumberOrNull(value) ?? 0;
         break;
@@ -868,6 +871,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
       machineType: updates.machineType ?? operation.machineType,
       requiredMaterial: updates.requiredMaterial ?? operation.requiredMaterial,
       requiredColor: updates.requiredColor ?? operation.requiredColor,
+      numberOfPresses: updates.numberOfPresses !== undefined ? (this.toNumberOrNull(updates.numberOfPresses) ?? operation.numberOfPresses ?? 0) : operation.numberOfPresses,
       completionDate: updates.completionDate ?? operation.completionDate,
       notes: updates.notes ?? operation.notes,
       // ProductCode and PartCode for updating relationships
@@ -1178,8 +1182,10 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           requiredMaterial: '',
           requiredColor: '',
           quantity: 0,
+          numberOfPresses: 0,
           chargeCount: 0,
           unitPrice: 0,
+          totalUnitPrice: 0,
           totalPrice: 0
         });
         break;
@@ -1605,9 +1611,12 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           netWeight: this.toNumberOrNull(row.netWeight),
           totalWeight: this.toNumberOrNull(row.totalWeight),
           machineType: row.machineType || '',
+          requiredMaterial: row.requiredMaterial || '',
+          requiredColor: row.requiredColor || '',
+          quantity: (this.toNumberOrNull(row.quantity) ?? 0),
+          numberOfPresses: (this.toNumberOrNull(row.numberOfPresses) ?? 0),
           chargeCount: (this.toNumberOrNull(row.chargeCount) ?? 0),
-          unitPrice: (this.toNumberOrNull(row.unitPrice) ?? 0),
-          quantity: (this.toNumberOrNull(row.quantity) ?? 0)
+          unitPrice: (this.toNumberOrNull(row.unitPrice) ?? 0)
         };
       case 'PHUN_IN':
         return {
@@ -1660,9 +1669,12 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           netWeight: row.netWeight !== undefined ? this.toNumberOrNull(row.netWeight) : operation.netWeight,
           totalWeight: row.totalWeight !== undefined ? this.toNumberOrNull(row.totalWeight) : operation.totalWeight,
           machineType: row.machineType !== undefined ? row.machineType : operation.machineType,
+          requiredMaterial: row.requiredMaterial !== undefined ? row.requiredMaterial : operation.requiredMaterial,
+          requiredColor: row.requiredColor !== undefined ? row.requiredColor : operation.requiredColor,
+          quantity: row.quantity !== undefined ? (this.toNumberOrNull(row.quantity) ?? 0) : operation.quantity,
+          numberOfPresses: row.numberOfPresses !== undefined ? (this.toNumberOrNull(row.numberOfPresses) ?? 0) : operation.numberOfPresses,
           chargeCount: row.chargeCount !== undefined ? (this.toNumberOrNull(row.chargeCount) ?? 0) : operation.chargeCount,
-          unitPrice: row.unitPrice !== undefined ? (this.toNumberOrNull(row.unitPrice) ?? 0) : operation.unitPrice,
-          quantity: row.quantity !== undefined ? (this.toNumberOrNull(row.quantity) ?? 0) : operation.quantity
+          unitPrice: row.unitPrice !== undefined ? (this.toNumberOrNull(row.unitPrice) ?? 0) : operation.unitPrice
         };
       case 'PHUN_IN':
         return {
