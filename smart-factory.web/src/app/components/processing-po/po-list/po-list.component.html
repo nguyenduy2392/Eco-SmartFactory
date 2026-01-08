@@ -123,10 +123,6 @@
           Loại gia công
           <p-sortIcon field="processingType"></p-sortIcon>
         </th>
-        <th pSortableColumn="totalAmount" class="text-right">
-          Tổng tiền
-          <p-sortIcon field="totalAmount"></p-sortIcon>
-        </th>
         <th pSortableColumn="poDate">
           Ngày PO
           <p-sortIcon field="poDate"></p-sortIcon>
@@ -146,9 +142,6 @@
             [value]="getProcessingTypeLabel(po.processingType)"
             [severity]="'info'">
           </p-tag>
-        </td>
-        <td class="text-right">
-          <strong>{{ po.totalAmount | currency:'VND':'symbol':'1.0-0' }}</strong>
         </td>
         <td>{{ po.poDate | date:'dd/MM/yyyy' }}</td>
         <td class="text-center">

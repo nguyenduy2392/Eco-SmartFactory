@@ -33,6 +33,7 @@ public class UpdatePOOperationCommand : IRequest<POOperationDto>
     public string? MachineType { get; set; }
     public decimal? RequiredMaterial { get; set; }
     public decimal? RequiredColor { get; set; }
+    public int? NumberOfPresses { get; set; } // Số lần ép
     public DateTime? CompletionDate { get; set; }
     public string? Notes { get; set; }
 }
@@ -211,6 +212,7 @@ public class UpdatePOOperationCommandHandler : IRequestHandler<UpdatePOOperation
         operation.MachineType = request.MachineType;
         operation.RequiredMaterial = request.RequiredMaterial;
         operation.RequiredColor = request.RequiredColor;
+        operation.NumberOfPresses = request.NumberOfPresses;
         operation.CompletionDate = request.CompletionDate;
         operation.Notes = request.Notes;
         operation.TotalAmount = request.ChargeCount * request.UnitPrice * request.Quantity;

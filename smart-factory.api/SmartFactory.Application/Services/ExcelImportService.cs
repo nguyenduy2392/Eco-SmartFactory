@@ -178,9 +178,16 @@ public class ExcelImportService
                 var currentRequiredPlasticQuantity = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "RequiredPlasticQuantity", "Lượng nhựa cần", "所需塑料量", "Lượng nhựa", "塑料量");
                 var currentRequiredColorQuantity = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "RequiredColorQuantity", "Lượng màu cần", "所需颜色量", "Lượng màu", "颜色量");
                 var currentQuantity = GetIntValueByColumn(worksheet, currentRow, columnMap, "Quantity", "Số lượng", "数量", "Số lượng (PCS)", "数量(PCS)");
-                var currentNumberOfPresses = GetIntValueByColumn(worksheet, currentRow, columnMap, "NumberOfPresses", "Số lần ép", "压次数", "Số lần", "次数");
+                var currentNumberOfPresses = GetIntValueByColumn(worksheet, currentRow, columnMap, "NumberOfPresses", "Số lần ép", "压次数", "Số lần", "次数", "So lan ep");
                 var currentUnitPrice = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "UnitPrice", "Đơn giá", "单价", "Đơn giá (VND)", "单价(VND)");
                 var currentTotalAmount = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "TotalAmount", "Thành tiền", "总金额", "Thành tiền (VND)", "总金额(VND)");
+
+                // Log để debug NumberOfPresses
+                if (currentRow <= 125) // Log first few rows
+                {
+                    _logger.LogInformation("Row {Row}: NumberOfPresses = {Value}, Quantity = {Quantity}", 
+                        currentRow, currentNumberOfPresses, currentQuantity);
+                }
 
                 // ===== FILL LOGIC FOR MERGED CELLS =====
                 // Nếu cell không rỗng, cập nhật giá trị gần nhất
@@ -237,7 +244,7 @@ public class ExcelImportService
                 if (currentQuantity > 0)
                     lastQuantity = currentQuantity;
                 
-                if (currentNumberOfPresses > 0)
+                if (currentNumberOfPresses >= 0)
                     lastNumberOfPresses = currentNumberOfPresses;
                 
                 if (currentUnitPrice > 0)
@@ -792,7 +799,11 @@ public class ExcelImportService
             
             // Số lần ép / Number of Presses
             if (headerLower.Contains("số lần ép") || headerLower.Contains("压次数") ||
-                (headerLower.Contains("số lần") && headerLower.Contains("ép")) ||
+                headerLower.Contains("số lần ep") || // Không dấu
+                headerLower.Contains("so lan ep") || // Không dấu
+                (headerLower.Contains("số") && headerLower.Contains("lần") && headerLower.Contains("ép")) ||
+                (headerLower.Contains("so") && headerLower.Contains("lan") && headerLower.Contains("ep")) ||
+                headerLower.Contains("次数") ||
                 headerLower.Contains("number of presses") || headerLower.Contains("presses"))
             {
                 columnMap["NumberOfPresses"] = col;

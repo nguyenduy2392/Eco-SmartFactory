@@ -258,8 +258,10 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           requiredMaterial: op.requiredMaterial || group.requiredMaterial || '',
           requiredColor: op.requiredColor || group.requiredColor || '',
           quantity: op.quantity || 0,
-          chargeCount: op.chargeCount || 0,
+          numberOfPresses: op.numberOfPresses || 0,
           unitPrice: op.unitPrice || 0,
+          totalUnitPrice: (op.numberOfPresses || 0) * (op.unitPrice || 0),
+          chargeCount: op.chargeCount || 0,
           totalPrice: op.totalAmount || 0,
           _groupKey: `${group.productCode}_${group.modelNumber}` // For grouping
         });
@@ -403,12 +405,12 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           { title: 'Vật liệu cần', field: 'requiredMaterial', minWidth: 100, resizable: true, editor: getEditor('input') },
           { title: 'Màu cần', field: 'requiredColor', minWidth: 80, resizable: true, editor: getEditor('input') },
           { title: 'Số lượng hợp đồng (PCS)', field: 'quantity', minWidth: 120, resizable: true, editor: getEditor('number'), editorParams: { min: 0 } },
-          { title: 'Số lần ép', field: 'chargeCount', minWidth: 80, resizable: true, editor: getEditor('number'), editorParams: { min: 0 } },
+          { title: 'Số lần ép', field: 'numberOfPresses', minWidth: 80, resizable: true, editor: getEditor('number'), editorParams: { min: 0 } },
           { title: 'Đơn giá (VND)', field: 'unitPrice', minWidth: 100, resizable: true, editor: getEditor('number'), editorParams: { min: 0, step: 0.01 }, formatter: (cell: any) => {
             const value = cell.getValue();
             return value ? this.formatCurrency(value) : '';
           }},
-          { title: 'Tổng đơn giá (VND)', field: 'totalPrice', minWidth: 120, resizable: true, editor: false, formatter: (cell: any) => {
+          { title: 'Tổng đơn giá (VND)', field: 'totalUnitPrice', minWidth: 120, resizable: true, editor: false, formatter: (cell: any) => {
             const value = cell.getValue();
             return value ? this.formatCurrency(value) : '';
           }}
