@@ -5,6 +5,7 @@ import { CustomerService } from '../../../services/customer.service';
 import { MessageService } from 'primeng/api';
 import { SharedModule } from '../../../shared.module';
 import { PrimengModule } from '../../../primeng.module';
+import { StockInComponent } from '../../../components/stock-in/stock-in/stock-in.component';
 import {
   Warehouse,
   MaterialReceipt,
@@ -24,7 +25,7 @@ import { Customer } from '../../../models/customer.interface';
   templateUrl: './warehouse.component.html',
   styleUrls: ['./warehouse.component.scss'],
   standalone: true,
-  imports: [SharedModule, PrimengModule]
+  imports: [SharedModule, PrimengModule, StockInComponent]
 })
 export class WarehouseComponent implements OnInit {
   // Tab management
@@ -38,11 +39,6 @@ export class WarehouseComponent implements OnInit {
 
   // Receipt tab
   receipts: MaterialReceipt[] = [];
-  showReceiptDialog = false;
-  receiptForm: Partial<CreateMaterialReceiptRequest> = {
-    receiptDate: new Date(),
-    quantity: 0
-  };
 
   // Issue tab
   issues: MaterialIssue[] = [];
@@ -136,10 +132,13 @@ export class WarehouseComponent implements OnInit {
       next: (warehouses) => {
         this.warehouses = warehouses;
         // Set default warehouse if available
-        if (warehouses.length > 0 && !this.receiptForm.warehouseId) {
-          this.receiptForm.warehouseId = warehouses[0].id;
-          this.issueForm.warehouseId = warehouses[0].id;
-          this.adjustmentForm.warehouseId = warehouses[0].id;
+        if (warehouses.length > 0) {
+          if (!this.issueForm.warehouseId) {
+            this.issueForm.warehouseId = warehouses[0].id;
+          }
+          if (!this.adjustmentForm.warehouseId) {
+            this.adjustmentForm.warehouseId = warehouses[0].id;
+          }
         }
       },
       error: (error) => {
@@ -185,64 +184,14 @@ export class WarehouseComponent implements OnInit {
     }
   }
 
-  // Receipt methods
-  openReceiptDialog(): void {
-    this.receiptForm = {
-      customerId: this.selectedCustomerId || '',
-      warehouseId: this.warehouses[0]?.id || '',
-      quantity: 0,
-      unit: 'kg',
-      batchNumber: '',
-      receiptDate: new Date(),
-      receiptNumber: `PNK-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`,
-      notes: ''
-    };
-    this.showReceiptDialog = true;
-  }
-
-  onReceiptMaterialChange(): void {
-    const material = this.materials.find(m => m.id === this.receiptForm.materialId);
-    if (material) {
-      this.receiptForm.unit = material.unit;
-      this.receiptForm.customerId = material.customerId;
-    }
-  }
-
-  saveReceipt(): void {
-    if (!this.receiptForm.customerId || !this.receiptForm.materialId || 
-        !this.receiptForm.warehouseId || !this.receiptForm.batchNumber ||
-        !this.receiptForm.quantity || !this.receiptForm.receiptNumber) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Cảnh báo',
-        detail: 'Vui lòng nhập đầy đủ thông tin bắt buộc'
-      });
-      return;
-    }
-
-    this.loading = true;
-    this.warehouseService.createMaterialReceipt(this.receiptForm as CreateMaterialReceiptRequest).subscribe({
-      next: () => {
-        this.messageService.add({
-          severity: 'success',
-          summary: 'Thành công',
-          detail: 'Nhập kho thành công'
-        });
-        this.showReceiptDialog = false;
-        this.loadMaterials(); // Reload to update stock - will set loading = false
-        // Reload receipts list if on receipt tab
-        if (this.activeTabIndex === 0) {
-          this.loadReceipts();
-        }
-      },
-      error: (error) => {
-        this.loading = false;
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Lỗi',
-          detail: error.error?.error || 'Không thể nhập kho'
-        });
-      }
+  // Event handler khi nhập kho thành công từ StockInComponent
+  onStockInSuccess(): void {
+    this.loadMaterials(); // Refresh danh sách NVL và tồn kho
+    this.loadReceipts(); // Refresh danh sách phiếu nhập (nếu cần hiển thị)
+    this.messageService.add({
+      severity: 'info',
+      summary: 'Cập nhật',
+      detail: 'Dữ liệu kho đã được cập nhật'
     });
   }
 
@@ -559,9 +508,7 @@ export class WarehouseComponent implements OnInit {
     
     // Lấy customerId từ form hiện tại
     let customerId = '';
-    if (source === 'receipt' && this.receiptForm.customerId) {
-      customerId = this.receiptForm.customerId;
-    } else if (source === 'issue' && this.issueForm.customerId) {
+    if (source === 'issue' && this.issueForm.customerId) {
       customerId = this.issueForm.customerId;
     } else if (source === 'adjustment' && this.adjustmentForm.customerId) {
       customerId = this.adjustmentForm.customerId;
@@ -641,10 +588,7 @@ export class WarehouseComponent implements OnInit {
         this.loadMaterials();
         
         // Tự động chọn nguyên vật liệu vừa tạo vào form hiện tại
-        if (this.currentMaterialDialogSource === 'receipt') {
-          this.receiptForm.materialId = newMaterial.id;
-          this.onReceiptMaterialChange();
-        } else if (this.currentMaterialDialogSource === 'issue') {
+        if (this.currentMaterialDialogSource === 'issue') {
           this.issueForm.materialId = newMaterial.id;
           this.onIssueMaterialChange();
         } else if (this.currentMaterialDialogSource === 'adjustment') {

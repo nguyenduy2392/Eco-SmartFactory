@@ -27,5 +27,23 @@ export const routes: Routes = [
       breadcrumb: 'Vai trò',
       icon: 'pi pi-shield'
     }
+  },
+  {
+    path: 'materials',
+    loadComponent: () => import('../materials/materials.component').then(c => c.MaterialsComponent),
+    data: {
+      title: 'Quản lý nguyên vật liệu',
+      breadcrumb: 'Nguyên vật liệu',
+      icon: 'pi pi-box'
+    }
+  },
+  {
+    path: 'units-of-measure',
+    loadComponent: () => import('./units-of-measure/units-of-measure.component').then(c => c.UnitsOfMeasureComponent),
+    data: {
+      title: 'Quản lý đơn vị tính',
+      breadcrumb: 'Đơn vị tính',
+      icon: 'pi pi-calculator'
+    }
   }
 ];

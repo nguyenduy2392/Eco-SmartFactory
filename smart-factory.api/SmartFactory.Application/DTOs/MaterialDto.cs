@@ -14,7 +14,7 @@ public class MaterialDto
     public string? Description { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
-    public Guid CustomerId { get; set; }
+    public Guid? CustomerId { get; set; }
     public string? CustomerCode { get; set; }
     public string? CustomerName { get; set; }
 }
@@ -30,7 +30,7 @@ public class CreateMaterialRequest
     public decimal CurrentStock { get; set; }
     public decimal MinStock { get; set; }
     public string? Description { get; set; }
-    public Guid CustomerId { get; set; }
+    public Guid? CustomerId { get; set; }
 }
 
 public class UpdateMaterialRequest

@@ -83,8 +83,8 @@ public class UpdateMaterialCommandHandler : IRequestHandler<UpdateMaterialComman
             IsActive = material.IsActive,
             CreatedAt = material.CreatedAt,
             CustomerId = material.CustomerId,
-            CustomerCode = material.Customer.Code,
-            CustomerName = material.Customer.Name
+            CustomerCode = material.Customer?.Code,
+            CustomerName = material.Customer?.Name
         };
     }
 }

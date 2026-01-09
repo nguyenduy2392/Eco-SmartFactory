@@ -12,6 +12,11 @@ import {
   AvailabilityCheckRequest,
   AvailabilityCheckResult
 } from '../models/purchase-order.interface';
+import {
+  MaterialReceiptHistory,
+  POForSelection,
+  UpdatePOMaterialStatusRequest
+} from '../models/stock-in.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -159,5 +164,29 @@ export class PurchaseOrderService {
   }): Observable<any> {
     return this.http.put(`${this.apiUrl}/${purchaseOrderId}/products/${productId}`, data);
   }
-}
 
+  /**
+   * Cập nhật trạng thái hoàn thành nhập NVL của PO
+   */
+  updateMaterialStatus(id: string, request: UpdatePOMaterialStatusRequest): Observable<PurchaseOrder> {
+    return this.http.put<PurchaseOrder>(`${this.apiUrl}/${id}/material-status`, request);
+  }
+
+  /**
+   * Lấy lịch sử nhập kho của PO
+   */
+  getReceiptHistory(id: string): Observable<MaterialReceiptHistory[]> {
+    return this.http.get<MaterialReceiptHistory[]>(`${this.apiUrl}/${id}/receipt-history`);
+  }
+
+  /**
+   * Lấy danh sách PO cho dropdown/search khi nhập kho
+   */
+  getPOsForSelection(searchTerm?: string): Observable<POForSelection[]> {
+    let params = new HttpParams();
+    if (searchTerm) {
+      params = params.set('searchTerm', searchTerm);
+    }
+    return this.http.get<POForSelection[]>(`${this.apiUrl}/for-selection`, { params });
+  }
+}

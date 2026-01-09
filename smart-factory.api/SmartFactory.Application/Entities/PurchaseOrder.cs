@@ -68,6 +68,12 @@ public class PurchaseOrder
     /// </summary>
     public int VersionNumber { get; set; } = 0;
     
+    /// <summary>
+    /// Cờ đánh dấu đã hoàn thành nhập nguyên vật liệu
+    /// Admin có thể tick để đánh dấu PO đã nhập đủ NVL
+    /// </summary>
+    public bool IsMaterialFullyReceived { get; set; } = false;
+    
     public bool IsActive { get; set; } = true;
     
     public DateTime CreatedAt { get; set; }
@@ -82,6 +88,8 @@ public class PurchaseOrder
     public virtual ICollection<POProduct> POProducts { get; set; } = new List<POProduct>();
     public virtual ICollection<POOperation> POOperations { get; set; } = new List<POOperation>();
     public virtual ICollection<POMaterialBaseline> MaterialBaselines { get; set; } = new List<POMaterialBaseline>();
+    public virtual ICollection<PurchaseOrderMaterial> PurchaseOrderMaterials { get; set; } = new List<PurchaseOrderMaterial>();
+    public virtual ICollection<MaterialReceiptHistory> MaterialReceiptHistories { get; set; } = new List<MaterialReceiptHistory>();
 }
 
 

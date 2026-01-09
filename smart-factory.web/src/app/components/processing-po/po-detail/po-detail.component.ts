@@ -13,6 +13,7 @@ import {
 import { Product } from '../../../models/interface/product.interface';
 import { PartDetail } from '../../../services/part.service';
 import { ProcessingType } from '../../../models/processing-type.interface';
+import { MaterialReceiptHistory } from '../../../models/stock-in.interface';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { SharedModule } from '../../../shared.module';
 import { PrimengModule } from '../../../primeng.module';
@@ -77,6 +78,10 @@ export class PODetailComponent implements OnInit {
   // Excel mode - always enabled
   excelMode = true;
 
+  // Material Receipt History
+  materialReceiptHistory: MaterialReceiptHistory[] = [];
+  loadingHistory = false;
+
   // Loading states
   savingGeneralInfo = false;
   savingProduct: { [key: string]: boolean } = {};
@@ -103,6 +108,7 @@ export class PODetailComponent implements OnInit {
       if (this.poId) {
         this.loadPODetail();
         this.loadAvailableData();
+        this.loadMaterialReceiptHistory();
       }
     });
   }
@@ -160,6 +166,47 @@ export class PODetailComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading processing types:', error);
+      }
+    });
+  }
+
+  loadMaterialReceiptHistory(): void {
+    if (!this.poId) return;
+
+    this.loadingHistory = true;
+    this.poService.getReceiptHistory(this.poId).subscribe({
+      next: (history) => {
+        this.materialReceiptHistory = history;
+        this.loadingHistory = false;
+      },
+      error: (error) => {
+        console.error('Error loading receipt history:', error);
+        this.loadingHistory = false;
+      }
+    });
+  }
+
+  updateMaterialStatus(completed: boolean): void {
+    if (!this.poId) return;
+
+    this.poService.updateMaterialStatus(this.poId, { isMaterialFullyReceived: completed }).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Thành công',
+          detail: 'Cập nhật trạng thái nhập NVL thành công'
+        });
+        if (this.purchaseOrder) {
+          this.purchaseOrder.isMaterialFullyReceived = completed;
+        }
+      },
+      error: (error) => {
+        console.error('Error updating material status:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: 'Không thể cập nhật trạng thái'
+        });
       }
     });
   }

@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { MaterialService } from '../../../services/material.service';
 import { CustomerService } from '../../../services/customer.service';
+import { UnitOfMeasureService } from '../../../services/unit-of-measure.service';
 import { Material } from '../../../models/material.interface';
 import { Customer } from '../../../models/customer.interface';
+import { UnitOfMeasure } from '../../../models/unit-of-measure.interface';
 import { MessageService } from 'primeng/api';
 import { SharedModule } from '../../../shared.module';
 import { PrimengModule } from '../../../primeng.module';
@@ -17,12 +19,13 @@ import { PrimengModule } from '../../../primeng.module';
 export class MaterialsComponent implements OnInit {
   materials: Material[] = [];
   customers: Customer[] = [];
+  units: UnitOfMeasure[] = [];
   loading = false;
   showDialog = false;
   isEdit = false;
   selectedMaterial: Material | null = null;
   
-  // Filter theo chủ hàng
+  // Filter theo chủ hàng (optional)
   selectedCustomerId: string | null = null;
 
   materialForm: any = {
@@ -30,13 +33,10 @@ export class MaterialsComponent implements OnInit {
     name: '',
     type: '',
     colorCode: '',
-    supplier: '',
     unit: 'kg',
-    currentStock: 0,
-    minStock: 0,
     description: '',
     isActive: true,
-    customerId: '' // Bắt buộc - Material phải gắn với chủ hàng
+    customerId: null // Optional - Material có thể không gắn với chủ hàng
   };
 
   materialTypes = [
@@ -46,21 +46,16 @@ export class MaterialsComponent implements OnInit {
     { label: 'Khác', value: 'OTHER' }
   ];
 
-  units = [
-    { label: 'kg', value: 'kg' },
-    { label: 'lít', value: 'l' },
-    { label: 'cái', value: 'pcs' },
-    { label: 'bộ', value: 'set' }
-  ];
-
   constructor(
     private materialService: MaterialService,
     private customerService: CustomerService,
+    private unitOfMeasureService: UnitOfMeasureService,
     private messageService: MessageService
   ) { }
 
   ngOnInit(): void {
     this.loadCustomers();
+    this.loadUnits();
     this.loadMaterials();
   }
 
@@ -71,6 +66,17 @@ export class MaterialsComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading customers:', error);
+      }
+    });
+  }
+
+  loadUnits(): void {
+    this.unitOfMeasureService.getAll().subscribe({
+      next: (units) => {
+        this.units = units.filter(u => u.isActive);
+      },
+      error: (error) => {
+        console.error('Error loading units:', error);
       }
     });
   }
@@ -105,14 +111,10 @@ export class MaterialsComponent implements OnInit {
       name: '',
       type: 'PLASTIC',
       colorCode: '',
-      supplier: '',
-      unit: 'kg',
-      currentStock: 0,
-      minStock: 0,
-      unitCost: 0,
+      unit: this.units.length > 0 ? this.units[0].code : 'kg',
       description: '',
       isActive: true,
-      customerId: this.selectedCustomerId || '' // Mặc định chọn customer đang filter
+      customerId: this.selectedCustomerId || null // Optional - có thể null
     };
     this.showDialog = true;
   }
@@ -125,10 +127,7 @@ export class MaterialsComponent implements OnInit {
       name: material.name,
       type: material.type,
       colorCode: material.colorCode || '',
-      supplier: material.supplier || '',
       unit: material.unit,
-      currentStock: material.currentStock,
-      minStock: material.minStock,
       description: material.description || '',
       isActive: material.isActive,
       customerId: material.customerId // Giữ nguyên customerId
@@ -137,11 +136,11 @@ export class MaterialsComponent implements OnInit {
   }
 
   saveMaterial(): void {
-    if (!this.materialForm.code || !this.materialForm.name || !this.materialForm.customerId) {
+    if (!this.materialForm.code || !this.materialForm.name) {
       this.messageService.add({
         severity: 'warn',
         summary: 'Cảnh báo',
-        detail: 'Vui lòng nhập đầy đủ thông tin bắt buộc (bao gồm chủ hàng)'
+        detail: 'Vui lòng nhập đầy đủ thông tin bắt buộc (Mã NVL và Tên NVL)'
       });
       return;
     }

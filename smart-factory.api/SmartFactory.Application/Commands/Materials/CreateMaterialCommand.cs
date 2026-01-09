@@ -17,7 +17,7 @@ public class CreateMaterialCommand : IRequest<MaterialDto>
     public decimal CurrentStock { get; set; }
     public decimal MinStock { get; set; }
     public string? Description { get; set; }
-    public Guid CustomerId { get; set; }
+    public Guid? CustomerId { get; set; }
 }
 
 public class CreateMaterialCommandHandler : IRequestHandler<CreateMaterialCommand, MaterialDto>
@@ -31,22 +31,26 @@ public class CreateMaterialCommandHandler : IRequestHandler<CreateMaterialComman
 
     public async Task<MaterialDto> Handle(CreateMaterialCommand request, CancellationToken cancellationToken)
     {
-        // Validate customer exists
-        var customer = await _context.Customers
-            .FirstOrDefaultAsync(c => c.Id == request.CustomerId, cancellationToken);
-
-        if (customer == null)
+        // Validate customer exists if CustomerId is provided
+        Customer? customer = null;
+        if (request.CustomerId.HasValue)
         {
-            throw new Exception($"Customer with ID {request.CustomerId} not found");
+            customer = await _context.Customers
+                .FirstOrDefaultAsync(c => c.Id == request.CustomerId.Value, cancellationToken);
+
+            if (customer == null)
+            {
+                throw new Exception($"Customer with ID {request.CustomerId} not found");
+            }
         }
 
-        // Check if code already exists for this customer
+        // Check if code already exists
         var existingMaterial = await _context.Materials
-            .FirstOrDefaultAsync(m => m.Code == request.Code && m.CustomerId == request.CustomerId, cancellationToken);
+            .FirstOrDefaultAsync(m => m.Code == request.Code, cancellationToken);
 
         if (existingMaterial != null)
         {
-            throw new Exception($"Material with code {request.Code} already exists for this customer");
+            throw new Exception($"Material with code {request.Code} already exists");
         }
 
         var material = new Material
@@ -86,8 +90,8 @@ public class CreateMaterialCommandHandler : IRequestHandler<CreateMaterialComman
             IsActive = material.IsActive,
             CreatedAt = material.CreatedAt,
             CustomerId = material.CustomerId,
-            CustomerCode = material.Customer.Code,
-            CustomerName = material.Customer.Name
+            CustomerCode = material.Customer?.Code,
+            CustomerName = material.Customer?.Name
         };
     }
 }

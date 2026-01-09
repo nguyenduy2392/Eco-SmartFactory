@@ -36,7 +36,7 @@ export class AppMenuComponent implements OnInit {
                     },
                     {
                         label: 'Kho nguyên vật liệu',
-                        icon: 'pi pi-fw pi-box',
+                        icon: 'pi pi-fw pi-warehouse',
                         routerLink: ['/warehouse']
                     }
                 ]
@@ -69,11 +69,21 @@ export class AppMenuComponent implements OnInit {
                                 label: 'Thông tin đơn vị',
                                 icon: 'pi pi-fw pi-circle',
                                 routerLink: ['/system/unit-info']
+                            },
+                            {
+                                label: 'Nguyên vật liệu',
+                                icon: 'pi pi-fw pi-circle',
+                                routerLink: ['/system/materials']
+                            },
+                            {
+                                label: 'Đơn vị tính',
+                                icon: 'pi pi-fw pi-circle',
+                                routerLink: ['/system/units-of-measure']
                             }
                         ]
-                    },
+                    }
                 ]
-            },
+            }
         ];
     }
 }

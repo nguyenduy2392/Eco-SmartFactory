@@ -127,6 +127,7 @@
           Ngày PO
           <p-sortIcon field="poDate"></p-sortIcon>
         </th>
+        <th class="text-center">Trạng thái NVL</th>
         <th class="text-center" style="width: 180px">Thao tác</th>
       </tr>
     </ng-template>
@@ -144,6 +145,12 @@
           </p-tag>
         </td>
         <td>{{ po.poDate | date:'dd/MM/yyyy' }}</td>
+        <td class="text-center">
+          <p-tag
+            [value]="po.isMaterialFullyReceived ? 'Đã hoàn thành' : 'Chưa đủ'"
+            [severity]="po.isMaterialFullyReceived ? 'success' : 'warning'">
+          </p-tag>
+        </td>
         <td class="text-center">
           <div class="flex justify-content-center gap-2">
             <p-button

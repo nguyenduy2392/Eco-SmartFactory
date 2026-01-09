@@ -45,6 +45,7 @@ import { NgApexchartsModule } from 'ng-apexcharts';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TabViewModule } from 'primeng/tabview';
 import {SidebarModule} from 'primeng/sidebar';
+import { AutoCompleteModule } from 'primeng/autocomplete';
 
 @NgModule({
   declarations: [],
@@ -98,7 +99,8 @@ import {SidebarModule} from 'primeng/sidebar';
     TimelineModule,
     NgApexchartsModule,
     ConfirmDialogModule,
-    TabViewModule 
+    TabViewModule,
+    AutoCompleteModule
   ],
   exports: [
     BadgeModule,
@@ -150,7 +152,8 @@ import {SidebarModule} from 'primeng/sidebar';
     NgApexchartsModule,
     ConfirmDialogModule,
     TabViewModule,
-    SidebarModule
+    SidebarModule,
+    AutoCompleteModule
 
   ]
 })

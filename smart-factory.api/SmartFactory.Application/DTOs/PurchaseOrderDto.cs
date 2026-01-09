@@ -30,13 +30,16 @@ public class PurchaseOrderDto
     public Guid? OriginalPOId { get; set; }
     public int VersionNumber { get; set; }
     public bool IsActive { get; set; }
+    public bool IsMaterialFullyReceived { get; set; }
     public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
     public string? CreatedBy { get; set; }
     
     // Related data
     public List<POProductDto>? Products { get; set; }
     public List<POOperationDto>? Operations { get; set; }
     public List<POMaterialBaselineDto>? MaterialBaselines { get; set; }
+    public List<PurchaseOrderMaterialDto>? PurchaseOrderMaterials { get; set; }
 }
 
 public class PurchaseOrderListDto
@@ -50,6 +53,7 @@ public class PurchaseOrderListDto
     public string Status { get; set; } = "DRAFT";
     public decimal TotalAmount { get; set; }
     public int ProductCount { get; set; }
+    public bool IsMaterialFullyReceived { get; set; }
     public DateTime CreatedAt { get; set; }
 }
 

@@ -19,8 +19,8 @@ public class MaterialStockDto
     public Guid MaterialId { get; set; }
     public string MaterialCode { get; set; } = string.Empty;
     public string MaterialName { get; set; } = string.Empty;
-    public Guid CustomerId { get; set; }
-    public string CustomerName { get; set; } = string.Empty;
+    public Guid? CustomerId { get; set; }
+    public string? CustomerName { get; set; }
     public Guid? WarehouseId { get; set; }
     public string? WarehouseCode { get; set; }
     public string? WarehouseName { get; set; }
@@ -99,7 +99,7 @@ public class GetMaterialStockQueryHandler : IRequestHandler<GetMaterialStockQuer
             MaterialCode = material.Code,
             MaterialName = material.Name,
             CustomerId = material.CustomerId,
-            CustomerName = material.Customer.Name,
+            CustomerName = material.Customer?.Name,
             WarehouseId = warehouse?.Id,
             WarehouseCode = warehouse?.Code,
             WarehouseName = warehouse?.Name,

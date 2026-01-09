@@ -135,6 +135,9 @@ try
     
     // Register WarehouseExcelService
     builder.Services.AddScoped<SmartFactory.Application.Services.WarehouseExcelService>();
+    
+    // Register StockInService
+    builder.Services.AddScoped<SmartFactory.Application.Services.StockInService>();
 
     // Add MediatR
     builder.Services.AddMediatR(cfg =>

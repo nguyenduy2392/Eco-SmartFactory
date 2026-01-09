@@ -50,6 +50,13 @@ public class ApplicationDbContext : DbContext
     public DbSet<POMaterialBaseline> POMaterialBaselines { get; set; } = null!;
     public DbSet<ProcessBOM> ProcessBOMs { get; set; } = null!;
     public DbSet<ProcessBOMDetail> ProcessBOMDetails { get; set; } = null!;
+    
+    // PO Material Management
+    public DbSet<PurchaseOrderMaterial> PurchaseOrderMaterials { get; set; } = null!;
+    public DbSet<MaterialReceiptHistory> MaterialReceiptHistories { get; set; } = null!;
+    
+    // System Configuration
+    public DbSet<UnitOfMeasure> UnitsOfMeasure { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -84,6 +91,13 @@ public class ApplicationDbContext : DbContext
         ConfigurePOMaterialBaselineEntity(modelBuilder);
         ConfigureProcessBOMEntity(modelBuilder);
         ConfigureProcessBOMDetailEntity(modelBuilder);
+        
+        // PO Material Management configurations
+        ConfigurePurchaseOrderMaterialEntity(modelBuilder);
+        ConfigureMaterialReceiptHistoryEntity(modelBuilder);
+        
+        // System Configuration
+        ConfigureUnitOfMeasureEntity(modelBuilder);
     }
 
     private void ConfigureUserEntity(ModelBuilder modelBuilder)
@@ -403,7 +417,7 @@ public class ApplicationDbContext : DbContext
             entity.HasOne(e => e.Customer)
                 .WithMany(c => c.Materials)
                 .HasForeignKey(e => e.CustomerId)
-                .OnDelete(DeleteBehavior.Restrict);
+                .OnDelete(DeleteBehavior.SetNull); // Changed to SetNull since CustomerId is now nullable
         });
     }
 
@@ -713,6 +727,76 @@ public class ApplicationDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.WarehouseId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+    
+    private void ConfigurePurchaseOrderMaterialEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<PurchaseOrderMaterial>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.MaterialCode).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.MaterialName).IsRequired().HasMaxLength(255);
+            entity.Property(e => e.MaterialType).HasMaxLength(50);
+            entity.Property(e => e.PlannedQuantity).HasColumnType("decimal(18,3)");
+            entity.Property(e => e.Unit).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.ColorCode).HasMaxLength(50);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+
+            entity.HasOne(e => e.PurchaseOrder)
+                .WithMany(p => p.PurchaseOrderMaterials)
+                .HasForeignKey(e => e.PurchaseOrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+    }
+    
+    private void ConfigureMaterialReceiptHistoryEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<MaterialReceiptHistory>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.Quantity).HasColumnType("decimal(18,3)");
+            entity.Property(e => e.Unit).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.BatchNumber).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.CreatedBy).HasMaxLength(255);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            // Index for faster queries
+            entity.HasIndex(e => e.PurchaseOrderId);
+            entity.HasIndex(e => e.MaterialReceiptId);
+
+            entity.HasOne(e => e.PurchaseOrder)
+                .WithMany(p => p.MaterialReceiptHistories)
+                .HasForeignKey(e => e.PurchaseOrderId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            entity.HasOne(e => e.MaterialReceipt)
+                .WithMany()
+                .HasForeignKey(e => e.MaterialReceiptId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            entity.HasOne(e => e.Material)
+                .WithMany()
+                .HasForeignKey(e => e.MaterialId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+    
+    private void ConfigureUnitOfMeasureEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<UnitOfMeasure>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.HasIndex(e => e.Code).IsUnique();
+            entity.Property(e => e.Code).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
         });
     }
 }

@@ -343,5 +343,65 @@ public class PurchaseOrdersController : BaseApiController
             return BadRequest(new { error = ex.Message });
         }
     }
-}
-
+    
+    /// <summary>
+    /// Cập nhật trạng thái hoàn thành nhập NVL của PO
+    /// </summary>
+    [HttpPut("{id}/material-status")]
+    public async Task<IActionResult> UpdateMaterialStatus(Guid id, [FromBody] UpdatePOMaterialStatusRequest request)
+    {
+        try
+        {
+            var command = new UpdatePOMaterialStatusCommand
+            {
+                PurchaseOrderId = id,
+                IsMaterialFullyReceived = request.IsMaterialFullyReceived
+            };
+            var result = await Mediator.Send(command);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+    
+    /// <summary>
+    /// Lấy lịch sử nhập kho của PO
+    /// </summary>
+    [HttpGet("{id}/receipt-history")]
+    public async Task<IActionResult> GetReceiptHistory(Guid id)
+    {
+        try
+        {
+            var query = new GetPOMaterialReceiptHistoryQuery { PurchaseOrderId = id };
+            var result = await Mediator.Send(query);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+    
+    /// <summary>
+    /// Lấy danh sách PO cho dropdown/search khi nhập kho
+    /// </summary>
+    [HttpGet("for-selection")]
+    public async Task<IActionResult> GetPOsForSelection([FromQuery] string? searchTerm, [FromQuery] Guid? customerId)
+    {
+        try
+        {
+            var query = new GetPOsForSelectionQuery 
+            { 
+                SearchTerm = searchTerm,
+                CustomerId = customerId
+            };
+            var result = await Mediator.Send(query);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }}

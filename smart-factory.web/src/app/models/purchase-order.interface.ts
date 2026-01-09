@@ -12,11 +12,14 @@ export interface PurchaseOrder {
   totalAmount: number;
   notes?: string;
   originalPOId?: string; // For version tracking
+  isMaterialFullyReceived?: boolean; // Cờ đánh dấu đã hoàn thành nhập NVL
   createdAt: Date;
+  updatedAt?: Date;
   createdBy?: string;
   operations?: POOperation[]; // NHAP_PO sheet data
   materialBaseline?: POMaterialBaseline[]; // NHAP_NGUYEN_VAT_LIEU sheet data
   products?: POProduct[]; // Products in this PO
+  purchaseOrderMaterials?: PurchaseOrderMaterial[]; // NVL từ sheet Excel (kế hoạch)
 }
 
 export interface POProduct {
@@ -40,6 +43,7 @@ export interface PurchaseOrderList {
   poDate: Date;
   totalAmount: number;
   operationCount: number; // Number of PO Operations
+  isMaterialFullyReceived?: boolean; // Trạng thái hoàn thành nhập NVL
   createdAt: Date;
 }
 
@@ -203,4 +207,17 @@ export interface MaterialAvailabilityDetailResult {
   customerId?: string;
   customerName?: string;
   materialFound: boolean;
+}
+
+// Purchase Order Material (từ sheet NVL trong Excel - kế hoạch)
+export interface PurchaseOrderMaterial {
+  id: string;
+  purchaseOrderId: string;
+  materialCode: string;
+  materialName: string;
+  materialType?: string;
+  plannedQuantity: number;
+  unit: string;
+  colorCode?: string;
+  notes?: string;
 }

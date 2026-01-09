@@ -52,6 +52,85 @@
       </app-po-excel-table>
     </div>
 
+    <!-- Material Receipt History Section -->
+    <div class="mt-5">
+      <p-card>
+        <ng-template pTemplate="header">
+          <div class="flex align-items-center justify-content-between p-3">
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-history text-xl"></i>
+              <span class="text-xl font-semibold">Lịch Sử Nhập Kho Nguyên Vật Liệu</span>
+            </div>
+            <div class="flex align-items-center gap-2">
+              <span class="text-600">Trạng thái:</span>
+              <p-checkbox
+                [(ngModel)]="purchaseOrder.isMaterialFullyReceived"
+                [binary]="true"
+                (onChange)="updateMaterialStatus($event.checked)"
+                [disabled]="isViewingOriginal">
+              </p-checkbox>
+              <span [class]="purchaseOrder.isMaterialFullyReceived ? 'text-green-600 font-semibold' : 'text-orange-600'">
+                {{ purchaseOrder.isMaterialFullyReceived ? 'Đã hoàn thành' : 'Chưa đủ' }}
+              </span>
+            </div>
+          </div>
+        </ng-template>
+
+        <div *ngIf="loadingHistory" class="flex justify-content-center p-5">
+          <p-progressSpinner></p-progressSpinner>
+        </div>
+
+        <div *ngIf="!loadingHistory">
+          <p-table
+            *ngIf="materialReceiptHistory.length > 0; else noHistory"
+            [value]="materialReceiptHistory"
+            styleClass="p-datatable-sm"
+            [scrollable]="true"
+            scrollHeight="400px">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>Ngày Nhập</th>
+                <th>Số Phiếu</th>
+                <th>Mã NVL</th>
+                <th>Tên NVL</th>
+                <th>Số Lượng</th>
+                <th>Đơn Vị</th>
+                <th>Số Lô</th>
+                <th>Mã NCC</th>
+                <th>Mã PO Mua</th>
+                <th>Kho</th>
+                <th>Ghi Chú</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-history>
+              <tr>
+                <td>{{ history.receiptDate | date:'dd/MM/yyyy HH:mm' }}</td>
+                <td>{{ history.receiptNumber }}</td>
+                <td>{{ history.materialCode }}</td>
+                <td>{{ history.materialName }}</td>
+                <td class="text-right">{{ history.quantity | number:'1.0-3' }}</td>
+                <td>{{ history.unit }}</td>
+                <td>
+                  <span class="p-tag p-tag-info">{{ history.batchNumber }}</span>
+                </td>
+                <td>{{ history.supplierCode || '-' }}</td>
+                <td>{{ history.purchasePOCode || '-' }}</td>
+                <td>{{ history.warehouseName }}</td>
+                <td>{{ history.notes || '-' }}</td>
+              </tr>
+            </ng-template>
+          </p-table>
+
+          <ng-template #noHistory>
+            <div class="text-center p-5 text-600">
+              <i class="pi pi-inbox text-4xl mb-3"></i>
+              <p>Chưa có lịch sử nhập kho cho PO này</p>
+            </div>
+          </ng-template>
+        </div>
+      </p-card>
+    </div>
+
     <!-- Traditional Table Mode (Hidden) -->
     <div *ngIf="false">
 

@@ -30,10 +30,11 @@ public class Material
     public string? ColorCode { get; set; }
     
     /// <summary>
-    /// Chủ hàng sở hữu nguyên vật liệu này
+    /// Chủ hàng sở hữu nguyên vật liệu này (optional)
     /// Nguyên vật liệu do chủ hàng cung cấp cho Hải Tân để gia công
+    /// NULL = Nguyên vật liệu không gắn với chủ hàng cụ thể
     /// </summary>
-    public Guid CustomerId { get; set; }
+    public Guid? CustomerId { get; set; }
     
     /// <summary>
     /// Nhà cung cấp / Chủ hàng cung cấp (tên text - có thể để null nếu dùng CustomerId)
@@ -66,7 +67,7 @@ public class Material
     public DateTime? UpdatedAt { get; set; }
     
     // Navigation properties
-    public virtual Customer Customer { get; set; } = null!;
+    public virtual Customer? Customer { get; set; }
     public virtual ICollection<ProductionOperation> ProductionOperations { get; set; } = new List<ProductionOperation>();
     public virtual ICollection<ProductionOperationMaterial> ProductionOperationMaterials { get; set; } = new List<ProductionOperationMaterial>();
     public virtual ICollection<MaterialReceipt> MaterialReceipts { get; set; } = new List<MaterialReceipt>();

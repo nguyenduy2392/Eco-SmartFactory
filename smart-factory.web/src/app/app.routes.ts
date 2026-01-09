@@ -96,6 +96,15 @@ export const routes: Routes = [
           icon: 'pi pi-box'
         }
       },
+      {
+        path: 'stock-in',
+        loadComponent: () => import('./components/stock-in/stock-in/stock-in.component').then(m => m.StockInComponent),
+        data: {
+          title: 'Nhập kho nguyên vật liệu',
+          breadcrumb: 'Nhập kho',
+          icon: 'pi pi-inbox'
+        }
+      },
     ]
   },
   {

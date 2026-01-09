@@ -54,8 +54,8 @@ public class GetAllMaterialsQueryHandler : IRequestHandler<GetAllMaterialsQuery,
                 IsActive = m.IsActive,
                 CreatedAt = m.CreatedAt,
                 CustomerId = m.CustomerId,
-                CustomerCode = m.Customer.Code,
-                CustomerName = m.Customer.Name
+                CustomerCode = m.Customer != null ? m.Customer.Code : null,
+                CustomerName = m.Customer != null ? m.Customer.Name : null
             })
             .ToListAsync(cancellationToken);
 

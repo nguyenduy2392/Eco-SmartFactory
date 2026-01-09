@@ -280,7 +280,7 @@ namespace SmartFactory.Application.Migrations
                     b.Property<decimal>("CurrentStock")
                         .HasColumnType("decimal(18,3)");
 
-                    b.Property<Guid>("CustomerId")
+                    b.Property<Guid?>("CustomerId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("Description")
@@ -564,6 +564,61 @@ namespace SmartFactory.Application.Migrations
                     b.HasIndex("WarehouseId");
 
                     b.ToTable("MaterialReceipts");
+                });
+
+            modelBuilder.Entity("SmartFactory.Application.Entities.MaterialReceiptHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("BatchNumber")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("CreatedBy")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<Guid>("MaterialId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MaterialReceiptId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid?>("PurchaseOrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Quantity")
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<DateTime>("ReceiptDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MaterialId");
+
+                    b.HasIndex("MaterialReceiptId");
+
+                    b.HasIndex("PurchaseOrderId");
+
+                    b.ToTable("MaterialReceiptHistories");
                 });
 
             modelBuilder.Entity("SmartFactory.Application.Entities.MaterialTransactionHistory", b =>
@@ -1372,6 +1427,9 @@ namespace SmartFactory.Application.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsMaterialFullyReceived")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Notes")
                         .HasColumnType("nvarchar(max)");
 
@@ -1422,6 +1480,60 @@ namespace SmartFactory.Application.Migrations
                         .IsUnique();
 
                     b.ToTable("PurchaseOrders");
+                });
+
+            modelBuilder.Entity("SmartFactory.Application.Entities.PurchaseOrderMaterial", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ColorCode")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("MaterialCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("MaterialName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("MaterialType")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<decimal>("PlannedQuantity")
+                        .HasColumnType("decimal(18,3)");
+
+                    b.Property<Guid>("PurchaseOrderId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Unit")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PurchaseOrderId");
+
+                    b.ToTable("PurchaseOrderMaterials");
                 });
 
             modelBuilder.Entity("SmartFactory.Application.Entities.Tool", b =>
@@ -1491,6 +1603,48 @@ namespace SmartFactory.Application.Migrations
                     b.HasIndex("OwnerId");
 
                     b.ToTable("Tools");
+                });
+
+            modelBuilder.Entity("SmartFactory.Application.Entities.UnitOfMeasure", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("UnitsOfMeasure");
                 });
 
             modelBuilder.Entity("SmartFactory.Application.Entities.User", b =>
@@ -1602,8 +1756,7 @@ namespace SmartFactory.Application.Migrations
                     b.HasOne("SmartFactory.Application.Entities.Customer", "Customer")
                         .WithMany("Materials")
                         .HasForeignKey("CustomerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Customer");
                 });
@@ -1687,6 +1840,32 @@ namespace SmartFactory.Application.Migrations
                     b.Navigation("Material");
 
                     b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("SmartFactory.Application.Entities.MaterialReceiptHistory", b =>
+                {
+                    b.HasOne("SmartFactory.Application.Entities.Material", "Material")
+                        .WithMany()
+                        .HasForeignKey("MaterialId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("SmartFactory.Application.Entities.MaterialReceipt", "MaterialReceipt")
+                        .WithMany()
+                        .HasForeignKey("MaterialReceiptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("SmartFactory.Application.Entities.PurchaseOrder", "PurchaseOrder")
+                        .WithMany("MaterialReceiptHistories")
+                        .HasForeignKey("PurchaseOrderId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Material");
+
+                    b.Navigation("MaterialReceipt");
+
+                    b.Navigation("PurchaseOrder");
                 });
 
             modelBuilder.Entity("SmartFactory.Application.Entities.MaterialTransactionHistory", b =>
@@ -1941,6 +2120,17 @@ namespace SmartFactory.Application.Migrations
                     b.Navigation("OriginalPO");
                 });
 
+            modelBuilder.Entity("SmartFactory.Application.Entities.PurchaseOrderMaterial", b =>
+                {
+                    b.HasOne("SmartFactory.Application.Entities.PurchaseOrder", "PurchaseOrder")
+                        .WithMany("PurchaseOrderMaterials")
+                        .HasForeignKey("PurchaseOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PurchaseOrder");
+                });
+
             modelBuilder.Entity("SmartFactory.Application.Entities.Tool", b =>
                 {
                     b.HasOne("SmartFactory.Application.Entities.Customer", "Owner")
@@ -2018,9 +2208,13 @@ namespace SmartFactory.Application.Migrations
 
                     b.Navigation("MaterialBaselines");
 
+                    b.Navigation("MaterialReceiptHistories");
+
                     b.Navigation("POOperations");
 
                     b.Navigation("POProducts");
+
+                    b.Navigation("PurchaseOrderMaterials");
                 });
 
             modelBuilder.Entity("SmartFactory.Application.Entities.Tool", b =>
