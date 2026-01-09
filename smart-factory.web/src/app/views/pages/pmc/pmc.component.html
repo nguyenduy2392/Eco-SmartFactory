@@ -1,0 +1,22 @@
+<div class="container">
+  <h1>{{ title }}</h1>
+  
+  <div class="grid-wrapper">
+    <ag-grid-angular
+      class="ag-theme-quartz"
+      [rowData]="rowData"
+      [columnDefs]="colDefs"
+      [defaultColDef]="defaultColDef"
+      [domLayout]="'autoHeight'"
+      [suppressHorizontalScroll]="false"
+      [enableCellTextSelection]="true"
+      [singleClickEdit]="true"
+      (cellValueChanged)="onCellValueChanged($event)"
+      style="width: 100%; min-height: 500px;"
+    />
+  </div>
+  
+  <div class="info">
+    <p><strong>Hướng dẫn:</strong> Click vào cell để chỉnh sửa. Nhấn Enter để lưu.</p>
+  </div>
+</div>

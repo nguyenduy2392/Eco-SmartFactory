@@ -105,6 +105,15 @@ export const routes: Routes = [
           icon: 'pi pi-inbox'
         }
       },
+      {
+        path: 'pmc',
+        loadComponent: () => import('./views/pages/pmc/pmc.component').then(m => m.PmcComponent),
+        data: {
+          title: 'Kế hoạch sản xuất PMC',
+          breadcrumb: 'PMC',
+          icon: 'pi pi-calendar'
+        }
+      },
     ]
   },
   {

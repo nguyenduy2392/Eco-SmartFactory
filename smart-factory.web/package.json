@@ -27,6 +27,8 @@
     "@fullcalendar/daygrid": "^6.0.3",
     "@fullcalendar/interaction": "^6.0.3",
     "@fullcalendar/timegrid": "^6.0.3",
+    "ag-grid-angular": "^35.0.0",
+    "ag-grid-community": "^35.0.0",
     "bignumber.js": "^9.1.2",
     "chart.js": "^3.3.2",
     "leaflet": "^1.9.4",
