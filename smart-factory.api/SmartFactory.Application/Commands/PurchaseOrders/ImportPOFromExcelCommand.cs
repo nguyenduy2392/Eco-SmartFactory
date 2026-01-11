@@ -550,12 +550,6 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
                     _logger.LogInformation("Created new Warehouse: {WarehouseCode}", warehouse.Code);
                 }
 
-                // Validate BatchNumber
-                if (string.IsNullOrWhiteSpace(receiptData.BatchNumber))
-                {
-                    throw new Exception($"BatchNumber is required for MaterialReceipt {receiptData.ReceiptNumber}");
-                }
-
                 // Get current stock before transaction
                 var stockBefore = material.CurrentStock;
 

@@ -430,7 +430,7 @@ public class ApplicationDbContext : DbContext
             entity.HasIndex(e => e.ReceiptNumber).IsUnique();
             entity.Property(e => e.Quantity).HasColumnType("decimal(18,3)");
             entity.Property(e => e.Unit).IsRequired().HasMaxLength(20);
-            entity.Property(e => e.BatchNumber).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.BatchNumber).HasMaxLength(100);
             entity.Property(e => e.SupplierCode).HasMaxLength(100);
             entity.Property(e => e.PurchasePOCode).HasMaxLength(100);
             entity.Property(e => e.ReceiptNumber).IsRequired().HasMaxLength(100);

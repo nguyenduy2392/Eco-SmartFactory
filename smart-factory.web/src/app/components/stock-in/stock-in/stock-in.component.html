@@ -195,10 +195,8 @@
             <th style="width: 3rem">#</th>
             <th style="width: 20%">Nguyên Vật Liệu <span class="text-red-500">*</span></th>
             <th style="width: 10%">Số Lượng <span class="text-red-500">*</span></th>
-            <th style="width: 8%">Đơn Vị <span class="text-red-500">*</span></th>
-            <th style="width: 12%">Số Lô <span class="text-red-500">*</span></th>
-            <th style="width: 12%">Mã NCC</th>
-            <th style="width: 12%">Mã PO Mua</th>
+            <th style="width: 10%">Đơn Vị <span class="text-red-500">*</span></th>
+            <th style="width: 12%">Số Lô</th>
             <th style="width: 15%">Ghi Chú</th>
             <th style="width: 5rem"></th>
           </tr>
@@ -235,11 +233,23 @@
               </p-inputNumber>
             </td>
             <td>
-              <input
-                type="text"
-                pInputText
+              <p-dropdown
                 formControlName="unit"
-                class="w-full" />
+                [options]="unitsOfMeasure"
+                optionLabel="name"
+                optionValue="name"
+                placeholder="Chọn đơn vị"
+                [filter]="true"
+                filterBy="name,code"
+                appendTo="body"
+                styleClass="w-full">
+                <ng-template let-unit pTemplate="item">
+                  <div>
+                    <div class="font-semibold">{{ unit.name }}</div>
+                    <div class="text-sm text-500">{{ unit.code }}</div>
+                  </div>
+                </ng-template>
+              </p-dropdown>
             </td>
             <td>
               <input
@@ -247,20 +257,6 @@
                 pInputText
                 formControlName="batchNumber"
                 placeholder="BATCH-001"
-                class="w-full" />
-            </td>
-            <td>
-              <input
-                type="text"
-                pInputText
-                formControlName="supplierCode"
-                class="w-full" />
-            </td>
-            <td>
-              <input
-                type="text"
-                pInputText
-                formControlName="purchasePOCode"
                 class="w-full" />
             </td>
             <td>

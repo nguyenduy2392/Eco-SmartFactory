@@ -35,9 +35,9 @@ public class MaterialReceipt
     public string Unit { get; set; } = string.Empty;
     
     /// <summary>
-    /// Số lô (Batch Number) - BẮT BUỘC
+    /// Số lô (Batch Number) - Tùy chọn
     /// </summary>
-    public string BatchNumber { get; set; } = string.Empty;
+    public string? BatchNumber { get; set; }
     
     /// <summary>
     /// Ngày nhập kho

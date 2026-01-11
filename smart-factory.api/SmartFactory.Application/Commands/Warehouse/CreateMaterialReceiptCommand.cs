@@ -58,11 +58,6 @@ public class CreateMaterialReceiptCommandHandler : IRequestHandler<CreateMateria
     public async Task<MaterialReceiptDto> Handle(CreateMaterialReceiptCommand request, CancellationToken cancellationToken)
     {
         // Validate business rules
-        if (string.IsNullOrWhiteSpace(request.BatchNumber))
-        {
-            throw new Exception("BatchNumber is required");
-        }
-
         if (request.Quantity <= 0)
         {
             throw new Exception("Quantity must be greater than 0");

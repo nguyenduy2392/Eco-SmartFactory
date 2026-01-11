@@ -5,6 +5,7 @@ import { StockInService } from '../../../services/stock-in.service';
 import { MaterialService } from '../../../services/material.service';
 import { WarehouseService } from '../../../services/warehouse.service';
 import { CustomerService } from '../../../services/customer.service';
+import { UnitOfMeasureService } from '../../../services/unit-of-measure.service';
 import {
   StockInRequest,
   StockInMaterialItem,
@@ -13,6 +14,7 @@ import {
 import { Material } from '../../../models/material.interface';
 import { Warehouse } from '../../../models/warehouse.interface';
 import { Customer } from '../../../models/customer.interface';
+import { UnitOfMeasure } from '../../../models/unit-of-measure.interface';
 import { SharedModule } from '../../../shared.module';
 import { PrimengModule } from '../../../primeng.module';
 
@@ -34,6 +36,7 @@ export class StockInComponent implements OnInit {
   customers: Customer[] = [];
   warehouses: Warehouse[] = [];
   materials: Material[] = [];
+  unitsOfMeasure: UnitOfMeasure[] = [];
   filteredPOs: POForSelection[] = [];
 
   // Selected data
@@ -45,6 +48,7 @@ export class StockInComponent implements OnInit {
     private materialService: MaterialService,
     private warehouseService: WarehouseService,
     private customerService: CustomerService,
+    private unitOfMeasureService: UnitOfMeasureService,
     private messageService: MessageService
   ) {
     this.initForm();
@@ -54,6 +58,7 @@ export class StockInComponent implements OnInit {
     this.loadCustomers();
     this.loadWarehouses();
     this.loadMaterials();
+    this.loadUnitsOfMeasure();
   }
 
   initForm(): void {
@@ -81,7 +86,7 @@ export class StockInComponent implements OnInit {
       materialId: ['', Validators.required],
       quantity: [0, [Validators.required, Validators.min(0.001)]],
       unit: ['', Validators.required],
-      batchNumber: ['', Validators.required],
+      batchNumber: [''],
       supplierCode: [''],
       purchasePOCode: [''],
       notes: ['']
@@ -89,7 +94,14 @@ export class StockInComponent implements OnInit {
   }
 
   addMaterialRow(): void {
-    this.materialsArray.push(this.createMaterialRow());
+    const newRow = this.createMaterialRow();
+    
+    // Auto-fill purchasePOCode từ PO Liên Quan nếu có
+    if (this.selectedPO && this.selectedPO.poNumber) {
+      newRow.patchValue({ purchasePOCode: this.selectedPO.poNumber });
+    }
+    
+    this.materialsArray.push(newRow);
   }
 
   removeMaterialRow(index: number): void {
@@ -147,6 +159,21 @@ export class StockInComponent implements OnInit {
           severity: 'error',
           summary: 'Lỗi',
           detail: 'Không thể tải danh sách nguyên vật liệu'
+        });
+      }
+    });
+  }
+
+  loadUnitsOfMeasure(): void {
+    this.unitOfMeasureService.getAll().subscribe({
+      next: (data) => {
+        this.unitsOfMeasure = data.filter(u => u.isActive);
+      },
+      error: (error) => {
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: 'Không thể tải danh sách đơn vị'
         });
       }
     });
@@ -215,6 +242,11 @@ export class StockInComponent implements OnInit {
       // Giữ nguyên customerId đã chọn
     });
     
+    // Auto-fill purchasePOCode cho tất cả các dòng hiện có
+    this.materialsArray.controls.forEach(control => {
+      control.patchValue({ purchasePOCode: po.poNumber || '' });
+    });
+    
     // Load materials by PO's customer if needed
     this.messageService.add({
       severity: 'info',
@@ -228,6 +260,10 @@ export class StockInComponent implements OnInit {
     this.stockInForm.patchValue({
       purchaseOrderId: null,
       poNumber: ''
+    });
+    // Clear purchasePOCode cho tất cả các dòng
+    this.materialsArray.controls.forEach(control => {
+      control.patchValue({ purchasePOCode: '' });
     });
   }
 
