@@ -186,6 +186,30 @@ export class PODetailComponent implements OnInit {
     });
   }
 
+  getMaterialsWithProgress(): any[] {
+    if (!this.purchaseOrder || !this.purchaseOrder.purchaseOrderMaterials) {
+      return [];
+    }
+
+    return this.purchaseOrder.purchaseOrderMaterials.map(material => {
+      // Tính tổng số lượng đã nhập cho material này
+      const receivedQuantity = this.materialReceiptHistory
+        .filter(h => h.materialCode === material.materialCode)
+        .reduce((sum, h) => sum + h.quantity, 0);
+
+      // Tính phần trăm hoàn thành
+      const progressPercent = material.plannedQuantity > 0
+        ? Math.min(Math.round((receivedQuantity / material.plannedQuantity) * 100), 100)
+        : 0;
+
+      return {
+        ...material,
+        receivedQuantity,
+        progressPercent
+      };
+    });
+  }
+
   updateMaterialStatus(completed: boolean): void {
     if (!this.poId) return;
 

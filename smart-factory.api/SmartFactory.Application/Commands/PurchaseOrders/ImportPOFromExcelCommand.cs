@@ -482,134 +482,89 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
                 _context.POProducts.Add(originalProduct);
             }
 
-            // Save Material Receipts from Sheet 2 (nhập kho thực tế) - only for original PO
-            foreach (var receiptData in importResult.MaterialReceipts)
+            // Save PurchaseOrderMaterials from Sheet 2 (NHAP_NGUYEN_VAT_LIEU)
+            // Đây là danh sách nguyên vật liệu CẦN THIẾT để gia công PO (như BOM)
+            // KHÔNG phải nhập kho thực tế
+            foreach (var materialData in importResult.MaterialReceipts)
             {
-                // Get or create Material
+                // Get or create Material - Tất cả PO dùng chung Materials, chỉ check theo Code
                 var material = await _context.Materials
-                    .FirstOrDefaultAsync(m => m.Code == receiptData.MaterialCode && m.CustomerId == customerId, cancellationToken);
+                    .FirstOrDefaultAsync(m => m.Code == materialData.MaterialCode, cancellationToken);
 
                 if (material == null)
                 {
-                    // Tạo Material mới
+                    // Tạo Material mới - Material dùng chung cho tất cả Customer
                     material = new Material
                     {
-                        Code = receiptData.MaterialCode,
-                        Name = receiptData.MaterialName,
-                        Type = receiptData.MaterialType ?? "Unknown",
-                        Unit = receiptData.Unit,
-                        CustomerId = customerId,
-                        Supplier = receiptData.SupplierCode,
-                        CurrentStock = 0, // Sẽ được cập nhật sau khi tạo MaterialReceipt
+                        Code = materialData.MaterialCode,
+                        Name = materialData.MaterialName,
+                        Type = materialData.MaterialType ?? "Unknown",
+                        Unit = materialData.Unit,
+                        CustomerId = null, // Material dùng chung, không gắn với Customer cụ thể
+                        Supplier = materialData.SupplierCode,
+                        CurrentStock = 0, // CurrentStock chỉ được update khi nhập kho thực tế
                         MinStock = 0,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow
                     };
                     _context.Materials.Add(material);
                     await _context.SaveChangesAsync(cancellationToken);
-                    _logger.LogInformation("Created new Material: {MaterialCode} - {MaterialName}", material.Code, material.Name);
+                    _logger.LogInformation("Created new shared Material: {MaterialCode} - {MaterialName}", material.Code, material.Name);
                 }
                 else
                 {
-                    // Cập nhật thông tin Material nếu có thay đổi
-                    if (!string.IsNullOrWhiteSpace(receiptData.MaterialName) && material.Name != receiptData.MaterialName)
+                    // Cập nhật thông tin Material nếu có thay đổi (ưu tiên thông tin mới hơn)
+                    var hasChanges = false;
+                    
+                    if (!string.IsNullOrWhiteSpace(materialData.MaterialName) && material.Name != materialData.MaterialName)
                     {
-                        material.Name = receiptData.MaterialName;
+                        material.Name = materialData.MaterialName;
+                        hasChanges = true;
                     }
-                    if (!string.IsNullOrWhiteSpace(receiptData.MaterialType) && material.Type != receiptData.MaterialType)
+                    if (!string.IsNullOrWhiteSpace(materialData.MaterialType) && material.Type != materialData.MaterialType)
                     {
-                        material.Type = receiptData.MaterialType;
+                        material.Type = materialData.MaterialType;
+                        hasChanges = true;
                     }
-                    if (!string.IsNullOrWhiteSpace(receiptData.Unit) && material.Unit != receiptData.Unit)
+                    if (!string.IsNullOrWhiteSpace(materialData.Unit) && material.Unit != materialData.Unit)
                     {
-                        material.Unit = receiptData.Unit;
+                        material.Unit = materialData.Unit;
+                        hasChanges = true;
                     }
-                    if (!string.IsNullOrWhiteSpace(receiptData.SupplierCode) && material.Supplier != receiptData.SupplierCode)
+                    if (!string.IsNullOrWhiteSpace(materialData.SupplierCode) && material.Supplier != materialData.SupplierCode)
                     {
-                        material.Supplier = receiptData.SupplierCode;
+                        material.Supplier = materialData.SupplierCode;
+                        hasChanges = true;
                     }
-                    material.UpdatedAt = DateTime.UtcNow;
+                    
+                    if (hasChanges)
+                    {
+                        material.UpdatedAt = DateTime.UtcNow;
+                        _logger.LogDebug("Updated shared Material: {MaterialCode}", material.Code);
+                    }
                 }
 
-                // Tìm Warehouse theo Code
-                var warehouse = await _context.Warehouses
-                    .FirstOrDefaultAsync(w => w.Code == receiptData.WarehouseCode, cancellationToken);
-
-                if (warehouse == null)
+                // Tạo PurchaseOrderMaterial cho Original PO (để hiển thị "Nguyên Vật Liệu Cần Cho PO")
+                var poMaterial = new PurchaseOrderMaterial
                 {
-                    // Tạo warehouse mặc định nếu chưa có
-                    warehouse = new Entities.Warehouse
-                    {
-                        Code = receiptData.WarehouseCode,
-                        Name = $"Kho {receiptData.WarehouseCode}",
-                        IsActive = true,
-                        CreatedAt = DateTime.UtcNow
-                    };
-                    _context.Warehouses.Add(warehouse);
-                    await _context.SaveChangesAsync(cancellationToken);
-                    _logger.LogInformation("Created new Warehouse: {WarehouseCode}", warehouse.Code);
-                }
-
-                // Get current stock before transaction
-                var stockBefore = material.CurrentStock;
-
-                // Chủ hàng chính là nhà cung cấp, tự động set SupplierCode = Customer.Code
-                var supplierCode = !string.IsNullOrWhiteSpace(receiptData.SupplierCode)
-                    ? receiptData.SupplierCode
-                    : customer.Code;
-
-                // Tạo MaterialReceipt
-                var materialReceipt = new MaterialReceipt
-                {
-                    CustomerId = customerId,
-                    MaterialId = material.Id,
-                    WarehouseId = warehouse.Id,
-                    Quantity = receiptData.Quantity,
-                    Unit = receiptData.Unit,
-                    BatchNumber = receiptData.BatchNumber,
-                    ReceiptDate = receiptData.ReceiptDate,
-                    SupplierCode = supplierCode, // Tự động set từ Customer.Code
-                    PurchasePOCode = null, // Không cần PO mua hàng
-                    ReceiptNumber = receiptData.ReceiptNumber,
-                    Notes = receiptData.Notes,
-                    Status = "RECEIVED", // Tự động xác nhận khi import
+                    PurchaseOrderId = originalPO.Id, // Gắn với Original PO
+                    MaterialCode = materialData.MaterialCode,
+                    MaterialName = materialData.MaterialName,
+                    MaterialType = materialData.MaterialType,
+                    PlannedQuantity = materialData.Quantity,
+                    Unit = materialData.Unit,
+                    Notes = materialData.Notes,
                     CreatedAt = DateTime.UtcNow
                 };
-                _context.MaterialReceipts.Add(materialReceipt);
+                _context.PurchaseOrderMaterials.Add(poMaterial);
 
-                // Cập nhật CurrentStock của Material
-                material.CurrentStock += receiptData.Quantity;
-                material.UpdatedAt = DateTime.UtcNow;
-
-                var stockAfter = material.CurrentStock;
-
-                // Tạo transaction history
-                var history = new Entities.MaterialTransactionHistory
-                {
-                    CustomerId = customerId,
-                    MaterialId = material.Id,
-                    WarehouseId = warehouse.Id,
-                    BatchNumber = receiptData.BatchNumber,
-                    TransactionType = "RECEIPT",
-                    ReferenceId = materialReceipt.Id,
-                    ReferenceNumber = receiptData.ReceiptNumber,
-                    StockBefore = stockBefore,
-                    QuantityChange = receiptData.Quantity,
-                    StockAfter = stockAfter,
-                    Unit = receiptData.Unit,
-                    TransactionDate = receiptData.ReceiptDate,
-                    Notes = receiptData.Notes,
-                    CreatedAt = DateTime.UtcNow
-                };
-                _context.MaterialTransactionHistories.Add(history);
-
-                _logger.LogDebug("Created MaterialReceipt: {ReceiptNumber} - {MaterialCode} - {Quantity} {Unit}",
-                    materialReceipt.ReceiptNumber, material.Code, receiptData.Quantity, receiptData.Unit);
+                _logger.LogDebug("Created PurchaseOrderMaterial: {MaterialCode} - Planned Quantity: {Quantity} {Unit}",
+                    materialData.MaterialCode, materialData.Quantity, materialData.Unit);
             }
 
             await _context.SaveChangesAsync(cancellationToken);
 
-            _logger.LogInformation("Imported PO from Excel: {PONumber} (Original: {OriginalPONumber}) with {OperationCount} operations and {MaterialCount} material receipts",
+            _logger.LogInformation("Imported PO from Excel: {PONumber} (Original: {OriginalPONumber}) with {OperationCount} operations and {MaterialCount} required materials",
                 operationPO.PONumber, originalPO.PONumber, importResult.Operations.Count, importResult.MaterialReceipts.Count);
 
             // Return operation PO (editable version)

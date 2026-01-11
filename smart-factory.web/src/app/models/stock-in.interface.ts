@@ -40,7 +40,10 @@ export interface MaterialReceiptHistory {
   materialName: string;
   quantity: number;
   unit: string;
-  batchNumber: string;
+  batchNumber?: string;
+  supplierCode?: string;
+  purchasePOCode?: string;
+  warehouseName?: string;
   receiptDate: Date;
   createdBy?: string;
   notes?: string;

@@ -52,27 +52,104 @@
       </app-po-excel-table>
     </div>
 
-    <!-- Material Receipt History Section -->
+    <!-- Material Requirements & Receipt History Section -->
     <div class="mt-5">
+      <!-- Material Requirements Card -->
+      <p-card class="mb-3">
+        <ng-template pTemplate="header">
+          <div class="flex align-items-center justify-content-between p-3">
+            <div class="flex align-items-center gap-2">
+              <i class="pi pi-list text-xl text-primary"></i>
+              <span class="text-xl font-semibold">Nguyên Vật Liệu Cần Cho PO</span>
+            </div>
+            <div class="flex align-items-center gap-2">
+              <span class="text-600">Trạng thái:</span>
+              <p-tag 
+                [value]="purchaseOrder.isMaterialFullyReceived ? 'Đã đủ NVL' : 'Chưa đủ NVL'"
+                [severity]="purchaseOrder.isMaterialFullyReceived ? 'success' : 'warning'">
+              </p-tag>
+            </div>
+          </div>
+        </ng-template>
+
+        <div *ngIf="!purchaseOrder.purchaseOrderMaterials || purchaseOrder.purchaseOrderMaterials.length === 0" 
+             class="text-center p-5 text-600">
+          <i class="pi pi-inbox text-4xl mb-3"></i>
+          <p>Chưa có thông tin nguyên vật liệu cho PO này</p>
+          <small>Dữ liệu nguyên vật liệu được import từ sheet NHAP_NGUYEN_VAT_LIEU</small>
+        </div>
+
+        <div *ngIf="purchaseOrder.purchaseOrderMaterials && purchaseOrder.purchaseOrderMaterials.length > 0">
+          <p-table 
+            [value]="getMaterialsWithProgress()"
+            styleClass="p-datatable-sm"
+            [scrollable]="true"
+            scrollHeight="400px">
+            <ng-template pTemplate="header">
+              <tr>
+                <th style="width: 15%">Mã NVL</th>
+                <th style="width: 20%">Tên NVL</th>
+                <th style="width: 12%">Loại</th>
+                <th style="width: 10%">Đơn vị</th>
+                <th style="width: 10%" class="text-right">SL Cần</th>
+                <th style="width: 10%" class="text-right">SL Đã Nhập</th>
+                <th style="width: 18%">Tiến Độ</th>
+                <th style="width: 5%"></th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-material>
+              <tr>
+                <td>
+                  <span class="font-semibold">{{ material.materialCode }}</span>
+                </td>
+                <td>{{ material.materialName }}</td>
+                <td>{{ material.materialType || '-' }}</td>
+                <td>{{ material.unit }}</td>
+                <td class="text-right">
+                  <span class="font-semibold">{{ material.plannedQuantity | number:'1.0-3' }}</span>
+                </td>
+                <td class="text-right">
+                  <span [class]="material.receivedQuantity >= material.plannedQuantity ? 'text-green-600 font-semibold' : 'text-orange-600'">
+                    {{ material.receivedQuantity | number:'1.0-3' }}
+                  </span>
+                </td>
+                <td>
+                  <div class="flex align-items-center gap-2">
+                    <p-progressBar 
+                      [value]="material.progressPercent" 
+                      [showValue]="false"
+                      [style]="{'height': '20px', 'flex': '1'}">
+                    </p-progressBar>
+                    <span class="text-sm font-semibold" [class]="material.progressPercent >= 100 ? 'text-green-600' : 'text-600'">
+                      {{ material.progressPercent }}%
+                    </span>
+                  </div>
+                </td>
+                <td class="text-center">
+                  <i *ngIf="material.progressPercent >= 100" class="pi pi-check-circle text-green-600 text-xl"></i>
+                  <i *ngIf="material.progressPercent < 100" class="pi pi-clock text-orange-500 text-xl"></i>
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+        </div>
+      </p-card>
+
+      <!-- Material Receipt History Card -->
       <p-card>
         <ng-template pTemplate="header">
           <div class="flex align-items-center justify-content-between p-3">
             <div class="flex align-items-center gap-2">
-              <i class="pi pi-history text-xl"></i>
+              <i class="pi pi-history text-xl text-primary"></i>
               <span class="text-xl font-semibold">Lịch Sử Nhập Kho Nguyên Vật Liệu</span>
             </div>
-            <div class="flex align-items-center gap-2">
-              <span class="text-600">Trạng thái:</span>
-              <p-checkbox
-                [(ngModel)]="purchaseOrder.isMaterialFullyReceived"
-                [binary]="true"
-                (onChange)="updateMaterialStatus($event.checked)"
-                [disabled]="isViewingOriginal">
-              </p-checkbox>
-              <span [class]="purchaseOrder.isMaterialFullyReceived ? 'text-green-600 font-semibold' : 'text-orange-600'">
-                {{ purchaseOrder.isMaterialFullyReceived ? 'Đã hoàn thành' : 'Chưa đủ' }}
-              </span>
-            </div>
+            <p-button
+              label="Tải lại"
+              icon="pi pi-refresh"
+              [outlined]="true"
+              size="small"
+              (onClick)="loadMaterialReceiptHistory()">
+            </p-button>
           </div>
         </ng-template>
 

@@ -2,6 +2,7 @@ using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SmartFactory.Application.Data;
 using SmartFactory.Application.DTOs;
+using SmartFactory.Application.Entities;
 
 namespace SmartFactory.Application.Queries.PurchaseOrders;
 
@@ -34,11 +35,25 @@ public class GetPurchaseOrderByIdQueryHandler : IRequestHandler<GetPurchaseOrder
                 .ThenInclude(po => po.ProcessingType)
             .Include(p => p.POOperations)
                 .ThenInclude(po => po.ProcessMethod)
+            .Include(p => p.PurchaseOrderMaterials) // Load materials từ sheet NHAP_NGUYEN_VAT_LIEU
             .FirstOrDefaultAsync(p => p.Id == request.Id, cancellationToken);
 
         if (po == null)
         {
             return null;
+        }
+
+        // Nếu là Operation PO, lấy PurchaseOrderMaterials từ Original PO
+        List<PurchaseOrderMaterial> materials;
+        if (po.OriginalPOId.HasValue)
+        {
+            materials = await _context.PurchaseOrderMaterials
+                .Where(m => m.PurchaseOrderId == po.OriginalPOId.Value)
+                .ToListAsync(cancellationToken);
+        }
+        else
+        {
+            materials = po.PurchaseOrderMaterials.ToList();
         }
 
         return new PurchaseOrderDto
@@ -110,7 +125,19 @@ public class GetPurchaseOrderByIdQueryHandler : IRequestHandler<GetPurchaseOrder
                 Notes = op.Notes,
                 CompletionDate = op.CompletionDate,
                 SequenceOrder = op.SequenceOrder
-            }).OrderBy(op => op.SequenceOrder).ToList()
+            }).OrderBy(op => op.SequenceOrder).ToList(),
+            PurchaseOrderMaterials = materials.Select(m => new PurchaseOrderMaterialDto
+            {
+                Id = m.Id,
+                PurchaseOrderId = m.PurchaseOrderId,
+                MaterialCode = m.MaterialCode,
+                MaterialName = m.MaterialName,
+                MaterialType = m.MaterialType,
+                PlannedQuantity = m.PlannedQuantity,
+                Unit = m.Unit,
+                ColorCode = m.ColorCode,
+                Notes = m.Notes
+            }).ToList()
         };
     }
 }

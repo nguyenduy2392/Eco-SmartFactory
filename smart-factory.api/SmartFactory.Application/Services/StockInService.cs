@@ -188,14 +188,29 @@ public class StockInService
 
     /// <summary>
     /// Lấy lịch sử nhập kho của một PO
+    /// Nếu là Operation PO (có OriginalPOId), lấy history của Original PO
+    /// Nếu là Original PO, lấy history của chính nó
     /// </summary>
     public async Task<List<MaterialReceiptHistoryDto>> GetPOReceiptHistoryAsync(Guid purchaseOrderId)
     {
+        // Tìm PO và xác định có phải Operation PO không
+        var po = await _context.PurchaseOrders
+            .FirstOrDefaultAsync(p => p.Id == purchaseOrderId);
+
+        if (po == null)
+        {
+            return new List<MaterialReceiptHistoryDto>();
+        }
+
+        // Nếu là Operation PO, lấy history của Original PO
+        // Nếu là Original PO, lấy history của chính nó
+        var targetPOId = po.OriginalPOId ?? purchaseOrderId;
+
         var histories = await _context.MaterialReceiptHistories
             .Include(h => h.Material)
             .Include(h => h.MaterialReceipt)
             .Include(h => h.PurchaseOrder)
-            .Where(h => h.PurchaseOrderId == purchaseOrderId)
+            .Where(h => h.PurchaseOrderId == targetPOId)
             .OrderByDescending(h => h.ReceiptDate)
             .Select(h => new MaterialReceiptHistoryDto
             {
