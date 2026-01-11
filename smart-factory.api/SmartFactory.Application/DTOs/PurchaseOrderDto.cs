@@ -103,6 +103,7 @@ public class UpdatePOOperationRequest
     // Product and Part codes for updating relationships
     public string? ProductCode { get; set; }
     public string? PartCode { get; set; }
+    public string? PartName { get; set; }
     // ÉP NHỰA specific fields
     public string? ModelNumber { get; set; }
     public string? Material { get; set; }

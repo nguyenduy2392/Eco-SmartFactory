@@ -1299,6 +1299,91 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
     }
   }
 
+  hasRowChanged(row: any, operation: POOperation): boolean {
+    // Helper function to compare values safely
+    const valueChanged = (rowValue: any, opValue: any): boolean => {
+      // Normalize empty values
+      const normalizeEmpty = (val: any) => {
+        if (val === null || val === undefined || val === '') return '';
+        return val;
+      };
+      
+      const normalizedRow = normalizeEmpty(rowValue);
+      const normalizedOp = normalizeEmpty(opValue);
+      
+      // For numbers, convert both to numbers and compare
+      if (typeof normalizedRow === 'number' || typeof normalizedOp === 'number') {
+        const rowNum = this.toNumberOrNull(normalizedRow) ?? 0;
+        const opNum = this.toNumberOrNull(normalizedOp) ?? 0;
+        return rowNum !== opNum;
+      }
+      
+      return normalizedRow !== normalizedOp;
+    };
+    
+    // Compare row data with original operation to detect changes
+    let hasChanges = false;
+    
+    switch (this.processingType) {
+      case 'EP_NHUA':
+        hasChanges = (
+          valueChanged(row.productNumber, operation.productCode) ||
+          valueChanged(row.modelNumber, operation.modelNumber) ||
+          valueChanged(row.partNumber, operation.partCode) ||
+          valueChanged(row.partName, operation.partName) ||
+          valueChanged(row.material, operation.material) ||
+          valueChanged(row.colorCode, operation.colorCode) ||
+          valueChanged(row.color, operation.color) ||
+          valueChanged(row.machineType, operation.machineType) ||
+          valueChanged(row.requiredMaterial, operation.requiredMaterial) ||
+          valueChanged(row.requiredColor, operation.requiredColor) ||
+          valueChanged(row.cavityQuantity, operation.cavityQuantity) ||
+          valueChanged(row.set, operation.set) ||
+          valueChanged(row.cycle, operation.cycleTime) ||
+          valueChanged(row.netWeight, operation.netWeight) ||
+          valueChanged(row.totalWeight, operation.totalWeight) ||
+          valueChanged(row.quantity, operation.quantity) ||
+          valueChanged(row.numberOfPresses, operation.numberOfPresses) ||
+          valueChanged(row.chargeCount, operation.chargeCount) ||
+          valueChanged(row.unitPrice, operation.unitPrice)
+        );
+        break;
+      case 'PHUN_IN':
+        hasChanges = (
+          valueChanged(row.productNumber, operation.productCode) ||
+          valueChanged(row.partNumber, operation.partCode) ||
+          valueChanged(row.sprayPosition, operation.sprayPosition) ||
+          valueChanged(row.processingContent, operation.printContent) ||
+          valueChanged(row.processingCount, operation.chargeCount) ||
+          valueChanged(row.unitPrice, operation.unitPrice) ||
+          valueChanged(row.quantity, operation.quantity) ||
+          valueChanged(row.completionDate, operation.completionDate ? this.formatDate(operation.completionDate) : '') ||
+          valueChanged(row.notes, operation.notes)
+        );
+        break;
+      case 'LAP_RAP':
+        hasChanges = (
+          valueChanged(row.productNumber, operation.productCode) ||
+          valueChanged(row.partNumber, operation.partCode) ||
+          valueChanged(row.processingContent, operation.assemblyContent) ||
+          valueChanged(row.processingCount, operation.chargeCount) ||
+          valueChanged(row.unitPrice, operation.unitPrice) ||
+          valueChanged(row.quantity, operation.quantity) ||
+          valueChanged(row.completionDate, operation.completionDate ? this.formatDate(operation.completionDate) : '') ||
+          valueChanged(row.notes, operation.notes)
+        );
+        break;
+      default:
+        hasChanges = true; // If unknown type, assume changed to be safe
+    }
+    
+    if (hasChanges) {
+      console.log('Row has changes:', { rowId: row.id, operationId: operation.id });
+    }
+    
+    return hasChanges;
+  }
+
   async saveAll(): Promise<void> {
     if (!this.purchaseOrder) {
       this.messageService.add({
@@ -1312,11 +1397,26 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
     this.saving = true;
 
     try {
-      console.log('Saving all table data...');
+      console.log('=== Starting saveAll ===');
+      
+      // Force Tabulator to clear any active cell editing state
+      if (this.tabulatorInstance) {
+        // Get any currently editing cell and trigger blur to save its value
+        const editingCells = this.tabulatorInstance.getEditedCells();
+        console.log('Currently editing cells:', editingCells.length);
+        editingCells.forEach((cell: any) => {
+          // This will trigger cell edit complete and save the value
+          cell.getElement().blur();
+        });
+      }
+      
+      // Small delay to ensure cell editing is complete
+      await new Promise(resolve => setTimeout(resolve, 100));
 
       // Get all current table data from Tabulator
       const allTableData = this.tabulatorInstance?.getData() || [];
       console.log('Total rows in table:', allTableData.length);
+      console.log('Table data:', allTableData);
 
       // Process all rows: update existing and create new ones
       await this.saveAllTableData(allTableData);
@@ -1444,6 +1544,8 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
       for (const row of allTableData) {
         const isNewRow = !row.operationId || row.id.startsWith('new_') || !existingOperationIds.has(row.operationId);
         
+        console.log(`Processing row ${row.id}:`, { isNewRow, operationId: row.operationId, isEmpty: this.isRowEmpty(row) });
+        
         // Handle empty rows
         if (this.isRowEmpty(row)) {
           if (isNewRow) {
@@ -1481,11 +1583,14 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           }
 
           // Create new operation
+          console.log('Creating new operation for row:', row.id);
           const operationData = this.buildCreateOperationDataFromRow(row);
+          console.log('Operation data to create:', operationData);
           savePromises.push(
             new Promise((resolve, reject) => {
               this.poService.createOperation(this.purchaseOrder.id, operationData).subscribe({
                 next: (createdOperation: any) => {
+                  console.log('Created operation:', createdOperation);
                   // Update row with new operation ID
                   if (this.tabulatorInstance) {
                     const rowComponent = this.tabulatorInstance.getRow(row.id);
@@ -1511,19 +1616,33 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           // Update existing operation
           const operation = this.findOperationById(row.operationId);
           if (operation) {
-            const updateData = this.buildUpdateDataFromRow(row, operation);
-            savePromises.push(
-              new Promise((resolve, reject) => {
-                this.poService.updateOperation(
-                  this.purchaseOrder.id,
-                  row.operationId,
-                  updateData
-                ).subscribe({
-                  next: () => resolve(undefined),
-                  error: (err) => reject(err)
-                });
-              })
-            );
+            // Check if row data has changed compared to operation
+            const hasChanges = this.hasRowChanged(row, operation);
+            if (hasChanges) {
+              console.log('Updating operation for row:', row.id, row.operationId);
+              const updateData = this.buildUpdateDataFromRow(row, operation);
+              console.log('Update data:', updateData);
+              savePromises.push(
+                new Promise((resolve, reject) => {
+                  this.poService.updateOperation(
+                    this.purchaseOrder.id,
+                    row.operationId,
+                    updateData
+                  ).subscribe({
+                    next: () => {
+                      console.log('Successfully updated operation:', row.operationId);
+                      resolve(undefined);
+                    },
+                    error: (err) => {
+                      console.error('Error updating operation:', err);
+                      reject(err);
+                    }
+                  });
+                })
+              );
+            } else {
+              console.log('No changes detected for row:', row.id, row.operationId);
+            }
           }
         }
       }
@@ -1601,6 +1720,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         return {
           ...baseData,
           operationName: 'EP_NHUA',
+          partName: row.partName || '',
           modelNumber: row.modelNumber || '',
           material: row.material || '',
           colorCode: row.colorCode || '',
@@ -1659,6 +1779,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         return {
           ...baseData,
           operationName: operation.operationName || 'EP_NHUA',
+          partName: row.partName !== undefined ? row.partName : operation.partName,
           modelNumber: row.modelNumber !== undefined ? row.modelNumber : operation.modelNumber,
           material: row.material !== undefined ? row.material : operation.material,
           colorCode: row.colorCode !== undefined ? row.colorCode : operation.colorCode,

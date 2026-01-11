@@ -21,6 +21,7 @@ public class UpdatePOOperationCommand : IRequest<POOperationDto>
     // Product and Part codes for updating relationships
     public string? ProductCode { get; set; }
     public string? PartCode { get; set; }
+    public string? PartName { get; set; }
     // ÉP NHỰA specific fields
     public string? ModelNumber { get; set; }
     public string? Material { get; set; }
@@ -119,27 +120,45 @@ public class UpdatePOOperationCommandHandler : IRequestHandler<UpdatePOOperation
                     throw new Exception("Cannot create Part without Product. Please provide ProductCode when creating a new Part.");
                 }
 
+                // Use PartName from request if provided, otherwise use PartCode
+                var partName = !string.IsNullOrWhiteSpace(request.PartName) 
+                    ? request.PartName 
+                    : $"Part {request.PartCode}";
+
                 part = new Entities.Part
                 {
                     Code = request.PartCode,
-                    Name = $"Part {request.PartCode}",
+                    Name = partName,
                     ProductId = product.Id,
                     IsActive = true,
                     CreatedAt = DateTime.UtcNow
                 };
                 _context.Parts.Add(part);
                 await _context.SaveChangesAsync(cancellationToken);
-                _logger.LogInformation("Created new Part: Code={PartCode}, ProductId={ProductId}", part.Code, part.ProductId);
+                _logger.LogInformation("Created new Part: Code={PartCode}, Name={PartName}, ProductId={ProductId}", 
+                    part.Code, part.Name, part.ProductId);
             }
             else
             {
+                // Update part name if provided and different
+                if (!string.IsNullOrWhiteSpace(request.PartName) && part.Name != request.PartName)
+                {
+                    part.Name = request.PartName;
+                    part.UpdatedAt = DateTime.UtcNow;
+                    _logger.LogInformation("Updated Part Name: PartCode={PartCode}, NewName={PartName}", 
+                        part.Code, part.Name);
+                }
+                
                 // If part exists but product is different, update the part's product relationship
                 if (product != null && part.ProductId != product.Id)
                 {
                     part.ProductId = product.Id;
                     part.UpdatedAt = DateTime.UtcNow;
-                    _logger.LogInformation("Updated Part ProductId: PartCode={PartCode}, NewProductId={ProductId}", part.Code, product.Id);
+                    _logger.LogInformation("Updated Part ProductId: PartCode={PartCode}, NewProductId={ProductId}", 
+                        part.Code, product.Id);
                 }
+                
+                await _context.SaveChangesAsync(cancellationToken);
             }
         }
         else if (product != null)

@@ -238,6 +238,7 @@ public class PurchaseOrdersController : BaseApiController
                 // Product and Part codes
                 ProductCode = request.ProductCode,
                 PartCode = request.PartCode,
+                PartName = request.PartName,
                 // ÉP NHỰA specific fields
                 ModelNumber = request.ModelNumber,
                 Material = request.Material,
@@ -282,6 +283,7 @@ public class PurchaseOrdersController : BaseApiController
                 // Product and Part codes
                 ProductCode = request.ProductCode,
                 PartCode = request.PartCode,
+                PartName = request.PartName,
                 // ÉP NHỰA specific fields
                 ModelNumber = request.ModelNumber,
                 Material = request.Material,

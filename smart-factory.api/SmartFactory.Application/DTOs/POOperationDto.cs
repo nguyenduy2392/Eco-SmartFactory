@@ -62,6 +62,7 @@ public class CreatePOOperationRequest
     // Product and Part codes for creating relationships
     public string? ProductCode { get; set; }
     public string? PartCode { get; set; }
+    public string? PartName { get; set; }
     // ÉP NHỰA specific fields
     public string? ModelNumber { get; set; }
     public string? Material { get; set; }
