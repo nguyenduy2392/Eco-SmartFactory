@@ -32,9 +32,11 @@ public class GetAllMaterialsQueryHandler : IRequestHandler<GetAllMaterialsQuery,
             query = query.Where(m => m.IsActive == request.IsActive.Value);
         }
 
+        // Nếu có CustomerId cụ thể, lấy materials của Customer đó + materials dùng chung (CustomerId = null)
+        // Nếu không có CustomerId, lấy tất cả materials
         if (request.CustomerId.HasValue && request.CustomerId.Value != Guid.Empty)
         {
-            query = query.Where(m => m.CustomerId == request.CustomerId.Value);
+            query = query.Where(m => m.CustomerId == request.CustomerId.Value || m.CustomerId == null);
         }
 
         var materials = await query

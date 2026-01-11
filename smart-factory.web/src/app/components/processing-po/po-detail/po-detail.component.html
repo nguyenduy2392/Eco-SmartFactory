@@ -62,12 +62,21 @@
               <i class="pi pi-list text-xl text-primary"></i>
               <span class="text-xl font-semibold">Nguyên Vật Liệu Cần Cho PO</span>
             </div>
-            <div class="flex align-items-center gap-2">
+            <div class="flex align-items-center gap-3">
               <span class="text-600">Trạng thái:</span>
               <p-tag 
                 [value]="purchaseOrder.isMaterialFullyReceived ? 'Đã đủ NVL' : 'Chưa đủ NVL'"
                 [severity]="purchaseOrder.isMaterialFullyReceived ? 'success' : 'warning'">
               </p-tag>
+              <p-button 
+                [label]="purchaseOrder.isMaterialFullyReceived ? 'Đánh dấu chưa đủ' : 'Đánh dấu đã đủ'"
+                [icon]="purchaseOrder.isMaterialFullyReceived ? 'pi pi-times-circle' : 'pi pi-check-circle'"
+                [severity]="purchaseOrder.isMaterialFullyReceived ? 'secondary' : 'success'"
+                size="small"
+                [outlined]="true"
+                (onClick)="updateMaterialStatus(!purchaseOrder.isMaterialFullyReceived)"
+                [disabled]="purchaseOrder.status === 'LOCKED'">
+              </p-button>
             </div>
           </div>
         </ng-template>

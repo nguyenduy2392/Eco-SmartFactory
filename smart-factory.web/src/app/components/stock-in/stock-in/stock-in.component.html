@@ -214,6 +214,7 @@
                 [filter]="true"
                 filterBy="name,code"
                 (onChange)="onMaterialChange(i)"
+                [appendTo]="'body'"
                 styleClass="w-full">
                 <ng-template let-material pTemplate="item">
                   <div>

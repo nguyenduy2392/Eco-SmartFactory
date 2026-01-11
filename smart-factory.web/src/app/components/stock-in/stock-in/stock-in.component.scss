@@ -165,4 +165,13 @@
       box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
     }
   }
+
+  // Fix dropdown panel visibility
+  .p-dropdown-panel {
+    z-index: 9999 !important;
+  }
+
+  .p-datatable-wrapper {
+    overflow: visible !important;
+  }
 }

@@ -59,6 +59,7 @@ public class GetAllPurchaseOrdersQueryHandler : IRequestHandler<GetAllPurchaseOr
                 Status = p.Status,
                 TotalAmount = p.TotalAmount,
                 ProductCount = p.POProducts.Count,
+                IsMaterialFullyReceived = p.IsMaterialFullyReceived,
                 CreatedAt = p.CreatedAt
             })
             .ToListAsync(cancellationToken);
