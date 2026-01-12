@@ -167,7 +167,7 @@
           background: #4472C4;
           
           th {
-            padding: 0.75rem 0.5rem;
+            padding: 0.4rem 0.5rem;
             text-align: center;
             border: 1px solid #2E5090;
             font-weight: 600;
@@ -230,7 +230,7 @@
             }
             
             .label-cell {
-              padding: 0.6rem 1rem;
+              padding: 0.3rem 0.6rem;
               border: 1px solid #D0D0D0;
               font-weight: 500;
               color: #333;
@@ -239,7 +239,7 @@
             }
             
             .value-cell {
-              padding: 0.5rem;
+              padding: 0.3rem;
               border: 1px solid #D0D0D0;
               text-align: center;
               font-weight: 500;
@@ -288,7 +288,7 @@
           background: #70AD47;
           
           th {
-            padding: 0.75rem 0.5rem;
+            padding: 0.4rem 0.5rem;
             text-align: center;
             border: 1px solid #507E32;
             font-weight: 600;
@@ -381,7 +381,7 @@
             }
             
             td {
-              padding: 0.4rem;
+              padding: 0.25rem;
               border: 1px solid #D0D0D0;
               text-align: center;
               
@@ -405,7 +405,7 @@
               &.row-type {
                 font-weight: 500;
                 font-size: 0.75rem;
-                padding: 0.4rem 0.3rem;
+                padding: 0.25rem 0.3rem;
                 white-space: nowrap;
               }
               
@@ -417,7 +417,7 @@
               }
               
               &.total-cell {
-                padding: 0.15rem;
+                padding: 0.1rem;
                 background: #D9E1F2;
                 
                 ::ng-deep {
@@ -426,7 +426,7 @@
                     
                     .p-inputnumber-input {
                       width: 100%;
-                      padding: 0.3rem 0.4rem;
+                      padding: 0.2rem 0.3rem;
                       text-align: center;
                       font-size: 0.8rem;
                       border: 1px solid #C0C0C0;
@@ -450,7 +450,7 @@
               }
               
               &.editable-cell {
-                padding: 0.15rem;
+                padding: 0.1rem;
                 
                 ::ng-deep {
                   .p-inputnumber {
@@ -458,7 +458,7 @@
                     
                     .p-inputnumber-input {
                       width: 100%;
-                      padding: 0.3rem 0.4rem;
+                      padding: 0.2rem 0.3rem;
                       text-align: center;
                       font-size: 0.8rem;
                       border: 1px solid #C0C0C0;
