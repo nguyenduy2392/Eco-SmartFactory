@@ -57,6 +57,11 @@ public class ApplicationDbContext : DbContext
     
     // System Configuration
     public DbSet<UnitOfMeasure> UnitsOfMeasure { get; set; } = null!;
+    
+    // PMC Planning System
+    public DbSet<PMCWeek> PMCWeeks { get; set; } = null!;
+    public DbSet<PMCRow> PMCRows { get; set; } = null!;
+    public DbSet<PMCCell> PMCCells { get; set; } = null!;
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -98,6 +103,11 @@ public class ApplicationDbContext : DbContext
         
         // System Configuration
         ConfigureUnitOfMeasureEntity(modelBuilder);
+        
+        // PMC Planning System configurations
+        ConfigurePMCWeekEntity(modelBuilder);
+        ConfigurePMCRowEntity(modelBuilder);
+        ConfigurePMCCellEntity(modelBuilder);
     }
 
     private void ConfigureUserEntity(ModelBuilder modelBuilder)
@@ -797,6 +807,87 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
             entity.Property(e => e.Description).HasMaxLength(500);
             entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+        });
+    }
+    
+    private void ConfigurePMCWeekEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<PMCWeek>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.WeekName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            // Composite index for week start + version
+            entity.HasIndex(e => new { e.WeekStartDate, e.Version }).IsUnique();
+            
+            // Index for faster queries
+            entity.HasIndex(e => e.WeekStartDate);
+            entity.HasIndex(e => e.IsActive);
+            
+            entity.HasOne(e => e.Creator)
+                .WithMany()
+                .HasForeignKey(e => e.CreatedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+    }
+    
+    private void ConfigurePMCRowEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<PMCRow>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.ProductCode).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.ComponentName).IsRequired().HasMaxLength(200);
+            entity.Property(e => e.CustomerName).HasMaxLength(200);
+            entity.Property(e => e.PlanType).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.RowGroup).IsRequired().HasMaxLength(300);
+            entity.Property(e => e.TotalValue).HasColumnType("decimal(18,3)");
+            entity.Property(e => e.Notes).HasMaxLength(1000);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            // Indexes for faster queries
+            entity.HasIndex(e => e.PMCWeekId);
+            entity.HasIndex(e => new { e.PMCWeekId, e.ProductCode, e.ComponentName, e.PlanType });
+            
+            entity.HasOne(e => e.PMCWeek)
+                .WithMany(w => w.Rows)
+                .HasForeignKey(e => e.PMCWeekId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.Customer)
+                .WithMany()
+                .HasForeignKey(e => e.CustomerId)
+                .OnDelete(DeleteBehavior.SetNull);
+        });
+    }
+    
+    private void ConfigurePMCCellEntity(ModelBuilder modelBuilder)
+    {
+        modelBuilder.Entity<PMCCell>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedOnAdd();
+            entity.Property(e => e.Value).HasColumnType("decimal(18,3)");
+            entity.Property(e => e.BackgroundColor).HasMaxLength(50);
+            entity.Property(e => e.Notes).HasMaxLength(500);
+            entity.Property(e => e.CreatedAt).HasDefaultValueSql("GETUTCDATE()");
+            
+            // Composite index for row + date (unique)
+            entity.HasIndex(e => new { e.PMCRowId, e.WorkDate }).IsUnique();
+            
+            // Index for faster queries
+            entity.HasIndex(e => e.PMCRowId);
+            entity.HasIndex(e => e.WorkDate);
+            
+            entity.HasOne(e => e.PMCRow)
+                .WithMany(r => r.Cells)
+                .HasForeignKey(e => e.PMCRowId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
 }

@@ -13,6 +13,9 @@ $gutter: 1rem; //for primeflex grid system
 /* Tabulator */
 @import "tabulator-tables/dist/css/tabulator.min.css";
 
+/* Handsontable */
+@import "handsontable/dist/handsontable.full.css";
+
 @import "width";
 @import "custom-primeng";
 

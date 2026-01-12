@@ -20,6 +20,7 @@ export function ConvertToPixel(value: number, unitType: number) {
         case 0: return value;
         case 1: return 2.8346456692913 * value;
         case 2: return 28.346456692913 * value;
-        case 3: return 72 * value
+        case 3: return 72 * value;
+        default: return value;
     }
 }

@@ -1,0 +1,225 @@
+<div class="production-planning-container">
+  <p-toast></p-toast>
+  
+  <!-- Header -->
+  <div class="planning-header">
+    <div class="header-left">
+      <h1>{{ title }}</h1>
+      <div class="week-info" *ngIf="currentWeek">
+        <span class="week-badge">{{ currentWeek.weekName }}</span>
+      </div>
+    </div>
+    
+    <div class="action-buttons">
+      <!-- Week navigation -->
+      <button pButton type="button" icon="pi pi-chevron-left" 
+              class="p-button-outlined p-button-sm"
+              (click)="loadPreviousWeek()"
+              [disabled]="loading"
+              pTooltip="Tuần trước"></button>
+      
+      <button pButton type="button" icon="pi pi-chevron-right" 
+              class="p-button-outlined p-button-sm"
+              (click)="loadNextWeek()"
+              [disabled]="loading"
+              pTooltip="Tuần sau"></button>
+      
+      <button pButton type="button" label="Tạo PMC Mới" icon="pi pi-plus" 
+              class="p-button-primary"
+              (click)="createNewWeek(false)"
+              [disabled]="loading"
+              pTooltip="Tạo PMC cho tuần tiếp theo"></button>
+      
+      <button pButton type="button" label="Lưu" icon="pi pi-save" 
+              class="p-button-success"
+              (click)="saveData()"
+              [disabled]="loading || !hasChanges || !currentWeek"
+              [loading]="loading"></button>
+      
+      <button pButton type="button" label="Làm mới" icon="pi pi-refresh" 
+              class="p-button-outlined"
+              (click)="loadCurrentWeek()"
+              [disabled]="loading"></button>
+    </div>
+  </div>
+  
+  <!-- No data state -->
+  <div class="no-data" *ngIf="!currentWeek && !loading">
+    <i class="pi pi-calendar" style="font-size: 3rem; color: #ccc;"></i>
+    <p>Chưa có PMC cho tuần này</p>
+    <div class="no-data-actions">
+      <button pButton type="button" label="Tạo PMC Tuần Mới" icon="pi pi-plus" 
+              class="p-button-lg p-button-primary"
+              (click)="createNewWeek(false)"></button>
+      <button pButton type="button" label="Tạo từ Tuần Trước" icon="pi pi-copy" 
+              class="p-button-lg p-button-outlined"
+              (click)="createNewWeek(true)"></button>
+      <button pButton type="button" label="Kiểm tra PO" icon="pi pi-search" 
+              class="p-button-lg p-button-outlined p-button-secondary"
+              (click)="debugAvailablePOs()"
+              pTooltip="Kiểm tra xem có PO nào để tạo PMC không"></button>
+    </div>
+  </div>
+  
+  <!-- Empty PMC state -->
+  <div class="empty-pmc-state" *ngIf="currentWeek && productionDetails.length === 0 && !loading">
+    <i class="pi pi-inbox" style="font-size: 3rem; color: #ccc;"></i>
+    <p>PMC tuần này chưa có dữ liệu sản phẩm</p>
+    <p class="hint">Có thể không có PO nào hoặc PO chưa có sản phẩm/linh kiện</p>
+    <div class="empty-pmc-actions">
+      <button pButton type="button" label="Kiểm tra PO có sẵn" icon="pi pi-search" 
+              class="p-button-outlined p-button-secondary"
+              (click)="debugAvailablePOs()"></button>
+      <button pButton type="button" label="Tạo lại PMC" icon="pi pi-refresh" 
+              class="p-button-outlined"
+              (click)="createNewWeek(false)"></button>
+    </div>
+  </div>
+  
+  <!-- Phần 1: Thống kê tổng hợp -->
+  <div class="summary-section" *ngIf="currentWeek && productionDetails.length > 0">
+    <h2>Thống kê theo ngày</h2>
+    
+    <div class="summary-table-wrapper">
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th class="label-col">Chỉ số</th>
+            <th *ngFor="let col of dateColumns" class="date-col">
+              {{ col.dateStr }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let row of summaryData" [class.highlight-row]="row.isHighlight">
+            <td class="label-cell">{{ row.label }}</td>
+            <td *ngFor="let value of row.values; let i = index" 
+                class="value-cell"
+                [style.background-color]="row.isPercentage ? getCellColor(value, true) : ''">
+              <span *ngIf="!row.isPercentage && !row.label.includes('DT')">
+                {{ value === 0 ? '' : (value | number:'1.0-0') }}
+              </span>
+              <span *ngIf="!row.isPercentage && row.label.includes('DT')">
+                {{ value === 0 ? '' : (value | number:'1.0-0') }}
+              </span>
+              <span *ngIf="row.isPercentage">
+                {{ value === 0 ? '' : (value + '%') }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <!-- Separator -->
+  <div class="section-separator"></div>
+  
+  <!-- Phần 2: Chi tiết kế hoạch -->
+  <div class="details-section" *ngIf="currentWeek && productionDetails.length > 0">
+    <h2>Chi tiết kế hoạch sản xuất</h2>
+    
+    <div class="details-table-wrapper">
+      <table class="details-table">
+        <thead>
+          <tr>
+            <th rowspan="2" class="col-customer">Khách hàng</th>
+            <th rowspan="2" class="col-material">Mã vật liệu</th>
+            <th rowspan="2" class="col-part-name">Tên linh kiện</th>
+            <th rowspan="2" class="col-plan">Kế hoạch</th>
+            <th rowspan="2" class="col-total">Tổng</th>
+            <th *ngFor="let col of dateColumns" class="date-col">
+              {{ col.dateStr }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <ng-container *ngFor="let detail of productionDetails">
+            <!-- Row 1: Yêu cầu KH/PO数量 -->
+            <tr class="detail-row po-requirement-row">
+              <td rowspan="3" class="customer-value">{{ detail.customer }}</td>
+              <td rowspan="3" class="material-code">{{ detail.materialCode }}</td>
+              <td rowspan="3" class="part-name">{{ detail.partName }}</td>
+              <td class="row-type">Yêu cầu KH/PO数量</td>
+              <td class="total-cell editable-cell">
+                <p-inputNumber 
+                  [(ngModel)]="detail.poTotal"
+                  [showButtons]="false"
+                  [min]="0"
+                  [useGrouping]="false"
+                  (ngModelChange)="onCellValueChange()"
+                  styleClass="compact-input">
+                </p-inputNumber>
+              </td>
+              <td *ngFor="let day of detail.poRequirement; let i = index" class="editable-cell">
+                <p-inputNumber 
+                  [(ngModel)]="day.value"
+                  [showButtons]="false"
+                  [min]="0"
+                  [useGrouping]="false"
+                  (ngModelChange)="onCellValueChange()"
+                  styleClass="compact-input">
+                </p-inputNumber>
+              </td>
+            </tr>
+            
+            <!-- Row 2: Kế hoạch SX/生产计划 -->
+            <tr class="detail-row production-plan-row">
+              <td class="row-type">Kế hoạch SX/生产计划</td>
+              <td class="total-cell editable-cell">
+                <p-inputNumber 
+                  [(ngModel)]="detail.planTotal"
+                  [showButtons]="false"
+                  [min]="0"
+                  [useGrouping]="false"
+                  (ngModelChange)="onCellValueChange()"
+                  styleClass="compact-input">
+                </p-inputNumber>
+              </td>
+              <td *ngFor="let day of detail.productionPlan; let i = index" class="editable-cell">
+                <p-inputNumber 
+                  [(ngModel)]="day.value"
+                  [showButtons]="false"
+                  [min]="0"
+                  [useGrouping]="false"
+                  (ngModelChange)="onCellValueChange()"
+                  styleClass="compact-input">
+                </p-inputNumber>
+              </td>
+            </tr>
+            
+            <!-- Row 3: Kẹp/喷油模 -->
+            <tr class="detail-row clamp-row">
+              <td class="row-type">Kẹp/喷油模</td>
+              <td class="total-cell editable-cell">
+                <p-inputNumber 
+                  [(ngModel)]="detail.clampTotal"
+                  [showButtons]="false"
+                  [min]="0"
+                  [useGrouping]="false"
+                  (ngModelChange)="onCellValueChange()"
+                  styleClass="compact-input">
+                </p-inputNumber>
+              </td>
+              <td *ngFor="let day of detail.clampCount; let i = index" class="editable-cell">
+                <p-inputNumber 
+                  [(ngModel)]="day.value"
+                  [showButtons]="false"
+                  [min]="0"
+                  [useGrouping]="false"
+                  (ngModelChange)="onCellValueChange()"
+                  styleClass="compact-input">
+                </p-inputNumber>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <!-- Loading overlay -->
+  <div class="loading-overlay" *ngIf="loading">
+    <i class="pi pi-spin pi-spinner" style="font-size: 3rem;"></i>
+  </div>
+</div>

@@ -114,6 +114,15 @@ export const routes: Routes = [
           icon: 'pi pi-calendar'
         }
       },
+      {
+        path: 'production-planning',
+        loadComponent: () => import('./views/pages/pmc/production-planning.component').then(m => m.ProductionPlanningComponent),
+        data: {
+          title: 'Kế hoạch sản xuất chi tiết',
+          breadcrumb: 'Kế hoạch chi tiết',
+          icon: 'pi pi-table'
+        }
+      },
     ]
   },
   {

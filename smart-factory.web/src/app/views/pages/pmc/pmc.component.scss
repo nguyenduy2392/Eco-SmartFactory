@@ -1,119 +1,332 @@
-.container {
-  max-width: 100%;
-  margin: 0;
+.pmc-container {
+  width: 100%;
+  height: 100%;
   padding: 20px;
   background: #f8f9fa;
-  min-height: 100vh;
 }
 
-h1 {
-  color: #2c3e50;
-  font-size: 28px;
+.pmc-header {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   margin-bottom: 20px;
-  font-weight: 600;
+
+  h1 {
+    color: #2c3e50;
+    font-size: 28px;
+    margin: 0 0 20px 0;
+    font-weight: 600;
+  }
+
+  .pmc-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+
+    .week-info {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+
+      h2 {
+        margin: 0;
+        font-size: 20px;
+        color: #34495e;
+        font-weight: 500;
+      }
+
+      .version-badge,
+      .status-badge {
+        padding: 4px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .version-badge {
+        background: #e3f2fd;
+        color: #1976d2;
+      }
+
+      .status-badge {
+        &.status-draft {
+          background: #fff3e0;
+          color: #f57c00;
+        }
+
+        &.status-approved {
+          background: #e8f5e9;
+          color: #2e7d32;
+        }
+      }
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+  }
+
+  .no-data {
+    text-align: center;
+    padding: 60px 20px;
+
+    i {
+      display: block;
+      margin-bottom: 20px;
+    }
+
+    p {
+      font-size: 18px;
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    button {
+      margin: 0 8px;
+    }
+  }
 }
 
 .grid-wrapper {
-  width: 100%;
-  overflow-x: auto;
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-  padding: 16px;
+  overflow: auto;
+  max-height: calc(100vh - 280px);
+  min-height: 400px;
+  padding: 10px;
+  
+  .no-grid-data {
+    text-align: center;
+    padding: 80px 20px;
+    
+    i {
+      display: block;
+      margin-bottom: 20px;
+    }
+    
+    p {
+      font-size: 16px;
+      color: #666;
+    }
+  }
 }
 
-.ag-theme-quartz {
-  --ag-font-size: 14px;
-  --ag-font-family: 'Segoe UI', Roboto, -apple-system, BlinkMacSystemFont, sans-serif;
-  --ag-header-height: 50px;
-  --ag-row-height: 45px;
-  --ag-header-background-color: #3498db;
-  --ag-header-foreground-color: white;
-  --ag-border-color: #e1e8ed;
-  --ag-row-border-color: #e1e8ed;
+// Import Handsontable styles
+@import 'handsontable/dist/handsontable.full.css';
+
+// Excel-like styling for Handsontable
+.pmc-hot-table {
+  width: 100%;
+  min-height: 400px;
+  overflow: auto;
 }
 
-:host ::ng-deep .ag-header {
-  border-bottom: 2px solid #2980b9;
+:host ::ng-deep {
+  // Table styling
+  .handsontable {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    font-size: 13px;
+    color: #333;
+  }
+  
+  // Header styling (like Excel)
+  .ht_clone_top th,
+  .ht_clone_top_left_corner th,
+  .ht_clone_left th {
+    background: linear-gradient(180deg, #4a90e2 0%, #357abd 100%);
+    color: white;
+    font-weight: 600;
+    border: 1px solid #2e5f8e;
+    text-align: center;
+    vertical-align: middle;
+    padding: 8px 4px;
+  }
+  
+  // Cell borders (Excel-like grid)
+  .handsontable td {
+    border: 1px solid #d0d7de;
+    padding: 4px 6px;
+    vertical-align: middle;
+  }
+  
+  // Fixed columns (frozen columns styling)
+  .ht_clone_left td,
+  .ht_clone_top_left_corner td {
+    background-color: #f6f8fa;
+    font-weight: 500;
+  }
+  
+  // Cell type colors (like Excel conditional formatting)
+  .cell-requirement {
+    background-color: #fff3cd !important; // Vàng nhạt
+    color: #856404 !important;
+    font-weight: 500;
+  }
+  
+  .cell-production {
+    background-color: #d4edda !important; // Xanh lá nhạt
+    color: #155724 !important;
+    font-weight: 500;
+  }
+  
+  .cell-clamp {
+    background-color: #d1ecf1 !important; // Xanh dương nhạt
+    color: #0c5460 !important;
+    font-weight: 500;
+  }
+  
+  // Selected cell (Excel-like)
+  .handsontable td.current,
+  .handsontable th.current {
+    background-color: #cfe2ff !important;
+    border: 2px solid #0d6efd !important;
+  }
+  
+  // Area selection
+  .handsontable td.area {
+    background-color: rgba(13, 110, 253, 0.1) !important;
+  }
+  
+  // Editable cell focus
+  .handsontable td.htCurrentRow {
+    background-color: rgba(255, 255, 255, 0.3);
+  }
+  
+  // Merged cells styling
+  .handsontable td.htMergeCell {
+    text-align: center;
+    vertical-align: middle;
+  }
+  
+  // Numeric cells alignment
+  .handsontable td.htNumeric {
+    text-align: right;
+  }
+  
+  // Readonly cells
+  .handsontable td.htDimmed {
+    color: #666;
+    background-color: #f5f5f5;
+  }
+  
+  // Context menu styling
+  .htContextMenu {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    border: 1px solid #ccc;
+    box-shadow: 2px 2px 8px rgba(0,0,0,0.2);
+  }
+  
+  // Hover effect on rows
+  .handsontable tbody tr:hover td {
+    background-color: rgba(0, 123, 255, 0.05);
+  }
+  
+  // Scrollbars
+  .handsontable::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+  }
+  
+  .handsontable::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+  
+  .handsontable::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 6px;
+  }
+  
+  .handsontable::-webkit-scrollbar-thumb:hover {
+    background: #555;
+  }
 }
 
-:host ::ng-deep .ag-header-cell {
-  background-color: #3498db !important;
-  color: white !important;
-  font-weight: 600;
-  border-right: 1px solid rgba(255,255,255,0.2);
-}
-
-:host ::ng-deep .ag-header-cell-label {
-  font-weight: 600;
-  justify-content: center;
-}
-
-:host ::ng-deep .ag-cell {
-  display: flex;
-  align-items: center;
-  border-right: 1px solid #e1e8ed;
-  padding: 0 12px;
-}
-
-:host ::ng-deep .ag-row {
-  border-bottom: 1px solid #e1e8ed;
-}
-
-:host ::ng-deep .ag-row:hover {
-  background-color: #f8f9fa !important;
-}
-
-:host ::ng-deep .ag-pinned-left-cols-container .ag-cell {
-  background-color: #f8f9fa;
-  font-weight: 500;
-}
-
-:host ::ng-deep .cell-header {
-  background-color: #5dade2 !important;
-  color: white !important;
-  font-weight: 700;
-  font-size: 15px;
-}
-
-:host ::ng-deep .cell-yellow {
-  background-color: #fff9e6 !important;
-  color: #856404 !important;
-  font-weight: 500;
-}
-
-:host ::ng-deep .cell-green {
-  background-color: #d4edda !important;
-  color: #155724 !important;
-  font-weight: 500;
-}
-
-:host ::ng-deep .ag-cell-focus {
-  border: 2px solid #3498db !important;
-}
-
-:host ::ng-deep .ag-cell-inline-editing {
-  background-color: #e3f2fd !important;
-  border: 2px solid #2196f3 !important;
-}
-
-.info {
-  margin-top: 20px;
-  padding: 15px 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+.pmc-footer {
+  background: white;
+  padding: 16px 20px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-.info p {
-  margin: 0;
-  font-size: 14px;
+  margin-top: 20px;
   display: flex;
+  justify-content: space-between;
   align-items: center;
+
+  .legend {
+    display: flex;
+    gap: 24px;
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: #555;
+
+      .legend-color {
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        border: 1px solid #ddd;
+      }
+    }
+  }
+
+  .info-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #666;
+    font-size: 13px;
+
+    i {
+      color: #3498db;
+    }
+  }
 }
 
-.info strong {
-  margin-right: 8px;
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+
+  i {
+    color: #3498db;
+    margin-bottom: 16px;
+  }
+
+  p {
+    color: #666;
+    font-size: 16px;
+  }
 }
 
+// Version dropdown styling
+.version-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  .version-number {
+    font-weight: 600;
+    color: #2c3e50;
+  }
+
+  .version-info {
+    font-size: 11px;
+    color: #7f8c8d;
+  }
+}

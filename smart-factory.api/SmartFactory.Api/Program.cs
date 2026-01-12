@@ -6,6 +6,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using SmartFactory.Application.Data;
 using SmartFactory.Application.Helpers;
+using SmartFactory.Api.Middleware;
 using Serilog;
 using System.Text;
 
@@ -171,6 +172,10 @@ try
     }
 
     // Configure the HTTP request pipeline
+    
+    // Enable global exception handling (must be first)
+    app.UseGlobalExceptionHandler();
+
     app.UseSwagger();
     app.UseSwaggerUI();
 
