@@ -268,6 +268,11 @@ export class ProductionPlanningComponent implements OnInit {
    * Convert PMC cells to DailyData format
    */
   convertCellsToDailyData(cells: any[]): DailyData[] {
+    console.log('Converting cells to daily data, cells count:', cells?.length || 0);
+    if (cells && cells.length > 0) {
+      console.log('Sample cell:', cells[0]);
+    }
+    
     return this.dateColumns.map(col => {
       const cell = cells.find(c => {
         const cellDate = format(new Date(c.workDate), 'yyyy-MM-dd');
@@ -283,6 +288,10 @@ export class ProductionPlanningComponent implements OnInit {
         if (isNaN(cellValue)) {
           cellValue = 0;
         }
+      }
+      
+      if (cell) {
+        console.log('Cell found for date', format(col.date, 'yyyy-MM-dd'), 'value:', cell.value, '-> converted:', cellValue);
       }
       
       return {
@@ -610,11 +619,19 @@ export class ProductionPlanningComponent implements OnInit {
     
     this.loading = true;
     
+    // DO NOT recalculate totals before saving - users enter them manually
+    // this.recalculateRowTotals();
+    
     const rows: SavePMCRowRequest[] = [];
     
     console.log('Production details before save:', this.productionDetails);
+    console.log('Number of production details:', this.productionDetails.length);
     
-    this.productionDetails.forEach(detail => {
+    this.productionDetails.forEach((detail, index) => {
+      console.log(`\n=== Processing detail ${index + 1} ===`);
+      console.log('Material:', detail.materialCode, 'Part:', detail.partName);
+      console.log('Totals - PO:', detail.poTotal, 'Plan:', detail.planTotal, 'Clamp:', detail.clampTotal);
+      
       // Helper function to ensure value is a valid number
       const ensureNumber = (value: any): number => {
         if (value === null || value === undefined || value === '') {
@@ -630,6 +647,15 @@ export class ProductionPlanningComponent implements OnInit {
         const dateKey = format(day.date, 'yyyy-MM-dd');
         cellValues[dateKey] = ensureNumber(day.value);
       });
+      console.log('PO cellValues:', cellValues);
+      console.log('PO cellValues keys:', Object.keys(cellValues));
+      console.log('PO cellValues values:', Object.values(cellValues));
+      
+      // Check if all values are 0
+      const allZero = Object.values(cellValues).every(v => v === 0);
+      if (allZero) {
+        console.warn('⚠️ All PO cell values are 0 for:', detail.materialCode, detail.partName);
+      }
       
       rows.push({
         id: detail.poRowId,
@@ -647,6 +673,7 @@ export class ProductionPlanningComponent implements OnInit {
         const dateKey = format(day.date, 'yyyy-MM-dd');
         planCellValues[dateKey] = ensureNumber(day.value);
       });
+      console.log('Production Plan cellValues:', planCellValues);
       
       rows.push({
         id: detail.planRowId,
@@ -664,6 +691,7 @@ export class ProductionPlanningComponent implements OnInit {
         const dateKey = format(day.date, 'yyyy-MM-dd');
         clampCellValues[dateKey] = ensureNumber(day.value);
       });
+      console.log('Clamp cellValues:', clampCellValues);
       
       rows.push({
         id: detail.clampRowId,
@@ -681,8 +709,10 @@ export class ProductionPlanningComponent implements OnInit {
       rows: rows
     };
     
-    console.log('Saving PMC with data:', request);
+    console.log('\n=== Final Save Request ===');
+    console.log('PMC Week ID:', request.pmcWeekId);
     console.log('Total rows to save:', rows.length);
+    console.log('Full request:', JSON.stringify(request, null, 2));
     
     this.pmcService.savePMCWeek(request).subscribe({
       next: (data) => {
@@ -699,10 +729,11 @@ export class ProductionPlanningComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error saving PMC:', error);
+        console.error('Error details:', error.error);
         this.messageService.add({
           severity: 'error',
           summary: 'Lỗi',
-          detail: error.error?.message || 'Không thể lưu kế hoạch'
+          detail: error.error?.message || error.message || 'Không thể lưu kế hoạch'
         });
         this.loading = false;
       }
@@ -763,8 +794,19 @@ export class ProductionPlanningComponent implements OnInit {
     console.log('Cell value changed, hasChanges:', this.hasChanges);
     console.log('Current production details sample:', this.productionDetails[0]);
     
+    // DO NOT recalculate totals - let users enter them manually
+    // this.recalculateRowTotals();
+    
     // Recalculate all summary data including revenue
-    // Note: Total columns (poTotal, planTotal, clampTotal) are now manually editable
     this.initializeSummaryData();
+  }
+  
+  /**
+   * Recalculate totals for each production detail row (NOT USED - totals are entered manually)
+   */
+  recalculateRowTotals(): void {
+    // DO NOTHING - totals should be entered manually by users
+    // Users can enter any value they want in the Total column
+    console.log('recalculateRowTotals called but doing nothing - totals are manual entry');
   }
 }

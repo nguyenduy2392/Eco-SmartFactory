@@ -52,15 +52,37 @@ public class SavePMCWeekCommandHandler : IRequestHandler<SavePMCWeekCommand, PMC
         // Update rows and cells
         foreach (var rowRequest in request.Rows)
         {
-            // Find existing row or create new one
-            var existingRow = currentWeek.Rows.FirstOrDefault(r =>
-                r.Id == rowRequest.Id ||
-                (r.ProductCode == rowRequest.ProductCode &&
-                 r.ComponentName == rowRequest.ComponentName &&
-                 r.PlanType == rowRequest.PlanType));
+            _logger.LogInformation("Processing row: ProductCode={ProductCode}, Component={Component}, PlanType={PlanType}, CustomerId={CustomerId}, Id={RowId}",
+                rowRequest.ProductCode, rowRequest.ComponentName, rowRequest.PlanType, rowRequest.CustomerId, rowRequest.Id);
+            
+            // Find existing row by ID first, then by matching all key fields
+            var existingRow = currentWeek.Rows.FirstOrDefault(r => r.Id == rowRequest.Id);
+            
+            if (existingRow == null && rowRequest.Id != null && rowRequest.Id != Guid.Empty)
+            {
+                _logger.LogWarning("Row ID {RowId} not found in current week, attempting to find by matching fields", rowRequest.Id);
+            }
+            
+            // If not found by ID, try to find by matching fields
+            if (existingRow == null)
+            {
+                existingRow = currentWeek.Rows.FirstOrDefault(r =>
+                    r.ProductCode == rowRequest.ProductCode &&
+                    r.ComponentName == rowRequest.ComponentName &&
+                    r.PlanType == rowRequest.PlanType &&
+                    r.CustomerId == rowRequest.CustomerId);
+                
+                if (existingRow != null)
+                {
+                    _logger.LogInformation("Found matching row by fields: {RowId}", existingRow.Id);
+                }
+            }
             
             if (existingRow != null)
             {
+                _logger.LogInformation("Updating existing row {RowId} with TotalValue={TotalValue}", 
+                    existingRow.Id, rowRequest.TotalValue);
+                
                 // Update existing row
                 existingRow.TotalValue = rowRequest.TotalValue;
                 existingRow.Notes = rowRequest.Notes;
@@ -75,13 +97,17 @@ public class SavePMCWeekCommandHandler : IRequestHandler<SavePMCWeekCommand, PMC
                         
                         if (existingCell != null)
                         {
-                            // Update existing cell
+                            // Update existing cell - ALWAYS update even if value is 0
+                            _logger.LogInformation("Updating cell for row {RowId}, date {Date}: OldValue={OldValue}, NewValue={NewValue}", 
+                                existingRow.Id, workDate.Date, existingCell.Value, cellEntry.Value);
                             existingCell.Value = cellEntry.Value;
                             existingCell.UpdatedAt = DateTime.UtcNow;
                         }
                         else
                         {
-                            // Create new cell
+                            // Create new cell - even if value is 0
+                            _logger.LogInformation("Creating new cell for row {RowId}, date {Date}: Value={Value}", 
+                                existingRow.Id, workDate.Date, cellEntry.Value);
                             existingRow.Cells.Add(new PMCCell
                             {
                                 PMCRowId = existingRow.Id,
@@ -92,10 +118,17 @@ public class SavePMCWeekCommandHandler : IRequestHandler<SavePMCWeekCommand, PMC
                             });
                         }
                     }
+                    else
+                    {
+                        _logger.LogWarning("Failed to parse date: {DateKey}", cellEntry.Key);
+                    }
                 }
             }
             else
             {
+                _logger.LogInformation("Creating new row: ProductCode={ProductCode}, Component={Component}, PlanType={PlanType}",
+                    rowRequest.ProductCode, rowRequest.ComponentName, rowRequest.PlanType);
+                
                 // Create new row
                 var newRow = new PMCRow
                 {
@@ -131,10 +164,20 @@ public class SavePMCWeekCommandHandler : IRequestHandler<SavePMCWeekCommand, PMC
             }
         }
         
-        await _context.SaveChangesAsync(cancellationToken);
+        _logger.LogInformation("About to save changes. Total rows in week: {RowCount}, Total cells across all rows: {CellCount}",
+            currentWeek.Rows.Count, currentWeek.Rows.Sum(r => r.Cells.Count));
         
-        _logger.LogInformation("Updated PMC Week {WeekId} with {RowCount} rows", 
-            currentWeek.Id, currentWeek.Rows.Count);
+        try
+        {
+            await _context.SaveChangesAsync(cancellationToken);
+            _logger.LogInformation("Successfully saved PMC Week {WeekId} with {RowCount} rows", 
+                currentWeek.Id, currentWeek.Rows.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error saving PMC Week {WeekId}: {Message}", currentWeek.Id, ex.Message);
+            throw;
+        }
         
         // Return updated week
         return await GetPMCWeekDto(currentWeek.Id, cancellationToken);

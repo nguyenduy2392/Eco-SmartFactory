@@ -30,11 +30,6 @@ export class AppMenuComponent implements OnInit {
                 icon: 'pi pi-fw pi-box',
                 items: [
                     {
-                        label: 'PMC',
-                        icon: 'pi pi-fw pi-calendar',
-                        routerLink: ['/pmc']
-                    },
-                    {
                         label: 'Kế hoạch chi tiết',
                         icon: 'pi pi-fw pi-table',
                         routerLink: ['/production-planning']

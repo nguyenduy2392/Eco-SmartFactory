@@ -106,15 +106,6 @@ export const routes: Routes = [
         }
       },
       {
-        path: 'pmc',
-        loadComponent: () => import('./views/pages/pmc/pmc.component').then(m => m.PmcComponent),
-        data: {
-          title: 'Kế hoạch sản xuất PMC',
-          breadcrumb: 'PMC',
-          icon: 'pi pi-calendar'
-        }
-      },
-      {
         path: 'production-planning',
         loadComponent: () => import('./views/pages/pmc/production-planning.component').then(m => m.ProductionPlanningComponent),
         data: {
