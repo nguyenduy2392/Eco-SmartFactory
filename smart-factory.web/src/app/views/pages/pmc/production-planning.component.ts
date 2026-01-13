@@ -42,6 +42,7 @@ interface SummaryData {
   isPercentage?: boolean;
   isHighlight?: boolean;
   isRevenue?: boolean;
+  isEditable?: boolean;
 }
 
 @Component({
@@ -78,6 +79,9 @@ export class ProductionPlanningComponent implements OnInit {
   
   // Production details (Phần 2)
   productionDetails: ProductionDetail[] = [];
+  
+  // Workers available data (editable)
+  workersAvailable: number[] = [];
   
   loading = false;
   
@@ -532,12 +536,15 @@ export class ProductionPlanningComponent implements OnInit {
       });
     });
     
-    // Workers available (mock data - replace with actual from settings)
-    const workersAvailable = new Array(daysCount).fill(41);
+    // Workers available (initialize if empty or adjust length)
+    if (this.workersAvailable.length !== daysCount) {
+      this.workersAvailable = new Array(daysCount).fill(41);
+    }
     
     // Calculate revenue
     const revenueByPlan = new Array(daysCount).fill(0);
-    const revenueTarget = new Array(daysCount).fill(24600000);
+    // DT THEO NGƯỜI = #CN Có * 600,000
+    const revenueTarget = this.workersAvailable.map(workers => workers * 600000);
     
     this.productionDetails.forEach(detail => {
       detail.productionPlan.forEach((day, index) => {
@@ -555,7 +562,7 @@ export class ProductionPlanningComponent implements OnInit {
     
     // Calculate workers shortage: CN Thiếu = CN Có - TỔNG CẦN CN
     const workersShortage = totalNeeded.map((needed, i) => 
-      workersAvailable[i] - needed
+      this.workersAvailable[i] - needed
     );
     
     // Build summary data dynamically
@@ -578,7 +585,8 @@ export class ProductionPlanningComponent implements OnInit {
       },
       {
         label: '#CN Có',
-        values: workersAvailable
+        values: this.workersAvailable,
+        isEditable: true
       },
       {
         label: 'DT THEO KHSX',
@@ -740,6 +748,15 @@ export class ProductionPlanningComponent implements OnInit {
     });
   }
   
+  /**
+   * Handle change in workers available value
+   */
+  onWorkersAvailableChange(): void {
+    // Recalculate summary data when workers available changes
+    this.initializeSummaryData();
+    this.hasChanges = true;
+  }
+
   /**
    * Get cell background color based on value
    */

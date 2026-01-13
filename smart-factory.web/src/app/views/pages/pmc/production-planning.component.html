@@ -95,14 +95,25 @@
             <td class="label-cell">{{ row.label }}</td>
             <td *ngFor="let value of row.values; let i = index" 
                 class="value-cell"
+                [ngClass]="{'editable-cell': row.isEditable}"
                 [style.background-color]="row.isPercentage ? getCellColor(value, true) : ''">
-              <span *ngIf="!row.isPercentage && !row.label.includes('DT')">
+              <!-- Editable cell for #CN Có -->
+              <p-inputNumber *ngIf="row.isEditable"
+                [(ngModel)]="row.values[i]"
+                [showButtons]="false"
+                [min]="0"
+                [useGrouping]="false"
+                (ngModelChange)="onWorkersAvailableChange()"
+                styleClass="compact-input">
+              </p-inputNumber>
+              <!-- Non-editable cells -->
+              <span *ngIf="!row.isEditable && !row.isPercentage && !row.label.includes('DT')">
                 {{ value === 0 ? '' : (value | number:'1.0-0') }}
               </span>
-              <span *ngIf="!row.isPercentage && row.label.includes('DT')">
+              <span *ngIf="!row.isEditable && !row.isPercentage && row.label.includes('DT')">
                 {{ value === 0 ? '' : (value | number:'1.0-0') }}
               </span>
-              <span *ngIf="row.isPercentage">
+              <span *ngIf="!row.isEditable && row.isPercentage">
                 {{ value === 0 ? '' : (value + '%') }}
               </span>
             </td>
