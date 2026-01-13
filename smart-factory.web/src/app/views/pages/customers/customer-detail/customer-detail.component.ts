@@ -8,7 +8,6 @@ import { Material } from '../../../../models/material.interface';
 import { MessageService } from 'primeng/api';
 import { SharedModule } from '../../../../shared.module';
 import { PrimengModule } from '../../../../primeng.module';
-import { ProcessBOMComponent } from '../../../../components/process-bom/process-bom.component';
 import { AvailabilityCheckComponent } from '../../../../components/availability-check/availability-check.component';
 import { POListComponent } from '../../../../components/processing-po/po-list/po-list.component';
 
@@ -17,7 +16,7 @@ import { POListComponent } from '../../../../components/processing-po/po-list/po
   templateUrl: './customer-detail.component.html',
   styleUrls: ['./customer-detail.component.scss'],
   standalone: true,
-  imports: [SharedModule, PrimengModule, ProcessBOMComponent, AvailabilityCheckComponent, POListComponent]
+  imports: [SharedModule, PrimengModule, AvailabilityCheckComponent, POListComponent]
 })
 export class CustomerDetailComponent implements OnInit {
   customer: Customer | null = null;

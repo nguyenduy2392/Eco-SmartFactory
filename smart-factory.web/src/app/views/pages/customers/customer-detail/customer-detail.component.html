@@ -121,12 +121,7 @@
         </p-table>
       </p-tabPanel>
 
-      <!-- Tab 3: Process BOM -->
-      <p-tabPanel header="Thiết lập BOM" leftIcon="pi pi-sitemap">
-        <app-process-bom></app-process-bom>
-      </p-tabPanel>
-
-      <!-- Tab 4: Kiểm tra tính khả dụng linh kiện -->
+      <!-- Tab 3: Kiểm tra tính khả dụng linh kiện -->
       <p-tabPanel header="Kiểm tra tính khả dụng linh kiện" leftIcon="pi pi-check-circle">
         <app-availability-check [customerId]="customerId || undefined"></app-availability-check>
       </p-tabPanel>

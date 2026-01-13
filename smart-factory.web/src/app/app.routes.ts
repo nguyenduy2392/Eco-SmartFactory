@@ -114,6 +114,15 @@ export const routes: Routes = [
           icon: 'pi pi-table'
         }
       },
+      {
+        path: 'process-bom',
+        loadComponent: () => import('./views/pages/process-bom/process-bom-page.component').then(m => m.ProcessBomPageComponent),
+        data: {
+          title: 'Quản lý Process BOM',
+          breadcrumb: 'Process BOM',
+          icon: 'pi pi-sitemap'
+        }
+      },
     ]
   },
   {

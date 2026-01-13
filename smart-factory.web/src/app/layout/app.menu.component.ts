@@ -40,6 +40,11 @@ export class AppMenuComponent implements OnInit {
                         routerLink: ['/customers']
                     },
                     {
+                        label: 'Process BOM',
+                        icon: 'pi pi-fw pi-sitemap',
+                        routerLink: ['/process-bom']
+                    },
+                    {
                         label: 'Kho nguyên vật liệu',
                         icon: 'pi pi-fw pi-warehouse',
                         routerLink: ['/warehouse']
