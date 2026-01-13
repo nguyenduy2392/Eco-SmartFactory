@@ -72,6 +72,11 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
   ) {}
 
   ngOnInit(): void {
+    console.log('=== PO EXCEL TABLE COMPONENT INIT ===', {
+      hasData: !!this.purchaseOrder,
+      processingType: this.processingType,
+      readonly: this.readonly
+    });
     this.loadCustomers();
     this.loadProcessingTypes();
     this.loadProducts();
@@ -178,7 +183,14 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
   }
 
   initializeTable(): void {
+    console.log('=== INITIALIZE TABLE ===', {
+      hasContainer: !!this.tableContainer,
+      hasData: !!this.purchaseOrder,
+      processingType: this.processingType,
+      readonly: this.readonly
+    });
     if (!this.tableContainer || !this.purchaseOrder || !this.processingType) {
+      console.warn('Cannot initialize table - missing requirements');
       return;
     }
 
@@ -197,22 +209,60 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
 
     const container = this.tableContainer.nativeElement;
 
-    this.tabulatorInstance = new Tabulator(container, {
-      data: this.tableData,
-      columns: this.tableColumns,
-      layout: 'fitDataFill',
-      height: 'auto',
-      rowHeight: 40,
-      editableTitleCancel: true,
-      cellEdited: (cell: any) => {
-        this.onCellEdit(cell);
-      },
-      cellEditCancelled: (cell: any) => {
-        // Handle edit cancellation if needed
-      }
+    console.log('=== CREATING TABULATOR INSTANCE ===', {
+      dataRows: this.tableData.length,
+      columns: this.tableColumns.length,
+      readonly: this.readonly
     });
 
-    this.isInitialized = true;
+    try {
+      this.tabulatorInstance = new Tabulator(container, {
+        data: this.tableData,
+        columns: this.tableColumns,
+        layout: 'fitDataFill',
+        height: 'auto',
+        rowHeight: 40,
+        cellEdited: (cell: any) => {
+          console.log('=== CELL EDITED IN CONFIG ===', {
+            field: cell.getField(),
+            oldValue: cell.getOldValue(),
+            newValue: cell.getValue()
+          });
+          this.onCellEdit(cell);
+        },
+        cellEditCancelled: (cell: any) => {
+          console.log('=== CELL EDIT CANCELLED ===', cell.getField());
+        }
+      });
+
+      console.log('=== TABULATOR TABLE BUILT ===');
+      
+      // Subscribe to Tabulator events after table is built
+      this.tabulatorInstance.on('tableBuilt', () => {
+        console.log('=== TABLE BUILT EVENT ===');
+      });
+
+      this.tabulatorInstance.on('cellEdited', (cell: any) => {
+        console.log('=== CELL EDITED VIA ON() ===', {
+          field: cell.getField(),
+          oldValue: cell.getOldValue(),
+          newValue: cell.getValue()
+        });
+        this.onCellEdit(cell);
+      });
+
+      this.tabulatorInstance.on('cellEditing', (cell: any) => {
+        console.log('=== CELL EDITING VIA ON() ===', cell.getField());
+      });
+
+      this.isInitialized = true;
+      console.log('=== TABULATOR INSTANCE CREATED ===', {
+        initialized: this.isInitialized,
+        instance: !!this.tabulatorInstance
+      });
+    } catch (error) {
+      console.error('=== ERROR CREATING TABULATOR ===', error);
+    }
   }
 
   prepareData(): void {
@@ -496,7 +546,12 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
   }
 
   onCellEdit(cell: any): void {
-    if (this.isSaving || this.readonly) return; // Disable editing if readonly
+    console.log('=== ON CELL EDIT FUNCTION CALLED ===', cell.getField());
+    
+    if (this.isSaving || this.readonly) {
+      console.log('Skipping: isSaving =', this.isSaving, 'readonly =', this.readonly);
+      return;
+    }
 
     try {
       const field = cell.getField();
@@ -588,7 +643,6 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
     const key = operationId ? `${operationId}_${field}` : `${row.id}_${field}`;
     const isNew = !operationId || row.id.startsWith('new_');
     this.pendingChanges.set(key, { operationId, field, value, row, isNew });
-    console.log('Marked for save:', { key, operationId, field, value, isNew, pendingCount: this.pendingChanges.size });
   }
 
   debounceSave(): void {
@@ -603,16 +657,13 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
 
   async saveChanges(): Promise<void> {
     if (this.pendingChanges.size === 0) {
-      console.log('No pending changes to save');
       return;
     }
 
     if (this.isSaving) {
-      console.log('Already saving, skipping...');
       return;
     }
 
-    console.log('Saving changes, count:', this.pendingChanges.size);
     this.isSaving = true;
     const changesToSave = new Map(this.pendingChanges);
     this.pendingChanges.clear();
@@ -623,11 +674,8 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
     changesToSave.forEach((change, key) => {
       const { operationId, field, value, row, isNew } = change;
 
-      console.log('Processing change:', { key, operationId, field, value, isNew, rowId: row.id });
 
       // Handle new rows (row starts with 'new_' or no operationId)
-      // Note: operationId can be empty string for existing rows that don't have an operation yet
-      // So we check row.id to determine if it's truly a new row
       if (isNew || row.id.startsWith('new_')) {
         const rowKey = row.id;
         if (!newRowsToCreate.has(rowKey)) {
@@ -639,18 +687,17 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         const update = this.mapFieldToUpdate(field, value);
         if (Object.keys(update).length > 0) {
           Object.assign(newRowsToCreate.get(rowKey)!.data, update);
-          console.log('Added to new rows:', { rowKey, update, mergedData: newRowsToCreate.get(rowKey)!.data });
         }
         return;
       }
 
-      // If operationId is empty but row is not new, skip it (this shouldn't happen for existing operations)
+      // Handle existing operations
+      // operationId should be valid at this point since isNew is false
       if (!operationId || operationId === '') {
-        console.warn('Skipping change with empty operationId for existing row:', { rowId: row.id, field, value });
+        console.error('Invalid operationId for existing row:', { rowId: row.id, field, value, rowData: row });
         return;
       }
 
-      // Handle existing operations
       if (!changesByOperation.has(operationId)) {
         changesByOperation.set(operationId, {
           operationId,
@@ -1804,7 +1851,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
 
     switch (this.processingType) {
       case 'EP_NHUA':
-        return {
+        const updateData = {
           ...baseData,
           operationName: operation.operationName || 'EP_NHUA',
           partName: row.partName !== undefined ? row.partName : operation.partName,
@@ -1825,6 +1872,8 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
           chargeCount: row.chargeCount !== undefined ? (this.toNumberOrNull(row.chargeCount) ?? 0) : operation.chargeCount,
           unitPrice: row.unitPrice !== undefined ? (this.toNumberOrNull(row.unitPrice) ?? 0) : operation.unitPrice
         };
+        console.log('EP_NHUA update data:', { rowId: row.id, numberOfPresses: row.numberOfPresses, updateData });
+        return updateData;
       case 'PHUN_IN':
         return {
           ...baseData,

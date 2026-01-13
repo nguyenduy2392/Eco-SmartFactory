@@ -116,6 +116,7 @@ public class UpdatePOOperationRequest
     public string? MachineType { get; set; }
     public decimal? RequiredMaterial { get; set; }
     public decimal? RequiredColor { get; set; }
+    public int? NumberOfPresses { get; set; } // Số lần ép
 }
 
 public class ClonePOVersionRequest

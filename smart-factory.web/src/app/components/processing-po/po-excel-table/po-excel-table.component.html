@@ -25,20 +25,12 @@
 
             <div class="field">
               <label class="field-label">
-                <i class="pi pi-calendar mr-1"></i>
-                NGÀY PO
+                <i class="pi pi-clock mr-1"></i>
+                NGÀY TẠO
               </label>
               <div class="p-inputgroup">
-                <span class="p-inputgroup-addon"><i class="pi pi-calendar"></i></span>
-                <p-calendar
-                  [(ngModel)]="poFormData.poDate"
-                  [showIcon]="true"
-                  dateFormat="dd/mm/yy"
-                  [showButtonBar]="true"
-                  [appendTo]="'body'"
-                  [disabled]="readonly"
-                  styleClass="w-full">
-                </p-calendar>
+                <span class="p-inputgroup-addon"><i class="pi pi-clock"></i></span>
+                <input pInputText [value]="purchaseOrder?.createdAt | date:'dd/MM/yyyy'" readonly class="w-full">
               </div>
             </div>
 
@@ -108,16 +100,6 @@
               </div>
             </div>
 
-            <div class="field">
-              <label class="field-label">
-                <i class="pi pi-clock mr-1"></i>
-                NGÀY TẠO
-              </label>
-              <div class="p-inputgroup">
-                <span class="p-inputgroup-addon"><i class="pi pi-clock"></i></span>
-                <input pInputText [value]="purchaseOrder?.createdAt | date:'dd/MM/yyyy'" readonly class="w-full">
-              </div>
-            </div>
           </div>
         </div>
 

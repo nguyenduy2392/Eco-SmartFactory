@@ -295,7 +295,8 @@ public class PurchaseOrdersController : BaseApiController
                 TotalWeight = request.TotalWeight,
                 MachineType = request.MachineType,
                 RequiredMaterial = request.RequiredMaterial,
-                RequiredColor = request.RequiredColor
+                RequiredColor = request.RequiredColor,
+                NumberOfPresses = request.NumberOfPresses
             };
             var result = await Mediator.Send(command);
             return Ok(result);
