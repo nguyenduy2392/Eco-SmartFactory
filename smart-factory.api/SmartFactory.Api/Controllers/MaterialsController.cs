@@ -10,12 +10,13 @@ namespace SmartFactory.Api.Controllers;
 public class MaterialsController : BaseApiController
 {
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] bool? isActive, [FromQuery] Guid? customerId)
+    public async Task<IActionResult> GetAll([FromQuery] bool? isActive, [FromQuery] Guid? customerId, [FromQuery] bool? excludeShared)
     {
         var query = new GetAllMaterialsQuery 
         { 
             IsActive = isActive,
-            CustomerId = customerId
+            CustomerId = customerId,
+            ExcludeShared = excludeShared
         };
         var result = await Mediator.Send(query);
         return Ok(result);

@@ -30,15 +30,18 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
 {
     private readonly ApplicationDbContext _context;
     private readonly ExcelImportService _excelImportService;
+    private readonly IFileStorageService _fileStorageService;
     private readonly ILogger<ImportPOFromExcelCommandHandler> _logger;
 
     public ImportPOFromExcelCommandHandler(
         ApplicationDbContext context,
         ExcelImportService excelImportService,
+        IFileStorageService fileStorageService,
         ILogger<ImportPOFromExcelCommandHandler> logger)
     {
         _context = context;
         _excelImportService = excelImportService;
+        _fileStorageService = fileStorageService;
         _logger = logger;
     }
 
@@ -224,6 +227,17 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
 
                 if (part == null)
                 {
+                    // Lưu ảnh linh kiện nếu có
+                    string? imageUrl = null;
+                    if (operationData.PartImageBytes != null && operationData.PartImageBytes.Length > 0)
+                    {
+                        imageUrl = await _fileStorageService.SavePartImageAsync(
+                            operationData.PartImageBytes, 
+                            operationData.PartCode);
+                        _logger.LogInformation("Saved part image for {PartCode}: {ImageUrl}", 
+                            operationData.PartCode, imageUrl);
+                    }
+                    
                     part = new Part
                     {
                         Code = operationData.PartCode,
@@ -234,6 +248,7 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
                         Material = operationData.Material,
                         Color = operationData.Color ?? operationData.ColorCode, // Ưu tiên Color, nếu không có thì dùng ColorCode
                         Weight = operationData.Weight,
+                        ImageUrl = imageUrl,
                         IsActive = true,
                         CreatedAt = DateTime.UtcNow
                     };
@@ -243,6 +258,24 @@ public class ImportPOFromExcelCommandHandler : IRequestHandler<ImportPOFromExcel
                 }
                 else
                 {
+                    // Cập nhật ảnh linh kiện nếu có ảnh mới
+                    if (operationData.PartImageBytes != null && operationData.PartImageBytes.Length > 0)
+                    {
+                        // Xóa ảnh cũ nếu có
+                        if (!string.IsNullOrWhiteSpace(part.ImageUrl))
+                        {
+                            await _fileStorageService.DeletePartImageAsync(part.ImageUrl);
+                        }
+                        
+                        // Lưu ảnh mới
+                        var imageUrl = await _fileStorageService.SavePartImageAsync(
+                            operationData.PartImageBytes, 
+                            operationData.PartCode);
+                        part.ImageUrl = imageUrl;
+                        _logger.LogInformation("Updated part image for {PartCode}: {ImageUrl}", 
+                            operationData.PartCode, imageUrl);
+                    }
+                    
                     // Cập nhật thông tin part nếu có thay đổi
                     if (!string.IsNullOrWhiteSpace(operationData.PartName) && part.Name != operationData.PartName)
                     {

@@ -14,10 +14,12 @@ namespace SmartFactory.Application.Services;
 public class ExcelImportService
 {
     private readonly ILogger<ExcelImportService> _logger;
+    private readonly IFileStorageService _fileStorageService;
 
-    public ExcelImportService(ILogger<ExcelImportService> logger)
+    public ExcelImportService(ILogger<ExcelImportService> logger, IFileStorageService fileStorageService)
     {
         _logger = logger;
+        _fileStorageService = fileStorageService;
         // Required for EPPlus
         ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
     }
@@ -375,9 +377,10 @@ public class ExcelImportService
     /// <summary>
     /// Parse template LẮP RÁP
     /// Template mới có các cột:
-    /// Mã sản phẩm, Nội dung gia công, Số lần gia công, Đơn giá (VND), Thành tiền (VND),
+    /// Mã sản phẩm, Mã linh kiện (hình ảnh), Nội dung gia công, Số lần gia công, Đơn giá (VND), Thành tiền (VND),
     /// Số lượng hợp đồng (PCS), Tổng tiền (VND), Ngày hoàn thành, Ghi chú
     /// Parse theo header động để hỗ trợ cả template cũ và mới
+    /// Cột "Mã linh kiện" có thể chứa hình ảnh embedded
     /// </summary>
     private async Task<ExcelImportResult> ParseLapRapTemplate(ExcelWorksheet worksheet)
     {
@@ -394,6 +397,9 @@ public class ExcelImportService
 
         // Parse header để tìm vị trí các cột
         var columnMap = ParseHeaderRow(worksheet, headerRow);
+        
+        // Extract tất cả hình ảnh trong sheet và map với row number
+        var partImageMap = ExtractPartImagesFromSheet(worksheet);
 
         // Start reading data from row after header
         int startRow = headerRow + 1;
@@ -414,13 +420,33 @@ public class ExcelImportService
                 var productCode = GetValueByColumn(worksheet, currentRow, columnMap, "ProductCode", "Mã sản phẩm", "产品代码");
                 var assemblyContent = GetValueByColumn(worksheet, currentRow, columnMap, "AssemblyContent", "Nội dung gia công", "加工内容", "Nội dung lắp ráp", "装配内容");
                 
+                // Lấy hình ảnh linh kiện từ map (nếu có)
+                byte[]? partImageBytes = null;
+                if (partImageMap.TryGetValue(currentRow, out var imageBytes))
+                {
+                    partImageBytes = imageBytes;
+                    _logger.LogDebug("LAP_RAP Row {Row}: Found part image ({Size} bytes)", currentRow, imageBytes.Length);
+                }
+                
                 _logger.LogDebug("LAP_RAP Row {Row}: ProductCode='{ProductCode}', AssemblyContent='{AssemblyContent}'",
                     currentRow, productCode, assemblyContent);
+                
+                // Đọc số lượng hợp đồng - ưu tiên cột có chữ "hợp đồng"
+                var quantity = GetIntValueByColumn(worksheet, currentRow, columnMap, "ContractQuantity", "Số lượng hợp đồng", "合同数量", "Số lượng hợp đồng (PCS)", "合同数量(PCS)");
+                
+                // Nếu không có, thử cột "Số lượng" thông thường
+                if (quantity == 0)
+                {
+                    quantity = GetIntValueByColumn(worksheet, currentRow, columnMap, "Quantity", "Số lượng", "数量");
+                }
                 
                 var operation = new POOperationData
                 {
                     // Thông tin sản phẩm
                     ProductCode = productCode,
+                    
+                    // Hình ảnh linh kiện
+                    PartImageBytes = partImageBytes,
                     
                     // Nội dung lắp ráp
                     AssemblyContent = assemblyContent,
@@ -433,16 +459,10 @@ public class ExcelImportService
                     TotalAmount = GetDecimalValueByColumn(worksheet, currentRow, columnMap, "TotalAmount", "Thành tiền", "总金额", "Thành tiền (VND)", "总金额(VND)"),
                     
                     // Số lượng hợp đồng
-                    Quantity = GetIntValueByColumn(worksheet, currentRow, columnMap, "Quantity", "Số lượng", "数量", "Số lượng hợp đồng", "合同数量", "Số lượng hợp đồng (PCS)", "合同数量(PCS)"),
+                    Quantity = quantity,
                     
                     ProcessingTypeName = "LẮP RÁP"
                 };
-
-                // Nếu không có số lượng từ cột "Số lượng hợp đồng", thử lấy từ cột "Số lượng" thông thường
-                if (operation.Quantity == 0)
-                {
-                    operation.Quantity = GetIntValueByColumn(worksheet, currentRow, columnMap, "Quantity", "Số lượng", "数量");
-                }
 
                 // Tự động đánh số thứ tự
                 operation.SequenceOrder = result.Operations.Count + 1;
@@ -809,8 +829,20 @@ public class ExcelImportService
                 columnMap["NumberOfPresses"] = col;
             }
             
+            // Số lượng hợp đồng / Contract Quantity - Ưu tiên map trước "Số lượng" thông thường
+            if (headerLower.Contains("số lượng hợp đồng") || headerLower.Contains("合同数量") ||
+                headerLower.Contains("contract quantity") || headerLower.Contains("contractquantity"))
+            {
+                columnMap["ContractQuantity"] = col;
+                // Cũng map vào Quantity để đảm bảo backward compatibility
+                if (!columnMap.ContainsKey("Quantity"))
+                {
+                    columnMap["Quantity"] = col;
+                }
+            }
+            
             // Số lượng / Quantity (hỗ trợ nhiều biến thể)
-            // Ưu tiên "Số lượng (PCS)" trước, sau đó "Số lượng" thông thường
+            // Chỉ map nếu chưa có ContractQuantity
             if ((headerLower.Contains("số lượng") || headerLower.Contains("数量") || 
                 headerNormalized.Contains("so luong") ||
                 headerLower == "quantity" || headerLower.Contains("qty")) &&
@@ -820,6 +852,25 @@ public class ExcelImportService
                 if (!columnMap.ContainsKey("Quantity"))
                 {
                     columnMap["Quantity"] = col;
+                }
+            }
+            
+            // Số lần gia công / Charge Count / Number of Processing Times
+            if (headerLower.Contains("số lần gia công") || headerLower.Contains("加工次数") ||
+                headerLower.Contains("charge count") || headerLower.Contains("chargecount") ||
+                headerLower.Contains("number of processing times"))
+            {
+                columnMap["ChargeCount"] = col;
+            }
+            
+            // Đơn giá / Unit Price
+            if ((headerLower.Contains("đơn giá") && !headerLower.Contains("chuẩn") && !headerLower.Contains("hợp đồng")) ||
+                (headerLower.Contains("单价") && !headerLower.Contains("标准") && !headerLower.Contains("合同")) ||
+                headerLower == "unit price" || headerLower.Contains("unitprice"))
+            {
+                if (!columnMap.ContainsKey("UnitPrice"))
+                {
+                    columnMap["UnitPrice"] = col;
                 }
             }
             
@@ -834,27 +885,11 @@ public class ExcelImportService
                 }
             }
             
-            // Đơn giá / Unit Price / Gía mỗi lần
-            // Chỉ match các cột có "đơn giá" mà KHÔNG phải "đơn giá chuẩn" hay "đơn giá hợp đồng"
-            if ((headerLower.Contains("đơn giá") && !headerLower.Contains("chuẩn") && !headerLower.Contains("hợp đồng")) || 
-                headerLower.Contains("gía mỗi lần") || headerLower.Contains("giá mỗi lần") ||
-                headerLower.Contains("单价") || 
-                headerLower.Contains("unit price") || headerLower.Contains("unitprice"))
-            {
-                columnMap["UnitPrice"] = col;
-            }
-            
             // Thành tiền / Total Amount
-            if (headerLower.Contains("thành tiền") || headerLower.Contains("总金额") || 
+            if (headerLower.Contains("thành tiền") || headerLower.Contains("总金额") ||
                 headerLower.Contains("total amount") || headerLower.Contains("totalamount"))
             {
                 columnMap["TotalAmount"] = col;
-            }
-            
-            // Tổng tiền / Total (khác với Thành tiền)
-            if (headerLower.Contains("tổng tiền") && !headerLower.Contains("thành tiền"))
-            {
-                columnMap["TotalAmount"] = col; // Map vào TotalAmount
             }
             
             // Đơn giá chuẩn / Standard Unit Price
@@ -869,21 +904,6 @@ public class ExcelImportService
                 headerLower.Contains("contract unit price") || headerLower.Contains("contractunitprice"))
             {
                 columnMap["ContractUnitPrice"] = col;
-            }
-            
-            // Số lượng hợp đồng / Contract Quantity
-            if (headerLower.Contains("số lượng hợp đồng") || headerLower.Contains("合同数量") ||
-                headerLower.Contains("contract quantity") || headerLower.Contains("contractquantity"))
-            {
-                columnMap["ContractQuantity"] = col;
-            }
-            
-            // Số lần gia công / Charge Count / Number of Processing Times
-            if (headerLower.Contains("số lần gia công") || headerLower.Contains("加工次数") ||
-                headerLower.Contains("charge count") || headerLower.Contains("chargecount") ||
-                headerLower.Contains("number of processing times"))
-            {
-                columnMap["ChargeCount"] = col;
             }
             
             // Vị trí gia công / Processing Position
@@ -1516,6 +1536,56 @@ public class ExcelImportService
     }
 
     /// <summary>
+    /// Extract tất cả hình ảnh trong worksheet và map với row number
+    /// Dùng cho template LẮP RÁP - cột "Mã linh kiện" chứa hình ảnh
+    /// </summary>
+    private Dictionary<int, byte[]> ExtractPartImagesFromSheet(ExcelWorksheet worksheet)
+    {
+        var imageMap = new Dictionary<int, byte[]>();
+        
+        try
+        {
+            // Lấy tất cả pictures trong sheet
+            var pictures = worksheet.Drawings
+                .Where(x => x is OfficeOpenXml.Drawing.ExcelPicture)
+                .Cast<OfficeOpenXml.Drawing.ExcelPicture>()
+                .ToList();
+            
+            _logger.LogInformation("Found {Count} pictures in worksheet", pictures.Count);
+            
+            foreach (var picture in pictures)
+            {
+                try
+                {
+                    // Lấy vị trí ảnh: From.Row là row index (0-based), cần +1 để match với Excel row number
+                    int imageRow = picture.From.Row + 1;
+                    
+                    // Extract image bytes
+                    var imageBytes = picture.Image.ImageBytes;
+                    
+                    if (imageBytes != null && imageBytes.Length > 0)
+                    {
+                        imageMap[imageRow] = imageBytes;
+                        _logger.LogDebug("Extracted image at row {Row}: {Size} bytes", imageRow, imageBytes.Length);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Error extracting picture from worksheet");
+                }
+            }
+            
+            _logger.LogInformation("Successfully extracted {Count} part images", imageMap.Count);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error extracting part images from worksheet");
+        }
+        
+        return imageMap;
+    }
+
+    /// <summary>
     /// Chuẩn hóa chuỗi tiếng Việt (loại bỏ dấu) để so sánh tốt hơn
     /// </summary>
     private string NormalizeVietnamese(string text)
@@ -1578,6 +1648,7 @@ public class POOperationData
     
     // Thông tin linh kiện
     public string PartCode { get; set; } = string.Empty;
+    public byte[]? PartImageBytes { get; set; } // Hình ảnh linh kiện (extracted từ Excel)
     public string PartName { get; set; } = string.Empty;
     public string ProcessingTypeName { get; set; } = string.Empty;
     

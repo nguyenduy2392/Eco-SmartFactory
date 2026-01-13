@@ -7,6 +7,7 @@ public class POOperationDto
     public Guid PartId { get; set; }
     public string PartCode { get; set; } = string.Empty;
     public string PartName { get; set; } = string.Empty;
+    public string? PartImageUrl { get; set; } // Part image URL
     public Guid? ProductId { get; set; } // Product that contains this part
     public string? ProductCode { get; set; }
     public string? ProductName { get; set; }

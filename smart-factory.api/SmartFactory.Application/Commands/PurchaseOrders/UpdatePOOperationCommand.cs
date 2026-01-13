@@ -255,6 +255,7 @@ public class UpdatePOOperationCommandHandler : IRequestHandler<UpdatePOOperation
             PartId = operation.PartId ?? Guid.Empty,
             PartCode = operation.Part?.Code ?? string.Empty,
             PartName = operation.Part?.Name ?? string.Empty,
+            PartImageUrl = operation.Part?.ImageUrl,
             ProductId = operation.Part?.ProductId,
             ProductCode = operation.Part?.Product?.Code ?? string.Empty,
             ProductName = operation.Part?.Product?.Name,

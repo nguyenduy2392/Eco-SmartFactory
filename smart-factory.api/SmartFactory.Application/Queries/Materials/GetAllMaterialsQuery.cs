@@ -9,6 +9,11 @@ public class GetAllMaterialsQuery : IRequest<List<MaterialDto>>
 {
     public bool? IsActive { get; set; }
     public Guid? CustomerId { get; set; }
+    /// <summary>
+    /// Nếu true, chỉ lấy materials thuộc CustomerId, không bao gồm materials dùng chung (CustomerId = null)
+    /// Nếu false hoặc null, lấy materials của Customer đó + materials dùng chung
+    /// </summary>
+    public bool? ExcludeShared { get; set; }
 }
 
 public class GetAllMaterialsQueryHandler : IRequestHandler<GetAllMaterialsQuery, List<MaterialDto>>
@@ -32,11 +37,19 @@ public class GetAllMaterialsQueryHandler : IRequestHandler<GetAllMaterialsQuery,
             query = query.Where(m => m.IsActive == request.IsActive.Value);
         }
 
-        // Nếu có CustomerId cụ thể, lấy materials của Customer đó + materials dùng chung (CustomerId = null)
-        // Nếu không có CustomerId, lấy tất cả materials
+        // Filter theo CustomerId
         if (request.CustomerId.HasValue && request.CustomerId.Value != Guid.Empty)
         {
-            query = query.Where(m => m.CustomerId == request.CustomerId.Value || m.CustomerId == null);
+            if (request.ExcludeShared == true)
+            {
+                // Chỉ lấy materials thuộc CustomerId, không bao gồm materials dùng chung
+                query = query.Where(m => m.CustomerId == request.CustomerId.Value);
+            }
+            else
+            {
+                // Lấy materials của Customer đó + materials dùng chung (CustomerId = null)
+                query = query.Where(m => m.CustomerId == request.CustomerId.Value || m.CustomerId == null);
+            }
         }
 
         var materials = await query

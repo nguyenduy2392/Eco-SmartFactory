@@ -25,6 +25,7 @@ public class PartDetailDto
     public string? Color { get; set; }
     public decimal? Weight { get; set; }
     public string? Description { get; set; }
+    public string? ImageUrl { get; set; }
     public bool IsActive { get; set; }
     public DateTime CreatedAt { get; set; }
     public string Status { get; set; } = "Draft";
@@ -229,6 +230,7 @@ public class GetPartByIdQueryHandler : IRequestHandler<GetPartByIdQuery, PartDet
             Color = part.Color,
             Weight = part.Weight,
             Description = part.Description,
+            ImageUrl = part.ImageUrl,
             IsActive = part.IsActive,
             CreatedAt = part.CreatedAt,
             Status = part.IsActive ? "In Production" : "Draft",

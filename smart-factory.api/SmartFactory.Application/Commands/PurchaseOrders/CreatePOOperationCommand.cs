@@ -252,6 +252,7 @@ public class CreatePOOperationCommandHandler : IRequestHandler<CreatePOOperation
             PartId = operation.PartId ?? Guid.Empty,
             PartCode = part?.Code ?? string.Empty,
             PartName = part?.Name ?? string.Empty,
+            PartImageUrl = part?.ImageUrl,
             ProductId = product?.Id ?? part?.ProductId,
             ProductCode = product?.Code ?? part?.Product?.Code ?? string.Empty,
             ProductName = product?.Name ?? part?.Product?.Name,

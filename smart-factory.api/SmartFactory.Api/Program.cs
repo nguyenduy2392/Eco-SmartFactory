@@ -131,6 +131,9 @@ try
     // Register JwtHelper
     builder.Services.AddScoped<JwtHelper>();
 
+    // Register FileStorageService
+    builder.Services.AddScoped<SmartFactory.Application.Services.IFileStorageService, SmartFactory.Application.Services.FileStorageService>();
+
     // Register ExcelImportService
     builder.Services.AddScoped<SmartFactory.Application.Services.ExcelImportService>();
     
@@ -180,6 +183,9 @@ try
     app.UseSwaggerUI();
 
     app.UseHttpsRedirection();
+    
+    // Enable static files (for serving uploaded images)
+    app.UseStaticFiles();
 
     // Enable CORS
     app.UseCors();

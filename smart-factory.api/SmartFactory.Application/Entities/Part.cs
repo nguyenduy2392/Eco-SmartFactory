@@ -48,6 +48,11 @@ public class Part
     /// </summary>
     public string? Description { get; set; }
     
+    /// <summary>
+    /// Đường dẫn hình ảnh linh kiện (extracted từ Excel import)
+    /// </summary>
+    public string? ImageUrl { get; set; }
+    
     public bool IsActive { get; set; } = true;
     
     public DateTime CreatedAt { get; set; }

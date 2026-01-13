@@ -12,6 +12,7 @@ import { ProcessingType } from '../../../models/processing-type.interface';
 import { Product } from '../../../models/interface/product.interface';
 import { SharedModule } from '../../../shared.module';
 import { PrimengModule } from '../../../primeng.module';
+import { environment } from 'src/environments/environment';
 
 // Register modules for inline editing, formatting, interaction, sorting, and resizing
 Tabulator.registerModule([EditModule, FormatModule, InteractionModule, SortModule, ResizeColumnsModule]);
@@ -201,6 +202,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
       columns: this.tableColumns,
       layout: 'fitDataFill',
       height: 'auto',
+      rowHeight: 40,
       editableTitleCancel: true,
       cellEdited: (cell: any) => {
         this.onCellEdit(cell);
@@ -332,6 +334,8 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         operationId: this.purchaseOrder.operations?.find(op => op.productCode === group.productCode)?.id || '',
         rowIndex: this.tableData.length,
         productNumber: group.productCode || '',
+        partCode: group.partCode || '',
+        partImageUrl: this.purchaseOrder.operations?.find(op => op.productCode === group.productCode)?.partImageUrl || '',
         partNumber: group.partCode || '',
         processingContent: group.assemblyContent || group.operationName || '',
         processingCount: processingCount,
@@ -445,6 +449,30 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
         this.tableColumns = [
           ...(actionColumn ? [actionColumn] : []),
           { title: 'Mã sản phẩm', field: 'productNumber', minWidth: 100, resizable: true, editor: getEditor('input') },
+          { 
+            title: 'Mã linh kiện', 
+            field: 'partCode', 
+            minWidth: 150, 
+            resizable: true, 
+            editor: false,
+            formatter: (cell: any) => {
+              const rowData = cell.getRow().getData();
+              const partCode = rowData.partCode || '';
+              const partImageUrl = rowData.partImageUrl || '';
+              
+              if (partImageUrl) {
+                // Nếu có ảnh, hiển thị ảnh
+                return `<div style="display: flex; align-items: center; justify-content: center; ">
+                  <img src="${this.getImageUrl(partImageUrl)}" 
+                       style="width: 35px;    height: 34px;    object-fit: cover;" 
+                       onerror="this.parentElement.innerHTML='${partCode}'"/>
+                </div>`;
+              }
+              // Không có ảnh, hiển thị mã
+              return partCode || '';
+            },
+            variableHeight: true
+          },
           { title: 'Nội dung gia công', field: 'processingContent', minWidth: 150, resizable: true, editor: getEditor('input') },
           { title: 'Số lần gia công', field: 'processingCount', minWidth: 100, resizable: true, editor: getEditor('number'), editorParams: { min: 0 } },
           { title: 'Đơn giá (VND)', field: 'unitPrice', minWidth: 100, resizable: true, editor: getEditor('number'), editorParams: { min: 0, step: 0.01 }, formatter: (cell: any) => {
@@ -1849,6 +1877,14 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
     if (value === '' || value === ' ') return null;
     const num = typeof value === 'number' ? value : Number(value);
     return isNaN(num) ? null : num;
+  }
+
+  getImageUrl(partImageUrl: string): string {
+    if (!partImageUrl) return '';
+    // Nếu đã có đầy đủ URL thì return luôn
+    if (partImageUrl.startsWith('http')) return partImageUrl;
+    // Nếu là relative path, thêm base URL
+    return `${environment.baseUrl}` + partImageUrl;
   }
 
   cancel(): void {

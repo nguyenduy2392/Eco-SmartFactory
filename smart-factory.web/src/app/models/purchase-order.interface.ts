@@ -95,6 +95,7 @@ export interface POOperation {
   partId: string;
   partCode: string;
   partName?: string;
+  partImageUrl?: string; // Part image URL
   productId?: string; // Product that contains this part
   productCode?: string;
   productName?: string;

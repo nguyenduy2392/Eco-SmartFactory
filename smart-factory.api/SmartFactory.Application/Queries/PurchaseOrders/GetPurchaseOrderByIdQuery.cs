@@ -92,6 +92,7 @@ public class GetPurchaseOrderByIdQueryHandler : IRequestHandler<GetPurchaseOrder
                 PartId = op.PartId ?? Guid.Empty,
                 PartCode = op.Part?.Code ?? string.Empty,
                 PartName = op.Part?.Name ?? string.Empty,
+                PartImageUrl = op.Part?.ImageUrl,
                 ProductId = op.ProductId ?? op.Part?.ProductId,
                 ProductCode = op.Product?.Code ?? op.Part?.Product?.Code ?? string.Empty,
                 ProductName = op.Product?.Name ?? op.Part?.Product?.Name,

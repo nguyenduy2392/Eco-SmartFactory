@@ -77,7 +77,8 @@ export class CustomerDetailComponent implements OnInit {
     if (!this.customerId) return;
 
     this.materialsLoading = true;
-    this.materialService.getByCustomer(this.customerId).subscribe({
+    // Chỉ lấy materials thuộc riêng khách hàng này, không bao gồm materials dùng chung
+    this.materialService.getByCustomerOnly(this.customerId).subscribe({
       next: (materials) => {
         this.materials = materials;
         this.updateMaterialOptions();

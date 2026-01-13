@@ -37,6 +37,7 @@ public class GetAllPartsQueryHandler : IRequestHandler<GetAllPartsQuery, List<Pa
                 Color = p.Color,
                 Weight = p.Weight,
                 Description = p.Description,
+                ImageUrl = p.ImageUrl,
                 IsActive = p.IsActive,
                 CreatedAt = p.CreatedAt,
                 Status = p.IsActive ? "In Production" : "Draft",
