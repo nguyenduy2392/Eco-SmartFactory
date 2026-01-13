@@ -77,6 +77,7 @@ public class StockInService
             var createdHistories = new List<MaterialReceiptHistory>();
 
             // Xử lý từng nguyên vật liệu
+            var itemIndex = 1;
             foreach (var item in request.Materials)
             {
                 // Validate material
@@ -88,6 +89,11 @@ public class StockInService
                     result.Errors.Add($"Nguyên vật liệu {item.MaterialId} không tồn tại");
                     continue;
                 }
+
+                // Generate unique receipt number for each material item
+                var uniqueReceiptNumber = request.Materials.Count > 1 
+                    ? $"{request.ReceiptNumber}-{itemIndex:D3}"
+                    : request.ReceiptNumber;
 
                 // 1. Tạo MaterialReceipt (nhập kho thực tế)
                 var receipt = new MaterialReceipt
@@ -102,12 +108,14 @@ public class StockInService
                     ReceiptDate = request.ReceiptDate,
                     SupplierCode = item.SupplierCode,
                     PurchasePOCode = item.PurchasePOCode,
-                    ReceiptNumber = request.ReceiptNumber,
+                    ReceiptNumber = uniqueReceiptNumber,
                     Notes = item.Notes ?? request.Notes,
                     Status = "RECEIVED",
                     CreatedAt = DateTime.UtcNow,
                     CreatedBy = currentUser
                 };
+                
+                itemIndex++;
 
                 _context.MaterialReceipts.Add(receipt);
                 createdReceipts.Add(receipt);
