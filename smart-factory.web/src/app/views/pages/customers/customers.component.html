@@ -1,43 +1,23 @@
 <div class="customers-container">
-  <!-- Header Section -->
-  <div class="flex flex-column md:flex-row md:align-items-end justify-content-between gap-4 mb-6">
-    <div class="flex flex-column gap-2">
-      <h1 class="page-title m-0">Quản lý Chủ hàng</h1>
-      <p class="page-subtitle m-0 max-w-full">
-        Quản lý danh sách khách hàng, cập nhật thông tin liên hệ và theo dõi tất cả các đơn hàng liên quan tại một nơi.
-      </p>
-    </div>
-  </div>
 
   <!-- Search and Filter Bar -->
-  <div class="search-filter-card mb-6">
+  <div class="search-filter-card mb-3">
     <div class="flex flex-column md:flex-row gap-4 align-items-center justify-content-between">
       <div class="flex flex-column sm:flex-row gap-4 w-full md:w-auto flex-1">
-        <div class="relative flex-1 max-w-md">
+        <!-- Lọc dữ liệu -->
+        <div class="relative flex-1 max-w-sm">
           <i class="pi pi-search search-icon"></i>
-          <input
-            type="text"
-            pInputText
-            [(ngModel)]="searchText"
-            name="searchText"
-            (input)="onSearch()"
-            placeholder="Tìm kiếm theo tên, số điện thoại..."
-            class="w-full search-input">
+          <input type="text" pInputText [(ngModel)]="searchText" name="searchText" (input)="onSearch()"
+            placeholder="Nhập từ khóa tìm kiếm" class="w-full search-input">
         </div>
-        <button
-          pButton
-          label="Bộ lọc"
-          icon="pi pi-filter"
-          class="p-button-outlined w-full sm:w-auto"
-          (click)="showFilters = !showFilters">
+        <button pButton label="Lọc dữ liệu" icon="pi pi-filter" class="p-button-secondary w-full md:w-auto"
+          (click)="filterMenu.toggle($event)">
         </button>
+        <p-menu #filterMenu [model]="filterMenuItems" [popup]="true"></p-menu>
       </div>
-      <div class="w-full md:w-auto">
-        <button
-          pButton
-          label="Thêm Chủ hàng"
-          icon="pi pi-user-plus"
-          class="p-button-primary w-full md:w-auto"
+      <!-- Chức năng -->
+      <div class="flex gap-2 justify-content-end" style="width: 40rem;">
+        <button pButton label="Thêm mới" icon="pi pi-plus" class="p-button-success w-full md:w-auto"
           (click)="openCreateDialog()">
         </button>
       </div>
@@ -50,31 +30,35 @@
       <table class="customers-table">
         <thead>
           <tr>
-            <th>Tên Chủ hàng</th>
-            <th>Người liên hệ</th>
+            <th class="checkbox-column">
+              <p-checkbox [(ngModel)]="selectAll" [binary]="true" (onChange)="toggleSelectAll()">
+              </p-checkbox>
+            </th>
+            <th>Tên</th>
+            <th>Công ty</th>
             <th>Số điện thoại</th>
             <th>Địa chỉ</th>
-            <th class="text-right">Thao tác</th>
+            <th>Ngày tạo</th>
+            <th class="text-center">Thao tác</th>
           </tr>
         </thead>
-        <tbody *ngIf="filteredCustomers.length > 0">
-          <tr *ngFor="let customer of filteredCustomers" class="table-row">
+        <tbody *ngIf="paginatedCustomers.length > 0">
+          <tr *ngFor="let customer of paginatedCustomers" class="table-row" [class.selected]="isSelected(customer)">
+            <td class="checkbox-column">
+              <p-checkbox [(ngModel)]="customer.selected" [binary]="true" (onChange)="toggleCustomer(customer)">
+              </p-checkbox>
+            </td>
             <td>
               <div class="flex align-items-center gap-3">
-                <div class="customer-avatar" [style.background-color]="getAvatarColor(customer.name)">
-                  {{ getInitials(customer.name) }}
-                </div>
-                <div>
-                  <p class="customer-name m-0">{{ customer.name }}</p>
-                  <p class="customer-id m-0">ID: {{ customer.code }}</p>
-                </div>
+                <p-avatar [label]="getInitials(customer.contactPerson || customer.name)"
+                  [style]="{'background-color': getAvatarColor(customer.contactPerson || customer.name), 'color': '#ffffff'}"
+                  shape="circle" styleClass="customer-avatar">
+                </p-avatar>
+                <span class="contact-name">{{ customer.contactPerson || '-' }}</span>
               </div>
             </td>
             <td>
-              <div class="flex flex-column">
-                <span class="contact-name">{{ customer.contactPerson || '-' }}</span>
-                <span class="contact-role" *ngIf="customer.contactPerson">Người liên hệ</span>
-              </div>
+              <span class="company-name">{{ customer.name }}</span>
             </td>
             <td>
               <span class="phone-number">{{ customer.phone || '-' }}</span>
@@ -82,30 +66,22 @@
             <td class="address-cell" [title]="customer.address || ''">
               {{ truncateAddress(customer.address) }}
             </td>
-            <td class="text-right">
-              <div class="flex align-items-center justify-content-end gap-2">
-                <button
-                  pButton
-                  label="Xem chi tiết"
-                  icon="pi pi-eye"
-                  class="p-button-link p-button-sm view-po-btn"
-                  pTooltip="Xem chi tiết chủ hàng"
-                  (click)="viewPurchaseOrders(customer)">
-                </button>
-                <button
-                  pButton
-                  icon="pi pi-pencil"
-                  class="p-button-text p-button-sm edit-btn"
-                  pTooltip="Chỉnh sửa"
-                  (click)="openEditDialog(customer)">
-                </button>
-              </div>
+            <td>
+              <span class="date-text">{{ formatDate(customer.createdAt) }}</span>
+            </td>
+            <td class="text-center">
+              <button pButton 
+                icon="pi pi-bars" 
+                class="p-button-soft p-button-primary p-button-sm p-button-rounded action-menu-btn"
+                pTooltip="Thao tác"
+                (click)="showActionMenu($event, customer); actionMenu.toggle($event)">
+              </button>
             </td>
           </tr>
         </tbody>
-        <tbody *ngIf="filteredCustomers.length === 0 && !loading">
+        <tbody *ngIf="paginatedCustomers.length === 0 && !loading">
           <tr>
-            <td colspan="5" class="text-center py-8">
+            <td colspan="8" class="text-center py-8">
               <i class="pi pi-inbox text-6xl mb-3 block text-gray-300"></i>
               <p class="text-lg font-medium text-gray-500">Không có dữ liệu</p>
             </td>
@@ -117,198 +93,41 @@
     <!-- Pagination -->
     <div class="table-footer" *ngIf="filteredCustomers.length > 0">
       <div class="pagination-info">
-        Hiển thị <span class="font-bold">{{ getFirstRecord() }}</span> đến 
-        <span class="font-bold">{{ getLastRecord() }}</span> trong tổng số 
+        Hiển thị <span class="font-bold">{{ getFirstRecord() }}</span> đến
+        <span class="font-bold">{{ getLastRecord() }}</span> trong tổng số
         <span class="font-bold">{{ filteredCustomers.length }}</span> chủ hàng
       </div>
-      <div class="flex gap-2">
-        <button
-          pButton
-          label="Trước"
-          icon="pi pi-chevron-left"
-          class="p-button-outlined p-button-sm"
-          [disabled]="currentPage === 1"
-          (click)="previousPage()">
+      <div class="flex gap-2 align-items-center">
+        <button pButton label="Trang trước" icon="pi pi-chevron-left" class="p-button-soft p-button-primary p-button-sm"
+          [disabled]="currentPage === 1" (click)="previousPage()">
         </button>
-        <button
-          pButton
-          label="Sau"
-          icon="pi pi-chevron-right"
-          iconPos="right"
-          class="p-button-outlined p-button-sm"
-          [disabled]="currentPage >= getTotalPages()"
-          (click)="nextPage()">
+        <div class="flex gap-1 page-numbers">
+          <button *ngFor="let page of getPageNumbers()" pButton [label]="page.toString()"
+            [class]="page === currentPage ? 'p-button-sm p-button-primary' : 'p-button-sm p-button-text'"
+            (click)="goToPage(page)">
+          </button>
+        </div>
+        <button pButton label="Trang sau" icon="pi pi-chevron-right" iconPos="right" class="p-button-soft p-button-primary p-button-sm"
+          [disabled]="currentPage >= getTotalPages()" (click)="nextPage()">
         </button>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Dialog tạo/sửa chủ hàng -->
-<p-dialog 
-  [(visible)]="showDialog" 
-  [header]="isEdit ? 'Chỉnh sửa chủ hàng' : 'Thêm chủ hàng mới'"
-  [modal]="true"
-  [style]="{width: '600px'}"
-  [draggable]="false"
-  [resizable]="false">
-  
-  <div class="p-fluid">
-    <div class="field grid">
-      <label class="col-12 mb-2 md:col-3 md:mb-0">Mã chủ hàng <span class="text-red-500">*</span></label>
-      <div class="col-12 md:col-9">
-        <input pInputText type="text" [(ngModel)]="customerForm.code" name="customerCode" placeholder="Nhập mã chủ hàng" />
-      </div>
-    </div>
+<!-- Action Menu -->
+<p-menu #actionMenu [model]="actionMenuItems" [popup]="true"></p-menu>
 
-    <div class="field grid">
-      <label class="col-12 mb-2 md:col-3 md:mb-0">Tên chủ hàng <span class="text-red-500">*</span></label>
-      <div class="col-12 md:col-9">
-        <input pInputText type="text" [(ngModel)]="customerForm.name" name="customerName" placeholder="Nhập tên chủ hàng" />
-      </div>
-    </div>
-
-    <div class="field grid">
-      <label class="col-12 mb-2 md:col-3 md:mb-0">Địa chỉ</label>
-      <div class="col-12 md:col-9">
-        <textarea pInputTextarea [(ngModel)]="customerForm.address" name="customerAddress" rows="2" placeholder="Nhập địa chỉ"></textarea>
-      </div>
-    </div>
-
-    <div class="field grid">
-      <label class="col-12 mb-2 md:col-3 md:mb-0">Người liên hệ</label>
-      <div class="col-12 md:col-9">
-        <input pInputText type="text" [(ngModel)]="customerForm.contactPerson" name="contactPerson" placeholder="Nhập tên người liên hệ" />
-      </div>
-    </div>
-
-    <div class="field grid">
-      <label class="col-12 mb-2 md:col-3 md:mb-0">Email</label>
-      <div class="col-12 md:col-9">
-        <input pInputText type="email" [(ngModel)]="customerForm.email" name="customerEmail" placeholder="Nhập email" />
-      </div>
-    </div>
-
-    <div class="field grid">
-      <label class="col-12 mb-2 md:col-3 md:mb-0">Số điện thoại</label>
-      <div class="col-12 md:col-9">
-        <input pInputText type="text" [(ngModel)]="customerForm.phone" name="customerPhone" placeholder="Nhập số điện thoại" />
-      </div>
-    </div>
-
-    <div class="field grid">
-      <label class="col-12 mb-2 md:col-3 md:mb-0">Điều khoản thanh toán</label>
-      <div class="col-12 md:col-9">
-        <input pInputText type="text" [(ngModel)]="customerForm.paymentTerms" name="paymentTerms" placeholder="VD: 30 ngày" />
-      </div>
-    </div>
-
-    <div class="field grid">
-      <label class="col-12 mb-2 md:col-3 md:mb-0">Ghi chú</label>
-      <div class="col-12 md:col-9">
-        <textarea pInputTextarea [(ngModel)]="customerForm.notes" name="customerNotes" rows="3" placeholder="Nhập ghi chú"></textarea>
-      </div>
-    </div>
-
-    <div class="field grid" *ngIf="isEdit">
-      <label class="col-12 mb-2 md:col-3 md:mb-0">Trạng thái</label>
-      <div class="col-12 md:col-9">
-        <p-checkbox [(ngModel)]="customerForm.isActive" name="customerIsActive" [binary]="true" label="Hoạt động"></p-checkbox>
-      </div>
-    </div>
-  </div>
-
+<!-- Confirm Delete Dialog -->
+<p-dialog [(visible)]="showDeleteDialog" header="Xác nhận xóa" [modal]="true" [style]="{width: '400px'}"
+  [draggable]="false" [resizable]="false">
+  <p>Bạn có chắc chắn muốn xóa chủ hàng <strong>{{ customerToDelete?.name }}</strong>?</p>
   <ng-template pTemplate="footer">
-    <button pButton type="button" label="Hủy" icon="pi pi-times" 
-            class="p-button-text" (click)="showDialog = false"></button>
-    <button pButton type="button" label="Lưu" icon="pi pi-check" 
-            class="p-button-primary" (click)="saveCustomer()"></button>
+    <button pButton type="button" label="Hủy" icon="pi pi-times" class="p-button-text"
+      (click)="showDeleteDialog = false"></button>
+    <button pButton type="button" label="Xóa" icon="pi pi-trash" class="p-button-danger"
+      (click)="deleteCustomer()"></button>
   </ng-template>
 </p-dialog>
 
 <p-toast></p-toast>
-
-<!-- Dialog tạo/sửa chủ hàng -->
-<p-dialog 
-  [(visible)]="showDialog" 
-  [header]="isEdit ? 'Chỉnh sửa chủ hàng' : 'Thêm chủ hàng mới'"
-  [modal]="true"
-  [style]="{width: '600px'}"
-  [draggable]="false"
-  [resizable]="false">
-  
-  <div class="p-fluid">
-    <div class="field grid">
-      <label class="col-12 mb-2 md:col-3 md:mb-0">Mã chủ hàng <span class="text-red-500">*</span></label>
-      <div class="col-12 md:col-9">
-        <input pInputText type="text" [(ngModel)]="customerForm.code" name="customerCode" placeholder="Nhập mã chủ hàng" />
-      </div>
-    </div>
-
-    <div class="field grid">
-      <label class="col-12 mb-2 md:col-3 md:mb-0">Tên chủ hàng <span class="text-red-500">*</span></label>
-      <div class="col-12 md:col-9">
-        <input pInputText type="text" [(ngModel)]="customerForm.name" name="customerName" placeholder="Nhập tên chủ hàng" />
-      </div>
-    </div>
-
-    <div class="field grid">
-      <label class="col-12 mb-2 md:col-3 md:mb-0">Địa chỉ</label>
-      <div class="col-12 md:col-9">
-        <textarea pInputTextarea [(ngModel)]="customerForm.address" name="customerAddress" rows="2" placeholder="Nhập địa chỉ"></textarea>
-      </div>
-    </div>
-
-    <div class="field grid">
-      <label class="col-12 mb-2 md:col-3 md:mb-0">Người liên hệ</label>
-      <div class="col-12 md:col-9">
-        <input pInputText type="text" [(ngModel)]="customerForm.contactPerson" name="contactPerson" placeholder="Nhập tên người liên hệ" />
-      </div>
-    </div>
-
-    <div class="field grid">
-      <label class="col-12 mb-2 md:col-3 md:mb-0">Email</label>
-      <div class="col-12 md:col-9">
-        <input pInputText type="email" [(ngModel)]="customerForm.email" name="customerEmail" placeholder="Nhập email" />
-      </div>
-    </div>
-
-    <div class="field grid">
-      <label class="col-12 mb-2 md:col-3 md:mb-0">Số điện thoại</label>
-      <div class="col-12 md:col-9">
-        <input pInputText type="text" [(ngModel)]="customerForm.phone" name="customerPhone" placeholder="Nhập số điện thoại" />
-      </div>
-    </div>
-
-    <div class="field grid">
-      <label class="col-12 mb-2 md:col-3 md:mb-0">Điều khoản thanh toán</label>
-      <div class="col-12 md:col-9">
-        <input pInputText type="text" [(ngModel)]="customerForm.paymentTerms" name="paymentTerms" placeholder="VD: 30 ngày" />
-      </div>
-    </div>
-
-    <div class="field grid">
-      <label class="col-12 mb-2 md:col-3 md:mb-0">Ghi chú</label>
-      <div class="col-12 md:col-9">
-        <textarea pInputTextarea [(ngModel)]="customerForm.notes" name="customerNotes" rows="3" placeholder="Nhập ghi chú"></textarea>
-      </div>
-    </div>
-
-    <div class="field grid" *ngIf="isEdit">
-      <label class="col-12 mb-2 md:col-3 md:mb-0">Trạng thái</label>
-      <div class="col-12 md:col-9">
-        <p-checkbox [(ngModel)]="customerForm.isActive" name="customerIsActive" [binary]="true" label="Hoạt động"></p-checkbox>
-      </div>
-    </div>
-  </div>
-
-  <ng-template pTemplate="footer">
-    <button pButton type="button" label="Hủy" icon="pi pi-times" 
-            class="p-button-text" (click)="showDialog = false"></button>
-    <button pButton type="button" label="Lưu" icon="pi pi-check" 
-            class="p-button-primary" (click)="saveCustomer()"></button>
-  </ng-template>
-</p-dialog>
-
-<p-toast></p-toast>
-

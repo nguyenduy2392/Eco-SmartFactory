@@ -1,0 +1,72 @@
+<div class="p-fluid">
+  <div class="field grid">
+    <label class="col-12 mb-2 md:col-3 md:mb-0">Mã chủ hàng <span class="text-red-500">*</span></label>
+    <div class="col-12 md:col-9">
+      <input pInputText type="text" [(ngModel)]="customerForm.code" name="customerCode"
+        placeholder="Nhập mã chủ hàng" />
+    </div>
+  </div>
+
+  <div class="field grid">
+    <label class="col-12 mb-2 md:col-3 md:mb-0">Tên chủ hàng <span class="text-red-500">*</span></label>
+    <div class="col-12 md:col-9">
+      <input pInputText type="text" [(ngModel)]="customerForm.name" name="customerName"
+        placeholder="Nhập tên chủ hàng" />
+    </div>
+  </div>
+
+  <div class="field grid">
+    <label class="col-12 mb-2 md:col-3 md:mb-0">Địa chỉ</label>
+    <div class="col-12 md:col-9">
+      <textarea pInputTextarea [(ngModel)]="customerForm.address" name="customerAddress" rows="2"
+        placeholder="Nhập địa chỉ"></textarea>
+    </div>
+  </div>
+
+  <div class="field grid">
+    <label class="col-12 mb-2 md:col-3 md:mb-0">Người liên hệ</label>
+    <div class="col-12 md:col-9">
+      <input pInputText type="text" [(ngModel)]="customerForm.contactPerson" name="contactPerson"
+        placeholder="Nhập tên người liên hệ" />
+    </div>
+  </div>
+
+  <div class="field grid">
+    <label class="col-12 mb-2 md:col-3 md:mb-0">Email</label>
+    <div class="col-12 md:col-9">
+      <input pInputText type="email" [(ngModel)]="customerForm.email" name="customerEmail" placeholder="Nhập email" />
+    </div>
+  </div>
+
+  <div class="field grid">
+    <label class="col-12 mb-2 md:col-3 md:mb-0">Số điện thoại</label>
+    <div class="col-12 md:col-9">
+      <input pInputText type="text" [(ngModel)]="customerForm.phone" name="customerPhone"
+        placeholder="Nhập số điện thoại" />
+    </div>
+  </div>
+
+  <div class="field grid">
+    <label class="col-12 mb-2 md:col-3 md:mb-0">Điều khoản thanh toán</label>
+    <div class="col-12 md:col-9">
+      <input pInputText type="text" [(ngModel)]="customerForm.paymentTerms" name="paymentTerms"
+        placeholder="VD: 30 ngày" />
+    </div>
+  </div>
+
+  <div class="field grid">
+    <label class="col-12 mb-2 md:col-3 md:mb-0">Ghi chú</label>
+    <div class="col-12 md:col-9">
+      <textarea pInputTextarea [(ngModel)]="customerForm.notes" name="customerNotes" rows="3"
+        placeholder="Nhập ghi chú"></textarea>
+    </div>
+  </div>
+
+  <div class="field grid" *ngIf="isEdit">
+    <label class="col-12 mb-2 md:col-3 md:mb-0">Trạng thái</label>
+    <div class="col-12 md:col-9">
+      <p-checkbox [(ngModel)]="customerForm.isActive" name="customerIsActive" [binary]="true"
+        label="Hoạt động"></p-checkbox>
+    </div>
+  </div>
+</div>

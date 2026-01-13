@@ -1,10 +1,13 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { Router } from '@angular/router';
 import { CustomerService } from '../../../services/customer.service';
 import { Customer } from '../../../models/customer.interface';
 import { MessageService } from 'primeng/api';
 import { SharedModule } from '../../../shared.module';
 import { PrimengModule } from '../../../primeng.module';
+import { Menu } from 'primeng/menu';
+import { UiModalService } from '../../../services/shared/ui-modal.service';
+import { CustomerFormComponent } from './customer-form/customer-form.component';
 
 @Component({
   selector: 'app-customers',
@@ -14,16 +17,28 @@ import { PrimengModule } from '../../../primeng.module';
   imports: [SharedModule, PrimengModule]
 })
 export class CustomersComponent implements OnInit {
+  @ViewChild('actionMenu') actionMenu!: Menu;
+
   customers: Customer[] = [];
   filteredCustomers: Customer[] = [];
+  paginatedCustomers: Customer[] = [];
   loading = false;
-  showDialog = false;
+  showDeleteDialog = false;
   showFilters = false;
+  showSettings = false;
   isEdit = false;
   selectedCustomer: Customer | null = null;
+  customerToDelete: Customer | null = null;
   searchText = '';
   currentPage = 1;
   pageSize = 10;
+  selectAll = false;
+  sortField = '';
+  sortOrder: 'asc' | 'desc' = 'asc';
+  
+  filterMenuItems: any[] = [];
+  actionMenuItems: any[] = [];
+  currentActionCustomer: Customer | null = null;
 
   // Form data
   customerForm: any = {
@@ -50,11 +65,36 @@ export class CustomersComponent implements OnInit {
   constructor(
     private customerService: CustomerService,
     private messageService: MessageService,
-    private router: Router
+    private router: Router,
+    private uiModalService: UiModalService
   ) { }
 
   ngOnInit(): void {
     this.loadCustomers();
+    this.initFilterMenu();
+  }
+
+  /**
+   * Initialize filter menu items
+   */
+  initFilterMenu(): void {
+    this.filterMenuItems = [
+      {
+        label: 'Tất cả',
+        icon: 'pi pi-filter',
+        command: () => this.applyStatusFilter('all')
+      },
+      {
+        label: 'Hoạt động',
+        icon: 'pi pi-check-circle',
+        command: () => this.applyStatusFilter('active')
+      },
+      {
+        label: 'Ngừng hoạt động',
+        icon: 'pi pi-times-circle',
+        command: () => this.applyStatusFilter('inactive')
+      }
+    ];
   }
 
   /**
@@ -97,8 +137,61 @@ export class CustomersComponent implements OnInit {
       );
     }
 
+    // Add selected property for checkbox
+    result = result.map(c => ({ ...c, selected: false }));
+
+    // Apply sorting
+    if (this.sortField) {
+      result.sort((a, b) => {
+        const aValue = (a as any)[this.sortField] || '';
+        const bValue = (b as any)[this.sortField] || '';
+        const comparison = aValue.toString().localeCompare(bValue.toString());
+        return this.sortOrder === 'asc' ? comparison : -comparison;
+      });
+    }
+
     this.filteredCustomers = result;
     this.currentPage = 1;
+    this.updatePaginatedCustomers();
+  }
+
+  /**
+   * Apply status filter
+   */
+  applyStatusFilter(status: 'all' | 'active' | 'inactive'): void {
+    let result = [...this.customers];
+
+    if (status === 'active') {
+      result = result.filter(c => c.isActive);
+    } else if (status === 'inactive') {
+      result = result.filter(c => !c.isActive);
+    }
+
+    // Apply search if exists
+    if (this.searchText) {
+      const searchLower = this.searchText.toLowerCase();
+      result = result.filter(c => 
+        c.name.toLowerCase().includes(searchLower) ||
+        c.phone?.toLowerCase().includes(searchLower) ||
+        c.contactPerson?.toLowerCase().includes(searchLower) ||
+        c.code.toLowerCase().includes(searchLower)
+      );
+    }
+
+    result = result.map(c => ({ ...c, selected: false }));
+
+    if (this.sortField) {
+      result.sort((a, b) => {
+        const aValue = (a as any)[this.sortField] || '';
+        const bValue = (b as any)[this.sortField] || '';
+        const comparison = aValue.toString().localeCompare(bValue.toString());
+        return this.sortOrder === 'asc' ? comparison : -comparison;
+      });
+    }
+
+    this.filteredCustomers = result;
+    this.currentPage = 1;
+    this.updatePaginatedCustomers();
   }
 
   /**
@@ -124,7 +217,22 @@ export class CustomersComponent implements OnInit {
       notes: '',
       isActive: true
     };
-    this.showDialog = true;
+    
+    this.uiModalService.openModal({
+      title: 'Thêm chủ hàng mới',
+      bodyComponent: CustomerFormComponent,
+      bodyData: {
+        customerForm: this.customerForm,
+        isEdit: this.isEdit,
+        onSave: () => this.saveCustomer()
+      },
+      size: '60vw',
+      showFooter: true,
+      primaryButtonText: 'Lưu',
+      secondaryButtonText: 'Hủy',
+      onPrimaryAction: () => this.saveCustomer(),
+      onSecondaryAction: () => this.uiModalService.closeModal()
+    });
   }
 
   /**
@@ -144,7 +252,22 @@ export class CustomersComponent implements OnInit {
       notes: customer.notes || '',
       isActive: customer.isActive
     };
-    this.showDialog = true;
+    
+    this.uiModalService.openModal({
+      title: 'Chỉnh sửa chủ hàng',
+      bodyComponent: CustomerFormComponent,
+      bodyData: {
+        customerForm: this.customerForm,
+        isEdit: this.isEdit,
+        onSave: () => this.saveCustomer()
+      },
+      size: '60vw',
+      showFooter: true,
+      primaryButtonText: 'Lưu',
+      secondaryButtonText: 'Hủy',
+      onPrimaryAction: () => this.saveCustomer(),
+      onSecondaryAction: () => this.uiModalService.closeModal()
+    });
   }
 
   /**
@@ -164,12 +287,13 @@ export class CustomersComponent implements OnInit {
       // Update
       this.customerService.update(this.selectedCustomer.id, this.customerForm).subscribe({
         next: () => {
+          this.uiModalService.closeModal();
+          this.uiModalService.closeModal();
           this.messageService.add({
             severity: 'success',
             summary: 'Thành công',
             detail: 'Cập nhật chủ hàng thành công'
           });
-          this.showDialog = false;
           this.loadCustomers();
         },
         error: (error) => {
@@ -185,12 +309,12 @@ export class CustomersComponent implements OnInit {
       // Create
       this.customerService.create(this.customerForm).subscribe({
         next: () => {
+          this.uiModalService.closeModal();
           this.messageService.add({
             severity: 'success',
             summary: 'Thành công',
             detail: 'Tạo chủ hàng mới thành công'
           });
-          this.showDialog = false;
           this.loadCustomers();
         },
         error: (error) => {
@@ -257,6 +381,177 @@ export class CustomersComponent implements OnInit {
   }
 
   /**
+   * Sort by field
+   */
+  sortBy(field: string): void {
+    if (this.sortField === field) {
+      this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortField = field;
+      this.sortOrder = 'asc';
+    }
+    this.applyFilters();
+  }
+
+  /**
+   * Format date
+   */
+  formatDate(dateString?: string): string {
+    if (!dateString) return '-';
+    const date = new Date(dateString);
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const day = date.getDate();
+    const month = months[date.getMonth()];
+    const year = date.getFullYear();
+    return `${day} ${month}, ${year}`;
+  }
+
+  /**
+   * Toggle select all
+   */
+  toggleSelectAll(): void {
+    this.paginatedCustomers.forEach(customer => {
+      (customer as any).selected = this.selectAll;
+    });
+  }
+
+  /**
+   * Toggle customer selection
+   */
+  toggleCustomer(customer: Customer): void {
+    const selected = this.paginatedCustomers.filter(c => (c as any).selected).length;
+    this.selectAll = selected === this.paginatedCustomers.length;
+  }
+
+  /**
+   * Check if customer is selected
+   */
+  isSelected(customer: Customer): boolean {
+    return (customer as any).selected || false;
+  }
+
+  /**
+   * Call customer
+   */
+  callCustomer(customer: Customer): void {
+    if (customer.phone) {
+      window.location.href = `tel:${customer.phone}`;
+    } else {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Cảnh báo',
+        detail: 'Chủ hàng này chưa có số điện thoại'
+      });
+    }
+  }
+
+  /**
+   * Message customer
+   */
+  messageCustomer(customer: Customer): void {
+    if (customer.phone) {
+      window.location.href = `sms:${customer.phone}`;
+    } else {
+      this.messageService.add({
+        severity: 'warn',
+        summary: 'Cảnh báo',
+        detail: 'Chủ hàng này chưa có số điện thoại'
+      });
+    }
+  }
+
+  /**
+   * Show action menu
+   */
+  showActionMenu(event: Event, customer: Customer): void {
+    this.currentActionCustomer = customer;
+    this.actionMenuItems = this.getActionMenuItems(customer);
+    // Menu will be toggled by ViewChild reference
+  }
+
+  /**
+   * Get action menu items for a customer
+   */
+  getActionMenuItems(customer: Customer): any[] {
+    return [
+      {
+        label: 'Gọi điện',
+        icon: 'pi pi-phone',
+        command: () => this.callCustomer(customer)
+      },
+      {
+        label: 'Nhắn tin',
+        icon: 'pi pi-comment',
+        command: () => this.messageCustomer(customer)
+      },
+      {
+        label: 'Xem chi tiết',
+        icon: 'pi pi-eye',
+        command: () => this.viewPurchaseOrders(customer)
+      },
+      {
+        label: 'Chỉnh sửa',
+        icon: 'pi pi-pencil',
+        command: () => this.openEditDialog(customer)
+      },
+      {
+        separator: true
+      },
+      {
+        label: 'Xóa',
+        icon: 'pi pi-trash',
+        styleClass: 'p-menuitem-danger',
+        command: () => this.confirmDelete(customer)
+      }
+    ];
+  }
+
+  /**
+   * Confirm delete
+   */
+  confirmDelete(customer: Customer): void {
+    this.customerToDelete = customer;
+    this.showDeleteDialog = true;
+  }
+
+  /**
+   * Delete customer
+   */
+  deleteCustomer(): void {
+    if (!this.customerToDelete) return;
+
+    this.customerService.delete(this.customerToDelete.id).subscribe({
+      next: () => {
+        this.messageService.add({
+          severity: 'success',
+          summary: 'Thành công',
+          detail: 'Xóa chủ hàng thành công'
+        });
+        this.showDeleteDialog = false;
+        this.customerToDelete = null;
+        this.loadCustomers();
+      },
+      error: (error) => {
+        console.error('Error deleting customer:', error);
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: error.error?.message || 'Không thể xóa chủ hàng'
+        });
+      }
+    });
+  }
+
+  /**
+   * Update paginated customers
+   */
+  updatePaginatedCustomers(): void {
+    const start = (this.currentPage - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    this.paginatedCustomers = this.filteredCustomers.slice(start, end);
+  }
+
+  /**
    * Pagination helpers
    */
   getFirstRecord(): number {
@@ -271,15 +566,52 @@ export class CustomersComponent implements OnInit {
     return Math.ceil(this.filteredCustomers.length / this.pageSize);
   }
 
+  getPageNumbers(): number[] {
+    const totalPages = this.getTotalPages();
+    const pages: number[] = [];
+    const maxVisible = 5;
+    
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (this.currentPage <= 3) {
+        for (let i = 1; i <= maxVisible; i++) {
+          pages.push(i);
+        }
+      } else if (this.currentPage >= totalPages - 2) {
+        for (let i = totalPages - maxVisible + 1; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        for (let i = this.currentPage - 2; i <= this.currentPage + 2; i++) {
+          pages.push(i);
+        }
+      }
+    }
+    
+    return pages;
+  }
+
   previousPage(): void {
     if (this.currentPage > 1) {
       this.currentPage--;
+      this.updatePaginatedCustomers();
     }
   }
 
   nextPage(): void {
     if (this.currentPage < this.getTotalPages()) {
       this.currentPage++;
+      this.updatePaginatedCustomers();
+    }
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.getTotalPages()) {
+      this.currentPage = page;
+      this.updatePaginatedCustomers();
     }
   }
 }

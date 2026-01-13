@@ -1,3 +1,7 @@
+:root {
+    font-size: 0.8125rem !important;
+}
+
 :root .surface-ground {
     background-color: #eff3f8 !important;
 }
@@ -55,4 +59,729 @@
     height: 97vh !important;
     max-height: 97vh !important;
     min-height: 97vh !important;
+}
+
+// Base button styles
+:root .p-button {
+    padding: 0.6rem 1rem;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+    border-radius: 5px;
+    border: 1px solid;
+    cursor: pointer;
+    font-family: inherit;
+}
+
+// Primary Button - Xanh đậm (#3f4e6f)
+:root .p-button.p-button-primary,
+:root .p-button:not([class*="p-button-"]) {
+    color: #ffffff;
+    background: #3f4e6f;
+    border-color: #3f4e6f;
+}
+
+:root .p-button.p-button-primary:not(:disabled):hover,
+:root .p-button:not([class*="p-button-"]):not(:disabled):hover {
+    background: #2d3a52;
+    border-color: #2d3a52;
+    color: #ffffff;
+}
+
+:root .p-button.p-button-primary:not(:disabled):active,
+:root .p-button:not([class*="p-button-"]):not(:disabled):active {
+    background: #1f2838;
+    border-color: #1f2838;
+    color: #ffffff;
+}
+
+// Secondary Button - Xanh dương trung bình (#4285f4)
+:root .p-button.p-button-secondary {
+    color: #ffffff;
+    background: #4285f4;
+    border-color: #4285f4;
+}
+
+:root .p-button.p-button-secondary:not(:disabled):hover {
+    background: #1a73e8;
+    border-color: #1a73e8;
+    color: #ffffff;
+}
+
+:root .p-button.p-button-secondary:not(:disabled):active {
+    background: #1967d2;
+    border-color: #1967d2;
+    color: #ffffff;
+}
+
+// Success Button - Xanh ngọc (#28a745)
+:root .p-button.p-button-success {
+    color: #ffffff;
+    background: #28a745;
+    border-color: #28a745;
+}
+
+:root .p-button.p-button-success:not(:disabled):hover {
+    background: #218838;
+    border-color: #218838;
+    color: #ffffff;
+}
+
+:root .p-button.p-button-success:not(:disabled):active {
+    background: #1e7e34;
+    border-color: #1e7e34;
+    color: #ffffff;
+}
+
+// Info Button - Xanh lam nhạt (#17a2b8)
+:root .p-button.p-button-info {
+    color: #ffffff;
+    background: #17a2b8;
+    border-color: #17a2b8;
+}
+
+:root .p-button.p-button-info:not(:disabled):hover {
+    background: #138496;
+    border-color: #138496;
+    color: #ffffff;
+}
+
+:root .p-button.p-button-info:not(:disabled):active {
+    background: #117a8b;
+    border-color: #117a8b;
+    color: #ffffff;
+}
+
+// Warning Button - Cam (#ffc107)
+:root .p-button.p-button-warning {
+    color: #ffffff;
+    background: #ffc107;
+    border-color: #ffc107;
+}
+
+:root .p-button.p-button-warning:not(:disabled):hover {
+    background: #e0a800;
+    border-color: #e0a800;
+    color: #ffffff;
+}
+
+:root .p-button.p-button-warning:not(:disabled):active {
+    background: #d39e00;
+    border-color: #d39e00;
+    color: #ffffff;
+}
+
+// Danger Button - Đỏ cam (#dc3545)
+:root .p-button.p-button-danger {
+    color: #ffffff;
+    background: #dc3545;
+    border-color: #dc3545;
+}
+
+:root .p-button.p-button-danger:not(:disabled):hover {
+    background: #c82333;
+    border-color: #c82333;
+    color: #ffffff;
+}
+
+:root .p-button.p-button-danger:not(:disabled):active {
+    background: #bd2130;
+    border-color: #bd2130;
+    color: #ffffff;
+}
+
+// Dark Button - Đen (#343a40)
+:root .p-button.p-button-dark {
+    color: #ffffff;
+    background: #343a40;
+    border-color: #343a40;
+}
+
+:root .p-button.p-button-dark:not(:disabled):hover {
+    background: #23272b;
+    border-color: #23272b;
+    color: #ffffff;
+}
+
+:root .p-button.p-button-dark:not(:disabled):active {
+    background: #1d2124;
+    border-color: #1d2124;
+    color: #ffffff;
+}
+
+// Link Button - Trong suốt, chữ xanh (#007bff)
+:root .p-button.p-button-link {
+    color: #007bff;
+    background: transparent;
+    border: none;
+    text-decoration: none;
+}
+
+:root .p-button.p-button-link:not(:disabled):hover {
+    color: #0056b3;
+    background: transparent;
+    text-decoration: underline;
+}
+
+:root .p-button.p-button-link:not(:disabled):active {
+    color: #004085;
+    background: transparent;
+}
+
+// Light Button - Trắng/xám nhạt (#f8f9fa), chữ xám đậm (#343a40), viền xám nhạt (#dee2e6)
+:root .p-button.p-button-light {
+    color: #343a40;
+    background: #f8f9fa;
+    border-color: #dee2e6;
+}
+
+:root .p-button.p-button-light:not(:disabled):hover {
+    background: #e9ecef;
+    border-color: #dee2e6;
+    color: #343a40;
+}
+
+:root .p-button.p-button-light:not(:disabled):active {
+    background: #dee2e6;
+    border-color: #dee2e6;
+    color: #343a40;
+}
+
+// Outlined variants
+:root .p-button.p-button-outlined.p-button-primary {
+    background-color: transparent;
+    color: #3f4e6f;
+    border-color: #3f4e6f;
+}
+
+:root .p-button.p-button-outlined.p-button-primary:not(:disabled):hover {
+    background: rgba(63, 78, 111, 0.1);
+    color: #3f4e6f;
+    border-color: #3f4e6f;
+}
+
+:root .p-button.p-button-outlined.p-button-secondary {
+    background-color: transparent;
+    color: #4285f4;
+    border-color: #4285f4;
+}
+
+:root .p-button.p-button-outlined.p-button-secondary:not(:disabled):hover {
+    background: rgba(66, 133, 244, 0.1);
+    color: #4285f4;
+    border-color: #4285f4;
+}
+
+:root .p-button.p-button-outlined.p-button-success {
+    background-color: transparent;
+    color: #28a745;
+    border-color: #28a745;
+}
+
+:root .p-button.p-button-outlined.p-button-success:not(:disabled):hover {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    border-color: #28a745;
+}
+
+:root .p-button.p-button-outlined.p-button-info {
+    background-color: transparent;
+    color: #17a2b8;
+    border-color: #17a2b8;
+}
+
+:root .p-button.p-button-outlined.p-button-info:not(:disabled):hover {
+    background: rgba(23, 162, 184, 0.1);
+    color: #17a2b8;
+    border-color: #17a2b8;
+}
+
+:root .p-button.p-button-outlined.p-button-warning {
+    background-color: transparent;
+    color: #ffc107;
+    border-color: #ffc107;
+}
+
+:root .p-button.p-button-outlined.p-button-warning:not(:disabled):hover {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+    border-color: #ffc107;
+}
+
+:root .p-button.p-button-outlined.p-button-danger {
+    background-color: transparent;
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+:root .p-button.p-button-outlined.p-button-danger:not(:disabled):hover {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    border-color: #dc3545;
+}
+
+:root .p-button.p-button-outlined.p-button-dark {
+    background-color: transparent;
+    color: #343a40;
+    border-color: #343a40;
+}
+
+:root .p-button.p-button-outlined.p-button-dark:not(:disabled):hover {
+    background: rgba(52, 58, 64, 0.1);
+    color: #343a40;
+    border-color: #343a40;
+}
+
+:root .p-button.p-button-outlined.p-button-light {
+    background-color: transparent;
+    color: #343a40;
+    border-color: #dee2e6;
+}
+
+:root .p-button.p-button-outlined.p-button-light:not(:disabled):hover {
+    background: rgba(248, 249, 250, 0.5);
+    color: #343a40;
+    border-color: #dee2e6;
+}
+
+// Text variants
+:root .p-button.p-button-text.p-button-primary {
+    background-color: transparent;
+    color: #3f4e6f;
+    border-color: transparent;
+}
+
+:root .p-button.p-button-text.p-button-primary:not(:disabled):hover {
+    background: rgba(63, 78, 111, 0.1);
+    color: #3f4e6f;
+    border-color: transparent;
+}
+
+:root .p-button.p-button-text.p-button-secondary {
+    background-color: transparent;
+    color: #4285f4;
+    border-color: transparent;
+}
+
+:root .p-button.p-button-text.p-button-secondary:not(:disabled):hover {
+    background: rgba(66, 133, 244, 0.1);
+    color: #4285f4;
+    border-color: transparent;
+}
+
+:root .p-button.p-button-text.p-button-success {
+    background-color: transparent;
+    color: #28a745;
+    border-color: transparent;
+}
+
+:root .p-button.p-button-text.p-button-success:not(:disabled):hover {
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    border-color: transparent;
+}
+
+:root .p-button.p-button-text.p-button-info {
+    background-color: transparent;
+    color: #17a2b8;
+    border-color: transparent;
+}
+
+:root .p-button.p-button-text.p-button-info:not(:disabled):hover {
+    background: rgba(23, 162, 184, 0.1);
+    color: #17a2b8;
+    border-color: transparent;
+}
+
+:root .p-button.p-button-text.p-button-warning {
+    background-color: transparent;
+    color: #ffc107;
+    border-color: transparent;
+}
+
+:root .p-button.p-button-text.p-button-warning:not(:disabled):hover {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+    border-color: transparent;
+}
+
+:root .p-button.p-button-text.p-button-danger {
+    background-color: transparent;
+    color: #dc3545;
+    border-color: transparent;
+}
+
+:root .p-button.p-button-text.p-button-danger:not(:disabled):hover {
+    background: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+    border-color: transparent;
+}
+
+:root .p-button.p-button-text.p-button-dark {
+    background-color: transparent;
+    color: #343a40;
+    border-color: transparent;
+}
+
+:root .p-button.p-button-text.p-button-dark:not(:disabled):hover {
+    background: rgba(52, 58, 64, 0.1);
+    color: #343a40;
+    border-color: transparent;
+}
+
+:root .p-button.p-button-text.p-button-light {
+    background-color: transparent;
+    color: #343a40;
+    border-color: transparent;
+}
+
+:root .p-button.p-button-text.p-button-light:not(:disabled):hover {
+    background: rgba(248, 249, 250, 0.5);
+    color: #343a40;
+    border-color: transparent;
+}
+
+// Disabled state
+:root .p-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+// ============================================
+// Soft Button Variants
+// ============================================
+
+// Soft Primary Button - Nền xám nhạt, chữ xám đậm
+:root .p-button.p-button-soft.p-button-primary,
+:root .p-button.p-button-soft:not([class*="p-button-"]) {
+    background-color: #f0f2f5;
+    color: #424e6a;
+    border: none;
+}
+
+:root .p-button.p-button-soft.p-button-primary:not(:disabled):hover,
+:root .p-button.p-button-soft:not([class*="p-button-"]):not(:disabled):hover {
+    background-color: #e0e4e8;
+    color: #424e6a;
+}
+
+:root .p-button.p-button-soft.p-button-primary:not(:disabled):active,
+:root .p-button.p-button-soft:not([class*="p-button-"]):not(:disabled):active {
+    background-color: #d0d4d8;
+    color: #424e6a;
+}
+
+// Soft Secondary Button - Nền xanh dương nhạt, chữ xanh dương
+:root .p-button.p-button-soft.p-button-secondary {
+    background-color: #e8f0fe;
+    color: #4285f4;
+    border: none;
+}
+
+:root .p-button.p-button-soft.p-button-secondary:not(:disabled):hover {
+    background-color: #d0e1fc;
+    color: #4285f4;
+}
+
+:root .p-button.p-button-soft.p-button-secondary:not(:disabled):active {
+    background-color: #b8d2fa;
+    color: #4285f4;
+}
+
+// Soft Success Button - Nền xanh lá nhạt, chữ xanh lá
+:root .p-button.p-button-soft.p-button-success {
+    background-color: #e8f9ea;
+    color: #28a745;
+    border: none;
+}
+
+:root .p-button.p-button-soft.p-button-success:not(:disabled):hover {
+    background-color: #d0f3d4;
+    color: #28a745;
+}
+
+:root .p-button.p-button-soft.p-button-success:not(:disabled):active {
+    background-color: #b8edbe;
+    color: #28a745;
+}
+
+// Soft Info Button - Nền xanh lam nhạt, chữ xanh lam
+:root .p-button.p-button-soft.p-button-info {
+    background-color: #e0f6f7;
+    color: #17a2b8;
+    border: none;
+}
+
+:root .p-button.p-button-soft.p-button-info:not(:disabled):hover {
+    background-color: #c0edef;
+    color: #17a2b8;
+}
+
+:root .p-button.p-button-soft.p-button-info:not(:disabled):active {
+    background-color: #a0e4e7;
+    color: #17a2b8;
+}
+
+// Soft Warning Button - Nền cam/vàng nhạt, chữ cam
+:root .p-button.p-button-soft.p-button-warning {
+    background-color: #fff8e2;
+    color: #ffc107;
+    border: none;
+}
+
+:root .p-button.p-button-soft.p-button-warning:not(:disabled):hover {
+    background-color: #fff1c5;
+    color: #ffc107;
+}
+
+:root .p-button.p-button-soft.p-button-warning:not(:disabled):active {
+    background-color: #ffeaa8;
+    color: #ffc107;
+}
+
+// Soft Danger Button - Nền đỏ nhạt, chữ đỏ
+:root .p-button.p-button-soft.p-button-danger {
+    background-color: #feeae9;
+    color: #dc3545;
+    border: none;
+}
+
+:root .p-button.p-button-soft.p-button-danger:not(:disabled):hover {
+    background-color: #fcd5d3;
+    color: #dc3545;
+}
+
+:root .p-button.p-button-soft.p-button-danger:not(:disabled):active {
+    background-color: #fac0bd;
+    color: #dc3545;
+}
+
+// Soft Dark Button - Nền xám nhạt, chữ đen/xám đậm
+:root .p-button.p-button-soft.p-button-dark {
+    background-color: #f0f2f5;
+    color: #343a40;
+    border: none;
+}
+
+:root .p-button.p-button-soft.p-button-dark:not(:disabled):hover {
+    background-color: #e0e4e8;
+    color: #343a40;
+}
+
+:root .p-button.p-button-soft.p-button-dark:not(:disabled):active {
+    background-color: #d0d4d8;
+    color: #343a40;
+}
+
+// ============================================
+// Input Fields Customization
+// ============================================
+
+// Base input text styles
+:root .p-inputtext {
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    color: #212529;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    font-family: inherit;
+    width: 100%;
+}
+
+// Input hover state
+:root .p-inputtext:enabled:hover {
+    border-color: #adb5bd;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+// Input focus state
+:root .p-inputtext:enabled:focus {
+    outline: 0 none;
+    outline-offset: 0;
+    border-color: #4285f4;
+    box-shadow: 0 0 0 0.2rem rgba(66, 133, 244, 0.15), 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+// Input disabled state
+:root .p-inputtext:disabled {
+    background-color: #f8f9fa;
+    color: #6c757d;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+// Input invalid state
+:root .p-inputtext.ng-dirty.ng-invalid,
+:root .p-inputtext.p-invalid {
+    border-color: #dc3545;
+}
+
+:root .p-inputtext.ng-dirty.ng-invalid:enabled:focus,
+:root .p-inputtext.p-invalid:enabled:focus {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 0.2rem rgba(220, 53, 69, 0.15), 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+// Input sizes
+:root .p-inputtext.p-inputtext-sm {
+    font-size: 0.875rem;
+    padding: 0.5rem 0.75rem;
+}
+
+:root .p-inputtext.p-inputtext-lg {
+    font-size: 1.125rem;
+    padding: 0.875rem 1.25rem;
+}
+
+// Placeholder styles - Màu xám nhạt
+:root .p-inputtext::placeholder {
+    color: #adb5bd;
+    opacity: 1;
+}
+
+:root .p-inputtext::-webkit-input-placeholder {
+    color: #adb5bd;
+    opacity: 1;
+}
+
+:root .p-inputtext::-moz-placeholder {
+    color: #adb5bd;
+    opacity: 1;
+}
+
+:root .p-inputtext:-ms-input-placeholder {
+    color: #adb5bd;
+    opacity: 1;
+}
+
+:root .p-inputtext:-moz-placeholder {
+    color: #adb5bd;
+    opacity: 1;
+}
+
+// Input with icon left
+:root .p-input-icon-left > .p-icon-wrapper.p-icon,
+:root .p-input-icon-left > i:first-of-type {
+    left: 0.75rem;
+    color: #adb5bd;
+}
+
+:root .p-input-icon-left > .p-inputtext {
+    padding-left: 2.5rem;
+}
+
+// Input with icon right
+:root .p-input-icon-right > .p-icon-wrapper,
+:root .p-input-icon-right > i:last-of-type {
+    right: 0.75rem;
+    color: #adb5bd;
+}
+
+:root .p-input-icon-right > .p-inputtext {
+    padding-right: 2.5rem;
+}
+
+// Float label styles
+:root .p-float-label > label {
+    left: 0.75rem;
+    color: #adb5bd;
+    transition-duration: 0.2s;
+}
+
+:root .p-float-label > .p-inputtext:focus ~ label,
+:root .p-float-label > .p-inputtext.p-filled ~ label {
+    color: #4285f4;
+}
+
+:root .p-float-label > .ng-invalid.ng-dirty + label,
+:root .p-float-label > .p-invalid + label {
+    color: #dc3545;
+}
+
+:root .p-input-icon-left.p-float-label > label {
+    left: 2.5rem;
+}
+
+// Textarea styles
+:root .p-inputtextarea {
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+    padding: 0.75rem 1rem;
+    font-size: 1rem;
+    color: #212529;
+    transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    font-family: inherit;
+    resize: vertical;
+}
+
+:root .p-inputtextarea:enabled:hover {
+    border-color: #adb5bd;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+:root .p-inputtextarea:enabled:focus {
+    outline: 0 none;
+    outline-offset: 0;
+    border-color: #4285f4;
+    box-shadow: 0 0 0 0.2rem rgba(66, 133, 244, 0.15), 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+:root .p-inputtextarea::placeholder {
+    color: #adb5bd;
+    opacity: 1;
+}
+
+// Input filled variant
+:root .p-input-filled .p-inputtext {
+    background-color: #f8f9fa;
+    border: none;
+}
+
+:root .p-input-filled .p-inputtext:enabled:hover {
+    background-color: #e9ecef;
+}
+
+:root .p-input-filled .p-inputtext:enabled:focus {
+    background-color: #ffffff;
+    border: 1px solid #4285f4;
+}
+
+// Input group styles
+:root .p-inputgroup .p-inputtext {
+    box-shadow: none;
+}
+
+:root .p-inputgroup .p-inputtext:enabled:focus {
+    box-shadow: 0 0 0 0.2rem rgba(66, 133, 244, 0.15);
+}
+
+:root .p-inputgroup-addon {
+    background: #f8f9fa;
+    border: 1px solid #dee2e6;
+    color: #6c757d;
+    padding: 0.75rem 1rem;
+}
+
+// Search icon in input (custom class)
+:root .search-icon {
+    color: #adb5bd;
+    position: absolute;
+    left: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 1;
+    pointer-events: none;
+}
+
+:root th{
+    color: #000 !important;
+}
+
+:root td{
+    padding: .75rem .6rem !important;
 }

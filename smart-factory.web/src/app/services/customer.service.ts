@@ -43,6 +43,13 @@ export class CustomerService {
   update(id: string, request: UpdateCustomerRequest): Observable<Customer> {
     return this.http.put<Customer>(`${this.apiUrl}/${id}`, request);
   }
+
+  /**
+   * Xóa chủ hàng
+   */
+  delete(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
 }
 
 

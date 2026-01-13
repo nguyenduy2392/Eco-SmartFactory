@@ -1,11 +1,13 @@
 .customers-container {
-  padding: 1rem;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
+  background: white;
 }
 
 .page-title {
   font-size: 2rem;
   font-weight: 900;
-  color: var(--text-color);
+  
   line-height: 1.2;
 }
 
@@ -16,11 +18,8 @@
 }
 
 .search-filter-card {
-  background: var(--surface-card);
-  border: 1px solid var(--surface-border);
-  border-radius: 12px;
-  padding: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
 }
 
 .search-input {
@@ -38,10 +37,8 @@
 
 .table-card {
   background: var(--surface-card);
-  border: 1px solid var(--surface-border);
-  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
 }
 
 .table-wrapper {
@@ -53,17 +50,22 @@
   border-collapse: collapse;
 
   thead {
-    background-color: var(--surface-50);
+    background-color: #e8e8e8;;
     border-bottom: 1px solid var(--surface-border);
 
     th {
       padding: 1rem 1.5rem;
+      padding-left: 0.75rem;
       text-align: left;
       font-weight: 600;
-      font-size: 0.75rem;
+      font-size: 1rem;
       color: var(--text-color-secondary);
-      text-transform: uppercase;
       letter-spacing: 0.05em;
+
+      &.checkbox-column {
+        width: 50px;
+        text-align: center;
+      }
     }
   }
 
@@ -76,6 +78,10 @@
         background-color: var(--surface-50);
       }
 
+      &.selected {
+        background-color: rgba(var(--primary-color-rgb), 0.05);
+      }
+
       &:last-child {
         border-bottom: none;
       }
@@ -83,50 +89,23 @@
       td {
         padding: 1rem 1.5rem;
         vertical-align: middle;
+
+        &.checkbox-column {
+          width: 50px;
+          text-align: center;
+        }
       }
     }
   }
 }
 
 .customer-avatar {
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.875rem;
-  color: white;
+  width: 40px !important;
+  height: 40px !important;
+  font-weight: 700 !important;
+  font-size: 0.875rem !important;
   flex-shrink: 0;
   box-shadow: 0 0 0 2px var(--surface-card);
-}
-
-.customer-name {
-  font-weight: 700;
-  font-size: 1rem;
-  color: var(--text-color);
-}
-
-.customer-id {
-  font-size: 0.75rem;
-  color: var(--text-color-secondary);
-}
-
-.contact-name {
-  font-weight: 500;
-  color: var(--text-color);
-}
-
-.contact-role {
-  font-size: 0.75rem;
-  color: var(--text-color-secondary);
-}
-
-.phone-number {
-  font-weight: 500;
-  font-family: monospace;
-  color: var(--text-color);
 }
 
 .address-cell {
@@ -134,29 +113,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  color: var(--text-color);
+  
 }
 
-.view-po-btn {
-  color: var(--primary-color);
-  font-weight: 500;
-  font-size: 0.75rem;
-  padding: 0.375rem 0.75rem;
-  background: rgba(var(--primary-color-rgb), 0.1);
-  border-radius: 6px;
-  transition: all 0.15s;
 
-  &:hover {
-    background: rgba(var(--primary-color-rgb), 0.2);
-  }
-}
 
-.edit-btn {
-  color: var(--text-color-secondary);
-  transition: color 0.15s;
-
-  &:hover {
-    color: var(--primary-color);
+.page-numbers {
+  button {
+    min-width: 2.5rem;
   }
 }
 
@@ -164,13 +128,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 1.5rem;
-  background-color: var(--surface-50);
+  padding-top: 1rem;
+  padding-right: 1.5rem;
+  padding-left: 1rem;
   border-top: 1px solid var(--surface-border);
 }
 
 .pagination-info {
-  font-size: 0.875rem;
+  font-size: 1rem;
   color: var(--text-color-secondary);
 }
 
@@ -183,5 +148,22 @@
 
   .address-cell {
     max-width: 150px;
+  }
+}
+
+.action-menu-btn {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+}
+
+// Style for danger menu item
+:host ::ng-deep .p-menuitem-danger {
+  .p-menuitem-link {
+    color: #dc3545 !important;
+    
+    &:hover {
+      background-color: rgba(220, 53, 69, 0.1) !important;
+    }
   }
 }

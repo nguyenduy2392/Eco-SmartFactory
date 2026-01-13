@@ -21,9 +21,8 @@
                                         <i class="pi pi-angle-right text-400 mx-1"></i>
                                     </li>
                                     <li class="flex align-items-center">
-                                        <a *ngIf="!last && item.url" 
-                                           [routerLink]="item.url" 
-                                           class="text-500 hover:text-primary no-underline">
+                                        <a *ngIf="!last && item.url" [routerLink]="item.url"
+                                            class="text-500 hover:text-primary no-underline">
                                             {{ item.label }}
                                         </a>
                                         <span *ngIf="last" class="text-700 font-medium">{{ item.label }}</span>
@@ -34,7 +33,10 @@
                     </div>
                 </div>
             </div>
-            <router-outlet></router-outlet>
+            <div class="layout-main-content">
+                <router-outlet></router-outlet>
+            </div>
+
         </div>
         <app-footer></app-footer>
     </div>
