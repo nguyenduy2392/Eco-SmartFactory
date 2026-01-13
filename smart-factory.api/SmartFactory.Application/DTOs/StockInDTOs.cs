@@ -26,6 +26,8 @@ public class MaterialReceiptHistoryDto
     public decimal Quantity { get; set; }
     public string Unit { get; set; } = string.Empty;
     public string BatchNumber { get; set; } = string.Empty;
+    public Guid WarehouseId { get; set; }
+    public string WarehouseName { get; set; } = string.Empty;
     public DateTime ReceiptDate { get; set; }
     public string? CreatedBy { get; set; }
     public string? Notes { get; set; }

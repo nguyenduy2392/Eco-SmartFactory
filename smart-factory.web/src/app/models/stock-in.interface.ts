@@ -41,9 +41,8 @@ export interface MaterialReceiptHistory {
   quantity: number;
   unit: string;
   batchNumber?: string;
-  supplierCode?: string;
-  purchasePOCode?: string;
-  warehouseName?: string;
+  warehouseId: string;
+  warehouseName: string;
   receiptDate: Date;
   createdBy?: string;
   notes?: string;

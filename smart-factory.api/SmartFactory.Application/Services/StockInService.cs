@@ -196,12 +196,11 @@ public class StockInService
 
     /// <summary>
     /// Lấy lịch sử nhập kho của một PO
-    /// Nếu là Operation PO (có OriginalPOId), lấy history của Original PO
-    /// Nếu là Original PO, lấy history của chính nó
+    /// Lịch sử nhập kho luôn gắn với Operation PO (PO sửa đổi)
     /// </summary>
     public async Task<List<MaterialReceiptHistoryDto>> GetPOReceiptHistoryAsync(Guid purchaseOrderId)
     {
-        // Tìm PO và xác định có phải Operation PO không
+        // Tìm PO
         var po = await _context.PurchaseOrders
             .FirstOrDefaultAsync(p => p.Id == purchaseOrderId);
 
@@ -210,15 +209,13 @@ public class StockInService
             return new List<MaterialReceiptHistoryDto>();
         }
 
-        // Nếu là Operation PO, lấy history của Original PO
-        // Nếu là Original PO, lấy history của chính nó
-        var targetPOId = po.OriginalPOId ?? purchaseOrderId;
-
+        // Lấy history của PO được chỉ định (luôn là Operation PO khi user chọn từ dropdown)
         var histories = await _context.MaterialReceiptHistories
             .Include(h => h.Material)
             .Include(h => h.MaterialReceipt)
+                .ThenInclude(mr => mr.Warehouse)
             .Include(h => h.PurchaseOrder)
-            .Where(h => h.PurchaseOrderId == targetPOId)
+            .Where(h => h.PurchaseOrderId == purchaseOrderId)
             .OrderByDescending(h => h.ReceiptDate)
             .Select(h => new MaterialReceiptHistoryDto
             {
@@ -233,6 +230,8 @@ public class StockInService
                 Quantity = h.Quantity,
                 Unit = h.Unit,
                 BatchNumber = h.BatchNumber,
+                WarehouseId = h.MaterialReceipt.WarehouseId,
+                WarehouseName = h.MaterialReceipt.Warehouse.Name,
                 ReceiptDate = h.ReceiptDate,
                 CreatedBy = h.CreatedBy,
                 Notes = h.Notes
@@ -244,11 +243,13 @@ public class StockInService
 
     /// <summary>
     /// Lấy danh sách PO để chọn khi nhập kho
+    /// Chỉ hiển thị PO sửa đổi (operation PO), không hiển thị bản ORIGINAL
     /// </summary>
     public async Task<List<POForSelectionDto>> GetPOsForSelectionAsync(string? searchTerm = null, Guid? customerId = null)
     {
         var query = _context.PurchaseOrders
             .Where(po => po.IsActive)
+            .Where(po => po.OriginalPOId != null) // Chỉ lấy PO sửa đổi (operation PO), bỏ qua bản ORIGINAL
             .AsQueryable();
 
         // Filter theo customer nếu có
