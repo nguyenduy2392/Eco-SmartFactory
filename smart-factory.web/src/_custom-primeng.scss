@@ -73,7 +73,7 @@
     font-family: inherit;
 }
 
-:root .p-dialog .p-dialog-header{
+:root .p-dialog .p-dialog-header {
     border-top-right-radius: 3px !important;
     border-top-left-radius: 3px !important;
 }
@@ -673,45 +673,45 @@
 }
 
 // Input with icon left
-:root .p-input-icon-left > .p-icon-wrapper.p-icon,
-:root .p-input-icon-left > i:first-of-type {
+:root .p-input-icon-left>.p-icon-wrapper.p-icon,
+:root .p-input-icon-left>i:first-of-type {
     left: 0.75rem;
     color: #adb5bd;
 }
 
-:root .p-input-icon-left > .p-inputtext {
+:root .p-input-icon-left>.p-inputtext {
     padding-left: 2.5rem;
 }
 
 // Input with icon right
-:root .p-input-icon-right > .p-icon-wrapper,
-:root .p-input-icon-right > i:last-of-type {
+:root .p-input-icon-right>.p-icon-wrapper,
+:root .p-input-icon-right>i:last-of-type {
     right: 0.75rem;
     color: #adb5bd;
 }
 
-:root .p-input-icon-right > .p-inputtext {
+:root .p-input-icon-right>.p-inputtext {
     padding-right: 2.5rem;
 }
 
 // Float label styles
-:root .p-float-label > label {
+:root .p-float-label>label {
     left: 0.75rem;
     color: #adb5bd;
     transition-duration: 0.2s;
 }
 
-:root .p-float-label > .p-inputtext:focus ~ label,
-:root .p-float-label > .p-inputtext.p-filled ~ label {
+:root .p-float-label>.p-inputtext:focus~label,
+:root .p-float-label>.p-inputtext.p-filled~label {
     color: #4285f4;
 }
 
-:root .p-float-label > .ng-invalid.ng-dirty + label,
-:root .p-float-label > .p-invalid + label {
+:root .p-float-label>.ng-invalid.ng-dirty+label,
+:root .p-float-label>.p-invalid+label {
     color: #dc3545;
 }
 
-:root .p-input-icon-left.p-float-label > label {
+:root .p-input-icon-left.p-float-label>label {
     left: 2.5rem;
 }
 
@@ -788,10 +788,15 @@
     pointer-events: none;
 }
 
-:root th{
+:root th {
     color: #000 !important;
 }
 
-:root td{
+:root td {
     padding: .75rem .6rem !important;
+}
+
+:root .p-dropdown .p-dropdown-trigger {
+    border-top-right-radius: 3px;
+    border-bottom-right-radius: 3px;
 }

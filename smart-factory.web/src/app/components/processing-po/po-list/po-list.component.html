@@ -4,20 +4,14 @@
       <i class="pi pi-file-import mr-2"></i>
       Quản lý Processing PO
     </h2>
-    <p-button
-      label="Import PO từ Excel"
-      icon="pi pi-upload"
-      (onClick)="openImportDialog()"
+    <p-button label="Import PO từ Excel" icon="pi pi-upload" (onClick)="openImportDialog()"
       styleClass="p-button-success">
     </p-button>
   </div>
 
   <!-- Import Button when header is hidden -->
-  <div *ngIf="hideHeader" class="flex justify-content-end mb-4">
-    <p-button
-      label="Import PO từ Excel"
-      icon="pi pi-upload"
-      (onClick)="openImportDialog()"
+  <div *ngIf="hideHeader" class="flex justify-content-end">
+    <p-button label="Import PO từ Excel" icon="pi pi-upload" (onClick)="openImportDialog()"
       styleClass="p-button-success">
     </p-button>
   </div>
@@ -26,44 +20,23 @@
   <div class="grid mb-4">
     <div class="col-12 md:col-3">
       <label for="status" class="block mb-2">Trạng thái</label>
-      <p-dropdown
-        id="status"
-        [options]="statusOptions"
-        [(ngModel)]="selectedStatus"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="Chọn trạng thái"
-        [style]="{'width': '100%'}"
-        (onChange)="applyFilters()">
+      <p-dropdown id="status" [options]="statusOptions" [(ngModel)]="selectedStatus" optionLabel="label"
+        optionValue="value" placeholder="Chọn trạng thái" [style]="{'width': '100%'}" (onChange)="applyFilters()">
       </p-dropdown>
     </div>
 
     <div class="col-12 md:col-3">
       <label for="processingType" class="block mb-2">Loại gia công</label>
-      <p-dropdown
-        id="processingType"
-        [options]="processingTypeOptions"
-        [(ngModel)]="selectedProcessingType"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="Chọn loại gia công"
-        [style]="{'width': '100%'}"
+      <p-dropdown id="processingType" [options]="processingTypeOptions" [(ngModel)]="selectedProcessingType"
+        optionLabel="label" optionValue="value" placeholder="Chọn loại gia công" [style]="{'width': '100%'}"
         (onChange)="applyFilters()">
       </p-dropdown>
     </div>
 
     <div class="col-12 md:col-3" *ngIf="!customerId">
       <label for="customer" class="block mb-2">Chủ hàng</label>
-      <p-dropdown
-        id="customer"
-        [options]="customers"
-        [(ngModel)]="selectedCustomerId"
-        optionLabel="name"
-        optionValue="id"
-        placeholder="Chọn chủ hàng"
-        [style]="{'width': '100%'}"
-        [filter]="true"
-        filterBy="name"
+      <p-dropdown id="customer" [options]="customers" [(ngModel)]="selectedCustomerId" optionLabel="name"
+        optionValue="id" placeholder="Chọn chủ hàng" [style]="{'width': '100%'}" [filter]="true" filterBy="name"
         (onChange)="applyFilters()">
       </p-dropdown>
     </div>
@@ -72,158 +45,107 @@
       <label for="search" class="block mb-2">Tìm kiếm</label>
       <span class="p-input-icon-left w-full">
         <i class="pi pi-search"></i>
-        <input
-          pInputText
-          id="search"
-          type="text"
-          [(ngModel)]="searchText"
-          placeholder="Tìm theo số PO, chủ hàng..."
-          class="w-full">
+        <input pInputText id="search" type="text" [(ngModel)]="searchText" (input)="onSearch()"
+          placeholder="Tìm theo số PO, chủ hàng..." class="w-full">
       </span>
     </div>
   </div>
 
-  <div class="flex gap-2 mb-4">
-    <p-button
-      label="Làm mới"
-      icon="pi pi-refresh"
-      (onClick)="loadPurchaseOrders()"
-      styleClass="p-button-outlined">
-    </p-button>
-    <p-button
-      label="Xóa bộ lọc"
-      icon="pi pi-filter-slash"
-      (onClick)="resetFilters()"
-      styleClass="p-button-outlined p-button-secondary">
-    </p-button>
-  </div>
-
   <!-- PO Table -->
-  <p-table
-    [value]="filteredPurchaseOrders"
-    [loading]="loading"
-    [paginator]="true"
-    [rows]="10"
-    [rowsPerPageOptions]="[10, 25, 50]"
-    [showCurrentPageReport]="true"
-    currentPageReportTemplate="Hiển thị {first} đến {last} trong tổng số {totalRecords} PO"
-    styleClass="p-datatable-gridlines p-datatable-striped"
-    [tableStyle]="{'min-width': '50rem'}">
-    <ng-template pTemplate="header">
-      <tr>
-        <th pSortableColumn="poNumber">
-          Số PO
-          <p-sortIcon field="poNumber"></p-sortIcon>
-        </th>
-        <th *ngIf="!customerId" pSortableColumn="customerName">
-          Chủ hàng
-          <p-sortIcon field="customerName"></p-sortIcon>
-        </th>
-        <th pSortableColumn="processingType">
-          Loại gia công
-          <p-sortIcon field="processingType"></p-sortIcon>
-        </th>
-        <th pSortableColumn="poDate">
-          Ngày PO
-          <p-sortIcon field="poDate"></p-sortIcon>
-        </th>
-        <th class="text-center">Trạng thái NVL</th>
-        <th class="text-center" style="width: 180px">Thao tác</th>
-      </tr>
-    </ng-template>
+  <div class="table-card">
+    <div class="table-wrapper">
+      <table class="po-table">
+        <thead>
+          <tr>
+            <th class="text-center" style="width: 60px;">STT</th>
+            <th>Số PO</th>
+            <th *ngIf="!customerId">Chủ hàng</th>
+            <th>Loại gia công</th>
+            <th>Ngày PO</th>
+            <th class="text-center">Trạng thái NVL</th>
+            <th class="text-center">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody *ngIf="paginatedPurchaseOrders.length > 0">
+          <tr *ngFor="let po of paginatedPurchaseOrders; let i = index" class="table-row">
+            <td class="text-center">
+              {{ getRowNumber(i) }}
+            </td>
+            <td>
+              <a href="javascript:void(0)" (click)="viewPODetail(po)">{{ po.poNumber }}</a>
+            </td>
+            <td *ngIf="!customerId">{{ po.customerName }}</td>
+            <td>
+              <span class="status-badge status-info">{{ getProcessingTypeLabel(po.processingType) }}</span>
+            </td>
+            <td>{{ po.poDate | date:'dd/MM/yyyy' }}</td>
+            <td class="text-center">
+              <span [class]="po.isMaterialFullyReceived ? 'status-badge status-success' : 'status-badge status-warning'">
+                {{ po.isMaterialFullyReceived ? 'Đã hoàn thành' : 'Chưa đủ' }}
+              </span>
+            </td>
+            <td class="text-center">
+              <button pButton icon="pi pi-bars"
+                class="p-button-soft p-button-primary p-button-sm p-button-rounded action-menu-btn" pTooltip="Thao tác"
+                (click)="showActionMenu($event, po); actionMenu.toggle($event)">
+              </button>
+            </td>
+          </tr>
+        </tbody>
+        <tbody *ngIf="paginatedPurchaseOrders.length === 0 && !loading">
+          <tr>
+            <td [attr.colspan]="customerId ? 6 : 7" class="text-center py-8">
+              <i class="pi pi-inbox text-6xl mb-3 block text-gray-300"></i>
+              <p class="text-lg font-medium text-gray-500">Không có PO nào</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
 
-    <ng-template pTemplate="body" let-po>
-      <tr>
-        <td>
-          <strong>{{ po.poNumber }}</strong>
-        </td>
-        <td *ngIf="!customerId">{{ po.customerName }}</td>
-        <td>
-          <p-tag
-            [value]="getProcessingTypeLabel(po.processingType)"
-            [severity]="'info'">
-          </p-tag>
-        </td>
-        <td>{{ po.poDate | date:'dd/MM/yyyy' }}</td>
-        <td class="text-center">
-          <p-tag
-            [value]="po.isMaterialFullyReceived ? 'Đã hoàn thành' : 'Chưa đủ'"
-            [severity]="po.isMaterialFullyReceived ? 'success' : 'warning'">
-          </p-tag>
-        </td>
-        <td class="text-center">
-          <div class="flex justify-content-center gap-2">
-            <p-button
-              icon="pi pi-eye"
-              [rounded]="true"
-              [outlined]="true"
-              severity="info"
-              (onClick)="viewPODetail(po)"
-              pTooltip="Xem chi tiết"
-              tooltipPosition="top">
-            </p-button>
-            <p-button
-              *ngIf="po.status === 'DRAFT'"
-              icon="pi pi-trash"
-              [rounded]="true"
-              [outlined]="true"
-              severity="danger"
-              (onClick)="deletePO(po)"
-              pTooltip="Xóa PO"
-              tooltipPosition="top">
-            </p-button>
-          </div>
-        </td>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="emptymessage">
-      <tr>
-        <td [attr.colspan]="customerId ? 5 : 6" class="text-center">
-          <div class="p-4">
-            <i class="pi pi-inbox text-4xl text-400"></i>
-            <p class="text-xl text-500 mt-3">Không có PO nào</p>
-          </div>
-        </td>
-      </tr>
-    </ng-template>
-  </p-table>
+    <!-- Pagination -->
+    <div class="table-footer" *ngIf="filteredPurchaseOrders.length > 0">
+      <div class="pagination-info">
+        Hiển thị <span class="font-bold">{{ getFirstRecord() }}</span> đến
+        <span class="font-bold">{{ getLastRecord() }}</span> trong tổng số
+        <span class="font-bold">{{ filteredPurchaseOrders.length }}</span> PO
+      </div>
+      <div class="flex gap-2 align-items-center">
+        <button pButton label="Trang trước" icon="pi pi-chevron-left" class="p-button-soft p-button-primary p-button-sm"
+          [disabled]="currentPage === 1" (click)="previousPage()">
+        </button>
+        <div class="flex gap-1 page-numbers">
+          <button *ngFor="let page of getPageNumbers()" pButton [label]="page.toString()"
+            [class]="page === currentPage ? 'p-button-sm p-button-primary' : 'p-button-sm p-button-text'"
+            (click)="goToPage(page)">
+          </button>
+        </div>
+        <button pButton label="Trang sau" icon="pi pi-chevron-right" iconPos="right"
+          class="p-button-soft p-button-primary p-button-sm" [disabled]="currentPage >= getTotalPages()"
+          (click)="nextPage()">
+        </button>
+      </div>
+    </div>
+  </div>
 </div>
 
+<!-- Action Menu -->
+<p-menu #actionMenu [model]="actionMenuItems" [popup]="true"></p-menu>
+
 <!-- Import Dialog -->
-<p-dialog
-  header="Import Processing PO từ Excel"
-  [(visible)]="showImportDialog"
-  [modal]="true"
-  [style]="{width: '600px'}"
-  [draggable]="false"
-  [resizable]="false">
+<p-dialog header="Import Processing PO từ Excel" [(visible)]="showImportDialog" [modal]="true"
+  [style]="{width: '600px'}" [draggable]="false" [resizable]="false">
   <div class="p-fluid">
     <div class="field">
       <label for="poNumber">Số PO <span class="text-red-500">*</span></label>
-      <input
-        pInputText
-        id="poNumber"
-        type="text"
-        [(ngModel)]="importForm.poNumber"
-        placeholder="Nhập số PO"
-        required>
+      <input pInputText id="poNumber" type="text" [(ngModel)]="importForm.poNumber" placeholder="Nhập số PO" required>
     </div>
 
     <div class="field">
       <label for="importCustomer">Chủ hàng <span class="text-red-500">*</span></label>
-      <p-dropdown
-        id="importCustomer"
-        [options]="customers"
-        [(ngModel)]="importForm.customerId"
-        optionLabel="name"
-        optionValue="id"
-        placeholder="Chọn chủ hàng"
-        [filter]="true"
-        filterBy="name"
-        [style]="{'width': '100%'}"
-        [disabled]="!!customerId"
-        required>
+      <p-dropdown id="importCustomer" [options]="customers" [(ngModel)]="importForm.customerId" optionLabel="name"
+        optionValue="id" placeholder="Chọn chủ hàng" [filter]="true" filterBy="name" [style]="{'width': '100%'}"
+        [disabled]="!!customerId" required>
       </p-dropdown>
       <small *ngIf="customerId" class="text-500 block mt-2">
         <i class="pi pi-info-circle mr-1"></i>
@@ -233,15 +155,9 @@
 
     <div class="field">
       <label for="importProcessingType">Loại gia công <span class="text-red-500">*</span></label>
-      <p-dropdown
-        id="importProcessingType"
-        [options]="importProcessingTypeOptions"
-        [(ngModel)]="importForm.processingType"
-        optionLabel="label"
-        optionValue="value"
-        placeholder="Chọn loại gia công"
-        [style]="{'width': '100%'}"
-        required>
+      <p-dropdown id="importProcessingType" [options]="importProcessingTypeOptions"
+        [(ngModel)]="importForm.processingType" optionLabel="label" optionValue="value" placeholder="Chọn loại gia công"
+        [style]="{'width': '100%'}" required>
       </p-dropdown>
       <small class="text-500 block mt-2">
         <i class="pi pi-info-circle mr-1"></i>
@@ -251,50 +167,28 @@
 
     <div class="field">
       <label for="poDate">Ngày PO <span class="text-red-500">*</span></label>
-      <p-calendar
-        id="poDate"
-        [(ngModel)]="importForm.poDate"
-        dateFormat="dd/mm/yy"
-        [showIcon]="true"
-        [style]="{'width': '100%'}"
-        required>
+      <p-calendar id="poDate" [(ngModel)]="importForm.poDate" dateFormat="dd/mm/yy" [showIcon]="true"
+        [style]="{'width': '100%'}" required>
       </p-calendar>
     </div>
 
     <div class="field">
       <label for="expectedDeliveryDate">Ngày dự kiến giao hàng</label>
-      <p-calendar
-        id="expectedDeliveryDate"
-        [(ngModel)]="importForm.expectedDeliveryDate"
-        dateFormat="dd/mm/yy"
-        [showIcon]="true"
-        [style]="{'width': '100%'}">
+      <p-calendar id="expectedDeliveryDate" [(ngModel)]="importForm.expectedDeliveryDate" dateFormat="dd/mm/yy"
+        [showIcon]="true" [style]="{'width': '100%'}">
       </p-calendar>
     </div>
 
     <div class="field">
       <label for="importNotes">Ghi chú</label>
-      <textarea
-        pInputTextarea
-        id="importNotes"
-        [(ngModel)]="importForm.notes"
-        rows="3"
-        placeholder="Nhập ghi chú...">
+      <textarea pInputTextarea id="importNotes" [(ngModel)]="importForm.notes" rows="3" placeholder="Nhập ghi chú...">
       </textarea>
     </div>
 
     <div class="field">
       <label>File Excel <span class="text-red-500">*</span></label>
-      <p-fileUpload
-        mode="basic"
-        chooseLabel="Chọn file"
-        [auto]="true"
-        accept=".xlsx,.xls"
-        [maxFileSize]="10000000"
-        (onSelect)="onFileSelect($event)"
-        (onRemove)="onFileRemove()"
-        [customUpload]="true"
-        [showUploadButton]="false"
+      <p-fileUpload mode="basic" chooseLabel="Chọn file" [auto]="true" accept=".xlsx,.xls" [maxFileSize]="10000000"
+        (onSelect)="onFileSelect($event)" (onRemove)="onFileRemove()" [customUpload]="true" [showUploadButton]="false"
         [showCancelButton]="false">
       </p-fileUpload>
       <small class="text-500 block mt-2" *ngIf="selectedFile">
@@ -306,18 +200,10 @@
 
   <ng-template pTemplate="footer">
     <div class="flex justify-content-end gap-2">
-      <p-button
-        label="Hủy"
-        icon="pi pi-times"
-        (onClick)="closeImportDialog()"
-        styleClass="p-button-text"
+      <p-button label="Hủy" icon="pi pi-times" (onClick)="closeImportDialog()" styleClass="p-button-text"
         [disabled]="importLoading">
       </p-button>
-      <p-button
-        label="Import"
-        icon="pi pi-upload"
-        (onClick)="importPO()"
-        [loading]="importLoading"
+      <p-button label="Import" icon="pi pi-upload" (onClick)="importPO()" [loading]="importLoading"
         [disabled]="!selectedFile">
       </p-button>
     </div>
@@ -325,25 +211,14 @@
 </p-dialog>
 
 <!-- Import Error Dialog -->
-<p-dialog
-  header="Lỗi Import PO"
-  [(visible)]="showImportErrorDialog"
-  [modal]="true"
-  [style]="{width: '700px'}"
-  [draggable]="false"
-  [resizable]="false">
+<p-dialog header="Lỗi Import PO" [(visible)]="showImportErrorDialog" [modal]="true" [style]="{width: '700px'}"
+  [draggable]="false" [resizable]="false">
   <div class="mb-3">
-    <p-message
-      severity="error"
-      text="Import thất bại. Vui lòng kiểm tra và sửa các lỗi sau:">
+    <p-message severity="error" text="Import thất bại. Vui lòng kiểm tra và sửa các lỗi sau:">
     </p-message>
   </div>
 
-  <p-table
-    [value]="importErrors"
-    [paginator]="true"
-    [rows]="10"
-    styleClass="p-datatable-sm">
+  <p-table [value]="importErrors" [paginator]="true" [rows]="10" styleClass="p-datatable-sm">
     <ng-template pTemplate="header">
       <tr>
         <th style="width: 80px">Dòng</th>
@@ -363,24 +238,16 @@
         </td>
         <td>{{ error.errorMessage }}</td>
         <td>
-          <p-tag
-            [value]="error.severity === 'error' ? 'Lỗi' : 'Cảnh báo'"
-            [severity]="error.severity === 'error' ? 'danger' : 'warning'">
-          </p-tag>
+          <span [class]="error.severity === 'error' ? 'status-badge status-danger' : 'status-badge status-warning'">
+            {{ error.severity === 'error' ? 'Lỗi' : 'Cảnh báo' }}
+          </span>
         </td>
       </tr>
     </ng-template>
   </p-table>
 
   <ng-template pTemplate="footer">
-    <p-button
-      label="Đóng"
-      icon="pi pi-times"
-      (onClick)="closeImportErrorDialog()"
-      styleClass="p-button-text">
+    <p-button label="Đóng" icon="pi pi-times" (onClick)="closeImportErrorDialog()" styleClass="p-button-text">
     </p-button>
   </ng-template>
 </p-dialog>
-
-
-

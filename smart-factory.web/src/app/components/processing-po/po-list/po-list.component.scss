@@ -1,17 +1,109 @@
-:host {
-  ::ng-deep {
-    .p-datatable {
-      .p-datatable-thead > tr > th {
-        background-color: var(--primary-color);
-        color: white;
-        font-weight: 600;
-      }
+.table-card {
+  background: var(--surface-card);
+  overflow: hidden;
+}
 
-      .p-datatable-tbody > tr:hover {
-        background-color: var(--surface-100);
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.po-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  thead {
+    background-color: #e8e8e8;
+    border-bottom: 1px solid var(--surface-border);
+
+    th {
+      padding: 1rem 1.5rem;
+      padding-left: 0.75rem;
+      text-align: left;
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--text-color-secondary);
+      letter-spacing: 0.05em;
+
+      &.text-center {
+        text-align: center;
       }
     }
+  }
 
+  tbody {
+    .table-row {
+      border-bottom: 1px solid var(--surface-border);
+      transition: background-color 0.15s;
+
+      &:hover {
+        background-color: var(--surface-50);
+      }
+
+      &:last-child {
+        border-bottom: none;
+      }
+
+      td {
+        padding: 1rem 1.5rem;
+        vertical-align: middle;
+        font-size: 1rem;
+
+        &.text-center {
+          text-align: center;
+        }
+      }
+    }
+  }
+}
+
+.page-numbers {
+  button {
+    min-width: 2.5rem;
+  }
+}
+
+.table-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 1rem;
+  padding-right: 1.5rem;
+  padding-left: 1rem;
+  border-top: 1px solid var(--surface-border);
+}
+
+.pagination-info {
+  font-size: 1rem;
+  color: var(--text-color-secondary);
+}
+
+.action-menu-btn {
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+}
+
+@media (max-width: 768px) {
+  .table-footer {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+}
+
+// Style for danger menu item
+:host ::ng-deep .p-menuitem-danger {
+  .p-menuitem-link {
+    color: #dc3545 !important;
+    
+    &:hover {
+      background-color: rgba(220, 53, 69, 0.1) !important;
+    }
+  }
+}
+
+:host {
+  ::ng-deep {
     .p-dialog {
       .p-dialog-header {
         background-color: var(--primary-color);
@@ -27,15 +119,37 @@
       }
     }
 
-    .p-tag {
-      font-weight: 600;
-    }
-
-    .p-button-rounded {
-      width: 2.5rem;
-      height: 2.5rem;
-    }
   }
+}
+
+// Status badge styles (replacing p-tag)
+.status-badge {
+  display: inline-block;
+  padding: 0.375rem 0.75rem;
+  border-radius: 3px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.status-info {
+  background-color: #d1ecf1;
+  color: #0c5460;
+}
+
+.status-success {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.status-warning {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.status-danger {
+  background-color: #f8d7da;
+  color: #721c24;
 }
 
 .field {

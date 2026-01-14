@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, OnInit, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { PurchaseOrderService } from '../../../services/purchase-order.service';
 import { CustomerService } from '../../../services/customer.service';
@@ -13,6 +13,7 @@ import { Customer } from '../../../models/customer.interface';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { SharedModule } from '../../../shared.module';
 import { PrimengModule } from '../../../primeng.module';
+import { Menu } from 'primeng/menu';
 
 @Component({
   selector: 'app-po-list',
@@ -22,12 +23,18 @@ import { PrimengModule } from '../../../primeng.module';
   imports: [SharedModule, PrimengModule]
 })
 export class POListComponent implements OnInit, OnChanges {
+  @ViewChild('actionMenu') actionMenu!: Menu;
   @Input() customerId?: string;
   @Input() hideHeader = false;
 
   purchaseOrders: PurchaseOrderList[] = [];
   customers: Customer[] = [];
   loading = false;
+  paginatedPurchaseOrders: PurchaseOrderList[] = [];
+  currentPage = 1;
+  pageSize = 10;
+  actionMenuItems: any[] = [];
+  currentActionPO: PurchaseOrderList | null = null;
 
   // Filters
   selectedStatus: string | undefined;
@@ -153,6 +160,8 @@ export class POListComponent implements OnInit, OnChanges {
     ).subscribe({
       next: (orders) => {
         this.purchaseOrders = orders;
+        this.currentPage = 1;
+        this.updatePaginatedPurchaseOrders();
         this.loading = false;
       },
       error: (error) => {
@@ -169,6 +178,13 @@ export class POListComponent implements OnInit, OnChanges {
 
   applyFilters(): void {
     this.loadPurchaseOrders();
+    this.currentPage = 1;
+    this.updatePaginatedPurchaseOrders();
+  }
+
+  onSearch(): void {
+    this.currentPage = 1;
+    this.updatePaginatedPurchaseOrders();
   }
 
   resetFilters(): void {
@@ -188,6 +204,121 @@ export class POListComponent implements OnInit, OnChanges {
       po.poNumber.toLowerCase().includes(search) ||
       po.customerName.toLowerCase().includes(search)
     );
+  }
+
+  /**
+   * Update paginated purchase orders
+   */
+  updatePaginatedPurchaseOrders(): void {
+    const start = (this.currentPage - 1) * this.pageSize;
+    const end = start + this.pageSize;
+    this.paginatedPurchaseOrders = this.filteredPurchaseOrders.slice(start, end);
+  }
+
+  /**
+   * Pagination helpers
+   */
+  getFirstRecord(): number {
+    return (this.currentPage - 1) * this.pageSize + 1;
+  }
+
+  getLastRecord(): number {
+    return Math.min(this.currentPage * this.pageSize, this.filteredPurchaseOrders.length);
+  }
+
+  getTotalPages(): number {
+    return Math.ceil(this.filteredPurchaseOrders.length / this.pageSize);
+  }
+
+  getPageNumbers(): number[] {
+    const totalPages = this.getTotalPages();
+    const pages: number[] = [];
+    const maxVisible = 5;
+    
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (this.currentPage <= 3) {
+        for (let i = 1; i <= maxVisible; i++) {
+          pages.push(i);
+        }
+      } else if (this.currentPage >= totalPages - 2) {
+        for (let i = totalPages - maxVisible + 1; i <= totalPages; i++) {
+          pages.push(i);
+        }
+      } else {
+        for (let i = this.currentPage - 2; i <= this.currentPage + 2; i++) {
+          pages.push(i);
+        }
+      }
+    }
+    
+    return pages;
+  }
+
+  previousPage(): void {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+      this.updatePaginatedPurchaseOrders();
+    }
+  }
+
+  nextPage(): void {
+    if (this.currentPage < this.getTotalPages()) {
+      this.currentPage++;
+      this.updatePaginatedPurchaseOrders();
+    }
+  }
+
+  goToPage(page: number): void {
+    if (page >= 1 && page <= this.getTotalPages()) {
+      this.currentPage = page;
+      this.updatePaginatedPurchaseOrders();
+    }
+  }
+
+  /**
+   * Get row number for display (STT)
+   */
+  getRowNumber(index: number): number {
+    return (this.currentPage - 1) * this.pageSize + index + 1;
+  }
+
+  /**
+   * Show action menu
+   */
+  showActionMenu(event: Event, po: PurchaseOrderList): void {
+    this.currentActionPO = po;
+    this.actionMenuItems = this.getActionMenuItems(po);
+  }
+
+  /**
+   * Get action menu items for a PO
+   */
+  getActionMenuItems(po: PurchaseOrderList): any[] {
+    const items: any[] = [
+      {
+        label: 'Xem chi tiết',
+        icon: 'pi pi-eye',
+        command: () => this.viewPODetail(po)
+      }
+    ];
+
+    if (po.status === 'DRAFT') {
+      items.push({
+        separator: true
+      });
+      items.push({
+        label: 'Xóa',
+        icon: 'pi pi-trash',
+        styleClass: 'p-menuitem-danger',
+        command: () => this.deletePO(po)
+      });
+    }
+
+    return items;
   }
 
   // Import Dialog
