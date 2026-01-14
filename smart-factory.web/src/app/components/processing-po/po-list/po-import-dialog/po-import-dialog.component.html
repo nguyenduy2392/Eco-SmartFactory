@@ -1,0 +1,132 @@
+<div class="import-form">
+    <!-- Content Area - Scrollable -->
+    <div class="form-content">
+      <div class="form-field">
+        <label for="poNumber">Số PO <span class="text-red-500">*</span></label>
+        <input pInputText id="poNumber" type="text" [(ngModel)]="importForm.poNumber" placeholder="Nhập số PO" required>
+      </div>
+
+      <div class="form-field">
+        <label for="importCustomer">Chủ hàng <span class="text-red-500">*</span></label>
+        <p-dropdown id="importCustomer" [options]="customers" [(ngModel)]="importForm.customerId" optionLabel="name"
+          optionValue="id" placeholder="Chọn chủ hàng" [filter]="true" filterBy="name" [style]="{'width': '100%'}"
+          [disabled]="!!customerId" required>
+        </p-dropdown>
+      </div>
+
+      <div class="form-field">
+        <label for="importProcessingType">Loại gia công <span class="text-red-500">*</span></label>
+        <p-dropdown id="importProcessingType" [options]="importProcessingTypeOptions"
+          [(ngModel)]="importForm.processingType" optionLabel="label" optionValue="value" placeholder="Chọn loại gia công"
+          [style]="{'width': '100%'}" required>
+        </p-dropdown>
+      </div>
+
+      <div class="form-row">
+        <div class="form-field">
+          <label for="poDate">Ngày PO <span class="text-red-500">*</span></label>
+          <p-calendar id="poDate" [(ngModel)]="importForm.poDate" dateFormat="dd/mm/yy"
+            [style]="{'width': '100%'}" required>
+          </p-calendar>
+        </div>
+        <div class="form-field">
+          <label for="expectedDeliveryDate">Ngày dự kiến giao hàng</label>
+          <p-calendar id="expectedDeliveryDate" [(ngModel)]="importForm.expectedDeliveryDate" dateFormat="dd/mm/yy"
+            [style]="{'width': '100%'}">
+          </p-calendar>
+        </div>
+      </div>
+
+      <div class="form-field">
+        <label for="importNotes">Ghi chú</label>
+        <ckeditor [editor]="Editor" [(ngModel)]="importForm.notes" name="importNotes"></ckeditor>
+      </div>
+
+      <div class="form-field">
+        <label>File Excel <span class="text-red-500">*</span></label>
+        <p-fileUpload mode="basic" chooseLabel="Chọn file" [auto]="true" accept=".xlsx,.xls" [maxFileSize]="10000000"
+          (onSelect)="onFileSelect($event)" (onRemove)="onFileRemove()" [customUpload]="true" [showUploadButton]="false"
+          [showCancelButton]="false">
+        </p-fileUpload>
+        <small class="text-500 block mt-2" *ngIf="selectedFile">
+          <i class="pi pi-check-circle text-green-500 mr-1"></i>
+          Đã chọn: {{ selectedFile.name }}
+        </small>
+      </div>
+
+      <!-- Info Box -->
+      <div class="info-box">
+        <div class="info-item" *ngIf="customerId">
+          <i class="pi pi-info-circle"></i>
+          <span>PO sẽ được import cho chủ hàng hiện tại</span>
+        </div>
+        <div class="info-item">
+          <i class="pi pi-info-circle"></i>
+          <span>File Excel phải chứa 2 sheets: NHAP_PO và NHAP_NGUYEN_VAT_LIEU (nhập kho nguyên vật liệu)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form Footer - Fixed Height -->
+    <div class="form-footer">
+      <button pButton 
+        type="button" 
+        label="Hủy" 
+        icon="pi pi-times" 
+        class="p-button-light"
+        (click)="handleClose()"
+        [disabled]="importLoading">
+      </button>
+      <button pButton 
+        type="button" 
+        label="Import" 
+        icon="pi pi-upload" 
+        class="p-button-success"
+        (click)="importPO()"
+        [loading]="importLoading"
+        [disabled]="!selectedFile">
+      </button>
+    </div>
+</div>
+
+<!-- Import Error Dialog -->
+<p-dialog header="Lỗi Import PO" [(visible)]="showImportErrorDialog" [modal]="true" [style]="{width: '700px'}"
+  [draggable]="false" [resizable]="false">
+  <div class="mb-3">
+    <p-message severity="error" text="Import thất bại. Vui lòng kiểm tra và sửa các lỗi sau:">
+    </p-message>
+  </div>
+
+  <p-table [value]="importErrors" [paginator]="true" [rows]="10" styleClass="p-datatable-sm">
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 80px">Dòng</th>
+        <th style="width: 150px">Trường</th>
+        <th>Lỗi</th>
+        <th style="width: 100px">Mức độ</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-error>
+      <tr>
+        <td class="text-center">
+          <strong>{{ error.row }}</strong>
+        </td>
+        <td>
+          <code>{{ error.field }}</code>
+        </td>
+        <td>{{ error.errorMessage }}</td>
+        <td>
+          <span [class]="error.severity === 'error' ? 'status-badge status-danger' : 'status-badge status-warning'">
+            {{ error.severity === 'error' ? 'Lỗi' : 'Cảnh báo' }}
+          </span>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <ng-template pTemplate="footer">
+    <p-button label="Đóng" icon="pi pi-times" (onClick)="closeImportErrorDialog()" styleClass="p-button-text">
+    </p-button>
+  </ng-template>
+</p-dialog>

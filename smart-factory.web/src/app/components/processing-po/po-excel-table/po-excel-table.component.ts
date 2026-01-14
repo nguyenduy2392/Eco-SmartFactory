@@ -12,7 +12,7 @@ import { ProcessingType } from '../../../models/processing-type.interface';
 import { Product } from '../../../models/interface/product.interface';
 import { SharedModule } from '../../../shared.module';
 import { PrimengModule } from '../../../primeng.module';
-import { environment } from 'src/environments/environment';
+import { AppConfig } from 'src/app/config/app.config';
 
 // Register modules for inline editing, formatting, interaction, sorting, and resizing
 Tabulator.registerModule([EditModule, FormatModule, InteractionModule, SortModule, ResizeColumnsModule]);
@@ -1933,7 +1933,7 @@ export class POExcelTableComponent implements OnInit, OnChanges, AfterViewInit, 
     // Nếu đã có đầy đủ URL thì return luôn
     if (partImageUrl.startsWith('http')) return partImageUrl;
     // Nếu là relative path, thêm base URL
-    return `${environment.baseUrl}` + partImageUrl;
+    return `${AppConfig.getBaseUrl()}` + partImageUrl;
   }
 
   cancel(): void {

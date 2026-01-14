@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { AppConfig } from '../config/app.config';
 import { ProcessingType, ProcessMethod } from '../models/processing-type.interface';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ProcessingTypeService {
-  private apiUrl = `${environment.apiUrl}/processing-types`;
+  private apiUrl = `${AppConfig.getApiUrl()}/processing-types`;
 
   constructor(private http: HttpClient) { }
 

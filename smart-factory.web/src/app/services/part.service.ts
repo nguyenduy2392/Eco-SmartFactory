@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { AppConfig } from '../config/app.config';
 import { PartProcessingType, CreatePartProcessingTypeRequest, UpdatePartProcessingTypeRequest } from '../models/processing-type.interface';
 
 export interface PartDetail {
@@ -64,7 +64,7 @@ export interface OperationTool {
   providedIn: 'root'
 })
 export class PartService {
-  private apiUrl = `${environment.apiUrl}/parts`;
+  private apiUrl = `${AppConfig.getApiUrl()}/parts`;
 
   constructor(private http: HttpClient) { }
 

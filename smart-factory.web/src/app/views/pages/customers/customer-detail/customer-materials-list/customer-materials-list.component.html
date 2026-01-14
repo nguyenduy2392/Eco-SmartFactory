@@ -1,0 +1,96 @@
+<!-- Filters -->
+<div class="grid mt-4">
+  <div class="col-12 md:col-3">
+    <label for="material" class="block mb-2">Nguyên vật liệu</label>
+    <p-dropdown 
+      id="material"
+      [options]="materialOptions" 
+      [(ngModel)]="selectedMaterialId"
+      name="selectedMaterialId"
+      optionLabel="label" 
+      optionValue="value"
+      placeholder="Chọn nguyên vật liệu"
+      [showClear]="true"
+      [style]="{'width': '100%'}"
+      (onChange)="applyMaterialFilter()">
+    </p-dropdown>
+  </div>
+
+  <div class="col-12 md:col-9">
+    <label for="search" class="block mb-2">Tìm kiếm</label>
+    <span class="p-input-icon-left w-full">
+      <i class="pi pi-search"></i>
+      <input pInputText id="search" type="text" [(ngModel)]="searchText" (input)="onSearch()"
+        placeholder="Tìm theo mã VT, tên vật tư..." class="w-full">
+    </span>
+  </div>
+</div>
+
+<!-- Materials Table -->
+<div class="table-card">
+  <div class="table-wrapper">
+    <table class="materials-table">
+      <thead>
+        <tr>
+          <th>Mã VT</th>
+          <th>Tên vật tư</th>
+          <th>Loại</th>
+          <th class="text-right">Tồn kho</th>
+          <th class="text-right">Tồn tối thiểu</th>
+          <th>Đơn vị</th>
+          <th>Trạng thái</th>
+        </tr>
+      </thead>
+      <tbody *ngIf="paginatedMaterials.length > 0">
+        <tr *ngFor="let material of paginatedMaterials" class="table-row">
+          <td><code>{{ material.code }}</code></td>
+          <td>{{ material.name }}</td>
+          <td>{{ material.type }}</td>
+          <td class="text-right">
+            <strong [class.text-red-500]="material.currentStock < material.minStock">
+              {{ material.currentStock | number:'1.0-3' }}
+            </strong>
+          </td>
+          <td class="text-right">{{ material.minStock | number:'1.0-3' }}</td>
+          <td>{{ material.unit }}</td>
+          <td>
+            <span [class]="material.isActive ? 'status-badge status-success' : 'status-badge status-danger'">
+              {{ material.isActive ? 'Hoạt động' : 'Ngừng hoạt động' }}
+            </span>
+          </td>
+        </tr>
+      </tbody>
+      <tbody *ngIf="paginatedMaterials.length === 0 && !materialsLoading">
+        <tr>
+          <td colspan="7" class="text-center py-8">
+            <i class="pi pi-inbox text-6xl mb-3 block text-gray-300"></i>
+            <p class="text-lg font-medium text-gray-500">Không có nguyên vật liệu nào</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Pagination -->
+  <div class="table-footer" *ngIf="filteredMaterials.length > 0">
+    <div class="pagination-info">
+      Hiển thị <span class="font-bold">{{ getFirstRecord() }}</span> đến
+      <span class="font-bold">{{ getLastRecord() }}</span> trong tổng số
+      <span class="font-bold">{{ filteredMaterials.length }}</span> nguyên vật liệu
+    </div>
+    <div class="flex gap-2 align-items-center">
+      <button pButton label="Trang trước" icon="pi pi-chevron-left" class="p-button-soft p-button-primary p-button-sm"
+        [disabled]="currentPage === 1" (click)="previousPage()">
+      </button>
+      <div class="flex gap-1 page-numbers">
+        <button *ngFor="let page of getPageNumbers()" pButton [label]="page.toString()"
+          [class]="page === currentPage ? 'p-button-sm p-button-primary' : 'p-button-sm p-button-text'"
+          (click)="goToPage(page)">
+        </button>
+      </div>
+      <button pButton label="Trang sau" icon="pi pi-chevron-right" iconPos="right" class="p-button-soft p-button-primary p-button-sm"
+        [disabled]="currentPage >= getTotalPages()" (click)="nextPage()">
+      </button>
+    </div>
+  </div>
+</div>

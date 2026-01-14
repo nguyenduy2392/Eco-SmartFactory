@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { AppConfig } from '../config/app.config';
 import { Customer, CreateCustomerRequest, UpdateCustomerRequest } from '../models/customer.interface';
 
 @Injectable({
   providedIn: 'root'
 })
 export class CustomerService {
-  private apiUrl = `${environment.apiUrl}/customers`;
+  private apiUrl = `${AppConfig.getApiUrl()}/customers`;
 
   constructor(private http: HttpClient) { }
 

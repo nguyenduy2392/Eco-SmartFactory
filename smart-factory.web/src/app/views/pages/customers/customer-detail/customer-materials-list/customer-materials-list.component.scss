@@ -1,13 +1,14 @@
 .table-card {
   background: var(--surface-card);
   overflow: hidden;
+  padding-top: 1rem;
 }
 
 .table-wrapper {
   overflow-x: auto;
 }
 
-.po-table {
+.materials-table {
   width: 100%;
   border-collapse: collapse;
 
@@ -24,8 +25,8 @@
       color: var(--text-color-secondary);
       letter-spacing: 0.05em;
 
-      &.text-center {
-        text-align: center;
+      &.text-right {
+        text-align: right;
       }
     }
   }
@@ -48,8 +49,8 @@
         vertical-align: middle;
         font-size: 1rem;
 
-        &.text-center {
-          text-align: center;
+        &.text-right {
+          text-align: right;
         }
       }
     }
@@ -77,12 +78,6 @@
   color: var(--text-color-secondary);
 }
 
-.action-menu-btn {
-  width: 2rem;
-  height: 2rem;
-  padding: 0;
-}
-
 @media (max-width: 768px) {
   .table-footer {
     flex-direction: column;
@@ -91,38 +86,7 @@
   }
 }
 
-// Style for danger menu item
-:host ::ng-deep .p-menuitem-danger {
-  .p-menuitem-link {
-    color: #dc3545 !important;
-    
-    &:hover {
-      background-color: rgba(220, 53, 69, 0.1) !important;
-    }
-  }
-}
-
-:host {
-  ::ng-deep {
-    .p-dialog {
-      .p-dialog-header {
-        background-color: var(--primary-color);
-        color: white;
-
-        .p-dialog-header-icon {
-          color: white;
-
-          &:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-          }
-        }
-      }
-    }
-
-  }
-}
-
-// Status badge styles (replacing p-tag)
+// Status badge styles
 .status-badge {
   display: inline-block;
   padding: 0.375rem 0.75rem;
@@ -132,29 +96,12 @@
   line-height: 1;
 }
 
-.status-info {
-  background-color: #d1ecf1;
-  color: #0c5460;
-}
-
 .status-success {
   background-color: #d4edda;
   color: #155724;
-}
-
-.status-warning {
-  background-color: #fff3cd;
-  color: #856404;
 }
 
 .status-danger {
   background-color: #f8d7da;
   color: #721c24;
 }
-
-
-
-
-
-
-

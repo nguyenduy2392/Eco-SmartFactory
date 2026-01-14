@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { AppConfig } from '../config/app.config';
 import {
   ProcessBOM,
   ProcessBOMList,
@@ -13,7 +13,7 @@ import {
   providedIn: 'root'
 })
 export class ProcessBOMService {
-  private apiUrl = `${environment.apiUrl}/processbom`;
+  private apiUrl = `${AppConfig.getApiUrl()}/processbom`;
 
   constructor(private http: HttpClient) { }
 

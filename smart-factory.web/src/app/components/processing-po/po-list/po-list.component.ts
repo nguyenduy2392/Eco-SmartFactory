@@ -3,17 +3,14 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { PurchaseOrderService } from '../../../services/purchase-order.service';
 import { CustomerService } from '../../../services/customer.service';
 import { ProcessingTypeService } from '../../../services/processing-type.service';
-import { ProcessingType } from '../../../models/processing-type.interface';
-import {
-  PurchaseOrderList,
-  ImportPOResponse,
-  ImportError
-} from '../../../models/purchase-order.interface';
+import { PurchaseOrderList } from '../../../models/purchase-order.interface';
 import { Customer } from '../../../models/customer.interface';
 import { MessageService, ConfirmationService } from 'primeng/api';
 import { SharedModule } from '../../../shared.module';
 import { PrimengModule } from '../../../primeng.module';
 import { Menu } from 'primeng/menu';
+import { UiModalService } from '../../../services/shared/ui-modal.service';
+import { POImportDialogComponent } from './po-import-dialog/po-import-dialog.component';
 
 @Component({
   selector: 'app-po-list',
@@ -42,20 +39,7 @@ export class POListComponent implements OnInit, OnChanges {
   selectedCustomerId: string | undefined;
   searchText = '';
 
-  // Import Dialog
-  showImportDialog = false;
-  importLoading = false;
-  selectedFile: File | null = null;
-  importErrors: ImportError[] = [];
-  showImportErrorDialog = false;
-  importForm = {
-    poNumber: '',
-    customerId: '',
-    processingType: 'EP_NHUA',
-    poDate: new Date(),
-    expectedDeliveryDate: null as Date | null,
-    notes: ''
-  };
+  // Import Dialog - managed via UiModalService
 
   // Options
   statusOptions = [
@@ -75,7 +59,8 @@ export class POListComponent implements OnInit, OnChanges {
     private router: Router,
     private route: ActivatedRoute,
     private messageService: MessageService,
-    private confirmationService: ConfirmationService
+    private confirmationService: ConfirmationService,
+    private uiModalService: UiModalService
   ) { }
 
   ngOnInit(): void {
@@ -119,10 +104,6 @@ export class POListComponent implements OnInit, OnChanges {
           label: type.name,
           value: type.code
         }));
-        // Set default processing type if options are loaded
-        if (this.importProcessingTypeOptions.length > 0 && !this.importForm.processingType) {
-          this.importForm.processingType = this.importProcessingTypeOptions[0].value;
-        }
       },
       error: (error) => {
         console.error('Error loading processing types:', error);
@@ -323,145 +304,18 @@ export class POListComponent implements OnInit, OnChanges {
 
   // Import Dialog
   openImportDialog(): void {
-    this.showImportDialog = true;
-    this.resetImportForm();
-    // Nếu có customerId từ input, tự động set vào form
-    if (this.customerId) {
-      this.importForm.customerId = this.customerId;
-    }
-  }
-
-  closeImportDialog(): void {
-    this.showImportDialog = false;
-    this.resetImportForm();
-  }
-
-  resetImportForm(): void {
-    const defaultProcessingType = this.importProcessingTypeOptions.length > 0 
-      ? this.importProcessingTypeOptions[0].value 
-      : '';
-    // Ưu tiên sử dụng customerId từ input, nếu không thì giữ giá trị hiện tại
-    const customerId = this.customerId || this.importForm.customerId || '';
-    this.importForm = {
-      poNumber: '',
-      customerId: customerId,
-      processingType: defaultProcessingType,
-      poDate: new Date(),
-      expectedDeliveryDate: null,
-      notes: ''
-    };
-    this.selectedFile = null;
-    this.importErrors = [];
-  }
-
-  onFileSelect(event: any): void {
-    const file = event.files[0];
-    if (file) {
-      // Validate file type
-      if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls')) {
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Lỗi',
-          detail: 'Vui lòng chọn file Excel (.xlsx hoặc .xls)'
-        });
-        return;
-      }
-      this.selectedFile = file;
-    }
-  }
-
-  onFileRemove(): void {
-    this.selectedFile = null;
-  }
-
-  importPO(): void {
-    if (!this.validateImportForm()) {
-      return;
-    }
-
-    this.importLoading = true;
-    this.poService.importFromExcel(
-      this.selectedFile!,
-      this.importForm.poNumber,
-      this.importForm.customerId,
-      this.importForm.processingType as 'EP_NHUA' | 'PHUN_IN' | 'LAP_RAP',
-      this.importForm.poDate,
-      this.importForm.expectedDeliveryDate,
-      this.importForm.notes
-    ).subscribe({
-      next: (response: ImportPOResponse) => {
-        this.importLoading = false;
-        
-        if (response.success) {
-          this.messageService.add({
-            severity: 'success',
-            summary: 'Thành công',
-            detail: `Import PO thành công!\nPO ID: ${response.purchaseOrderId}\nVersion: ${response.version}\nStatus: ${response.status}`,
-            life: 5000
-          });
-          this.closeImportDialog();
-          this.loadPurchaseOrders();
-        } else {
-          // Có lỗi validation
-          this.importErrors = response.errors || [];
-          this.showImportErrorDialog = true;
-        }
+    this.uiModalService.openModal({
+      title: 'Nhập khẩu PO từ Excel',
+      bodyComponent: POImportDialogComponent,
+      bodyData: {
+        customers: this.customers,
+        importProcessingTypeOptions: this.importProcessingTypeOptions,
+        customerId: this.customerId,
+        onImport: () => this.loadPurchaseOrders()
       },
-      error: (error) => {
-        console.error('Import error:', error);
-        this.importLoading = false;
-        this.messageService.add({
-          severity: 'error',
-          summary: 'Lỗi',
-          detail: error.error?.message || 'Không thể import PO'
-        });
-      }
+      size: '50vw',
+      showFooter: false
     });
-  }
-
-  validateImportForm(): boolean {
-    if (!this.selectedFile) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Cảnh báo',
-        detail: 'Vui lòng chọn file Excel'
-      });
-      return false;
-    }
-
-    if (!this.importForm.poNumber.trim()) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Cảnh báo',
-        detail: 'Vui lòng nhập số PO'
-      });
-      return false;
-    }
-
-    if (!this.importForm.customerId) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Cảnh báo',
-        detail: 'Vui lòng chọn chủ hàng'
-      });
-      return false;
-    }
-
-    if (!this.importForm.processingType) {
-      this.messageService.add({
-        severity: 'warn',
-        summary: 'Cảnh báo',
-        detail: 'Vui lòng chọn loại gia công'
-      });
-      return false;
-    }
-
-    return true;
-  }
-
-  closeImportErrorDialog(): void {
-    this.showImportErrorDialog = false;
-    this.importErrors = [];
   }
 
   viewPODetail(po: PurchaseOrderList): void {

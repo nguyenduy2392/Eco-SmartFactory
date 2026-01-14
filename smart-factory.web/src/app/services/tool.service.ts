@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { AppConfig } from '../config/app.config';
 import { Tool, CreateToolRequest, UpdateToolRequest } from '../models/tool.interface';
 
 @Injectable({
   providedIn: 'root'
 })
 export class ToolService {
-  private apiUrl = `${environment.apiUrl}/tools`;
+  private apiUrl = `${AppConfig.getApiUrl()}/tools`;
 
   constructor(private http: HttpClient) { }
 

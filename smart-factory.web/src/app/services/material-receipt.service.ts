@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { AppConfig } from '../config/app.config';
 import { MaterialReceipt, CreateMaterialReceiptRequest, UpdateMaterialReceiptRequest } from '../models/material-receipt.interface';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MaterialReceiptService {
-  private apiUrl = `${environment.apiUrl}/material-receipts`;
+  private apiUrl = `${AppConfig.getApiUrl()}/material-receipts`;
 
   constructor(private http: HttpClient) { }
 

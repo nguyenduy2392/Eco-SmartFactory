@@ -1,5 +1,5 @@
 export const Constant = {
-    API_URL: 'https://localhost:7009/',
+    API_URL: 'http://183.81.32.190:8081/',
 
     DEPARTMENT_METHODS: {
         GET_PARENT_DEPT: 'GetParentDepartment',

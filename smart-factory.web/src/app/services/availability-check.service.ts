@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { AppConfig } from '../config/app.config';
 import {
   AvailabilityCheckRequest,
   AvailabilityCheckResult
@@ -11,7 +11,7 @@ import {
   providedIn: 'root'
 })
 export class AvailabilityCheckService {
-  private apiUrl = `${environment.apiUrl}/availabilitycheck`;
+  private apiUrl = `${AppConfig.getApiUrl()}/availabilitycheck`;
 
   constructor(private http: HttpClient) { }
 

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { AppConfig } from '../config/app.config';
 
 export interface PMCWeekDto {
   id: string;
@@ -86,7 +86,7 @@ export interface SavePMCRowRequest {
   providedIn: 'root'
 })
 export class PMCService {
-  private apiUrl = `${environment.apiUrl}/pmc`;
+  private apiUrl = `${AppConfig.getApiUrl()}/pmc`;
 
   constructor(private http: HttpClient) { }
 

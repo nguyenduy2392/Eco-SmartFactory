@@ -1,14 +1,14 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { AppConfig } from '../config/app.config';
 import { Material, CreateMaterialRequest, UpdateMaterialRequest } from '../models/material.interface';
 
 @Injectable({
   providedIn: 'root'
 })
 export class MaterialService {
-  private apiUrl = `${environment.apiUrl}/materials`;
+  private apiUrl = `${AppConfig.getApiUrl()}/materials`;
 
   constructor(private http: HttpClient) { }
 

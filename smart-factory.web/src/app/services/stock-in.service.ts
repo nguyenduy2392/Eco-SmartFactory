@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { environment } from '../../environments/environment';
+import { AppConfig } from '../config/app.config';
 import {
   StockInRequest,
   StockInResponse,
@@ -13,8 +13,8 @@ import {
   providedIn: 'root'
 })
 export class StockInService {
-  private apiUrl = `${environment.apiUrl}/stockin`;
-  private poApiUrl = `${environment.apiUrl}/purchaseorders`;
+  private apiUrl = `${AppConfig.getApiUrl()}/stockin`;
+  private poApiUrl = `${AppConfig.getApiUrl()}/purchaseorders`;
 
   constructor(private http: HttpClient) { }
 
