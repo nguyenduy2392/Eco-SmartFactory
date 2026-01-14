@@ -1,4 +1,4 @@
-import { Component, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Output, EventEmitter, Input, SimpleChanges, OnChanges } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormArray } from '@angular/forms';
 import { MessageService } from 'primeng/api';
 import { StockInService } from '../../../services/stock-in.service';
@@ -25,8 +25,11 @@ import { PrimengModule } from '../../../primeng.module';
   standalone: true,
   imports: [SharedModule, PrimengModule]
 })
-export class StockInComponent implements OnInit {
+export class StockInComponent implements OnInit, OnChanges {
   @Output() stockInSuccess = new EventEmitter<void>();
+  @Input() prefillCustomerId?: string;
+  @Input() prefillPOId?: string;
+  @Input() prefillPONumber?: string;
   
   stockInForm!: FormGroup;
   loading = false;
@@ -36,6 +39,7 @@ export class StockInComponent implements OnInit {
   customers: Customer[] = [];
   warehouses: Warehouse[] = [];
   materials: Material[] = [];
+  filteredMaterials: Material[] = []; // Materials filtered by selected customer
   unitsOfMeasure: UnitOfMeasure[] = [];
   filteredPOs: POForSelection[] = [];
 
@@ -59,6 +63,83 @@ export class StockInComponent implements OnInit {
     this.loadWarehouses();
     this.loadMaterials();
     this.loadUnitsOfMeasure();
+    
+    // Apply prefill data after a short delay to ensure form is ready
+    setTimeout(() => {
+      this.applyPrefillData();
+    }, 800);
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    // Handle prefill data from parent component
+    if (changes['prefillCustomerId'] || changes['prefillPOId'] || changes['prefillPONumber']) {
+      if (this.stockInForm) {
+        setTimeout(() => {
+          this.applyPrefillData();
+        }, 100);
+      }
+    }
+  }
+
+  private applyPrefillData(): void {
+    if (!this.prefillCustomerId || !this.stockInForm) {
+      return;
+    }
+
+    console.log('Applying prefill data:', {
+      customerId: this.prefillCustomerId,
+      poId: this.prefillPOId,
+      poNumber: this.prefillPONumber
+    });
+
+    this.stockInForm.patchValue({
+      customerId: this.prefillCustomerId
+    });
+    
+    // If PO info is provided, load and select it
+    if (this.prefillPOId && this.prefillPONumber) {
+      console.log('Prefilling PO:', { poId: this.prefillPOId, poNumber: this.prefillPONumber });
+      
+      this.stockInService.getPOById(this.prefillPOId).subscribe({
+        next: (po) => {
+          console.log('Loaded PO:', po);
+          this.selectedPO = po;
+          this.stockInForm.patchValue({
+            purchaseOrderId: po.id,
+            poNumber: po.poNumber || this.prefillPONumber
+          });
+          
+          console.log('Form after prefill:', this.stockInForm.value);
+          
+          // Auto-fill purchasePOCode for all rows
+          this.materialsArray.controls.forEach(control => {
+            control.patchValue({ purchasePOCode: po.poNumber || this.prefillPONumber });
+          });
+          
+          this.messageService.add({
+            severity: 'success',
+            summary: 'Thành công',
+            detail: 'Đã tự động điền thông tin từ PO'
+          });
+        },
+        error: (error) => {
+          console.error('Error loading PO:', error);
+          // Fallback: manually set both purchaseOrderId and poNumber
+          this.stockInForm.patchValue({
+            purchaseOrderId: this.prefillPOId,
+            poNumber: this.prefillPONumber
+          });
+          
+          console.log('Form after fallback:', this.stockInForm.value);
+          
+          this.messageService.add({
+            severity: 'info',
+            summary: 'Thông tin',
+            detail: 'Đã điền thông tin PO (không load được chi tiết)'
+          });
+        }
+      });
+    }
   }
 
   initForm(): void {
@@ -149,10 +230,13 @@ export class StockInComponent implements OnInit {
     });
   }
 
-  loadMaterials(): void {
-    this.materialService.getAll().subscribe({
+  loadMaterials(customerId?: string): void {
+    // Always load all materials (materials are shared across customers)
+    // Don't filter by customer - user can select any material for any customer
+    this.materialService.getAll(true, undefined).subscribe({
       next: (data) => {
         this.materials = data;
+        this.filteredMaterials = data;
       },
       error: (error) => {
         this.messageService.add({
@@ -187,6 +271,8 @@ export class StockInComponent implements OnInit {
       poNumber: ''
     });
     this.filteredPOs = [];
+    
+    // Materials are shared across customers, no need to reload
   }
 
   onSearchPO(event: any): void {
@@ -291,6 +377,9 @@ export class StockInComponent implements OnInit {
     }
 
     const formValue = this.stockInForm.value;
+    console.log('Form value before submit:', formValue);
+    console.log('purchaseOrderId:', formValue.purchaseOrderId);
+    
     const request: StockInRequest = {
       purchaseOrderId: formValue.purchaseOrderId || null,
       customerId: formValue.customerId,
@@ -301,6 +390,8 @@ export class StockInComponent implements OnInit {
       materials: formValue.materials
     };
 
+    console.log('Request to send:', request);
+    
     this.submitting = true;
     this.stockInService.stockIn(request).subscribe({
       next: (response) => {
@@ -333,10 +424,24 @@ export class StockInComponent implements OnInit {
   }
 
   resetForm(): void {
-    this.stockInForm.reset({
+    // Preserve prefill data if exists
+    const preservedData: any = {
       receiptDate: new Date()
-    });
-    this.selectedPO = null;
+    };
+    
+    if (this.prefillCustomerId) {
+      preservedData.customerId = this.prefillCustomerId;
+    }
+    
+    if (this.prefillPOId && this.prefillPONumber) {
+      preservedData.purchaseOrderId = this.prefillPOId;
+      preservedData.poNumber = this.prefillPONumber;
+      // Don't clear selectedPO if we have prefill data
+    } else {
+      this.selectedPO = null;
+    }
+    
+    this.stockInForm.reset(preservedData);
     
     // Clear materials array and add one row
     while (this.materialsArray.length > 0) {

@@ -39,8 +39,8 @@
           </tr>
         </thead>
         <tbody *ngIf="paginatedCustomers.length > 0">
-          <tr *ngFor="let customer of paginatedCustomers" class="table-row" [class.selected]="isSelected(customer)">
-            <td class="checkbox-column">
+          <tr *ngFor="let customer of paginatedCustomers" class="table-row" [class.selected]="isSelected(customer)" (click)="navigateToDetail(customer)" style="cursor: pointer;">
+            <td class="checkbox-column" (click)="$event.stopPropagation()">
               <p-checkbox [(ngModel)]="customer.selected" [binary]="true" (onChange)="toggleCustomer(customer)">
               </p-checkbox>
             </td>
@@ -65,7 +65,7 @@
             <td>
               <span class="date-text">{{ formatDate(customer.createdAt) }}</span>
             </td>
-            <td class="text-center">
+            <td class="text-center" (click)="$event.stopPropagation()">
               <button pButton 
                 icon="pi pi-bars" 
                 class="p-button-soft p-button-primary p-button-sm p-button-rounded action-menu-btn"

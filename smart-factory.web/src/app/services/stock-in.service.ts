@@ -47,4 +47,11 @@ export class StockInService {
     }
     return this.http.get<POForSelection[]>(`${this.poApiUrl}/for-selection`, { params });
   }
+
+  /**
+   * Lấy thông tin PO theo ID để pre-fill form
+   */
+  getPOById(poId: string): Observable<POForSelection> {
+    return this.http.get<POForSelection>(`${this.poApiUrl}/${poId}/for-selection`);
+  }
 }

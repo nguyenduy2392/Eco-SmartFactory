@@ -73,6 +73,13 @@ export class CustomersComponent implements OnInit {
   }
 
   /**
+   * Navigate to customer detail page
+   */
+  navigateToDetail(customer: Customer): void {
+    this.router.navigate(['/customers', customer.id]);
+  }
+
+  /**
    * Load danh sách chủ hàng
    */
   loadCustomers(): void {

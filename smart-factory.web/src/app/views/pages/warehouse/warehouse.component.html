@@ -24,7 +24,12 @@
       <p-tabView [(activeIndex)]="activeTabIndex" (onChange)="onHistoryTabChange()">
         <!-- Tab Nhập kho -->
         <p-tabPanel header="Nhập kho">
-          <app-stock-in (stockInSuccess)="onStockInSuccess()"></app-stock-in>
+          <app-stock-in 
+            (stockInSuccess)="onStockInSuccess()"
+            [prefillCustomerId]="prefillCustomerId"
+            [prefillPOId]="prefillPOId"
+            [prefillPONumber]="prefillPONumber">
+          </app-stock-in>
         </p-tabPanel>
 
         <!-- Tab Xuất kho -->
@@ -263,7 +268,7 @@
             </p-dropdown>
           </div>
 
-          <p-table [value]="materials" [loading]="loading" [paginator]="true" [rows]="20"
+          <p-table [value]="materialStocks" [loading]="loading" [paginator]="true" [rows]="20"
                    styleClass="p-datatable-striped">
             <ng-template pTemplate="header">
               <tr>
@@ -277,30 +282,39 @@
                 <th>Hành động</th>
               </tr>
             </ng-template>
-            <ng-template pTemplate="body" let-material>
+            <ng-template pTemplate="body" let-stock>
               <tr>
-                <td>{{ material.code }}</td>
-                <td>{{ material.name }}</td>
-                <td>{{ material.customerName }}</td>
+                <td>{{ stock.materialCode }}</td>
+                <td>{{ stock.materialName }}</td>
+                <td>{{ stock.customerName }}</td>
                 <td>
                   <p-tag 
-                    [value]="material.currentStock.toString()" 
-                    [severity]="getStockSeverity(material.currentStock, material.minStock)">
+                    [value]="stock.currentStock.toString()" 
+                    [severity]="getStockSeverity(stock.currentStock, stock.minStock)">
                   </p-tag>
                 </td>
-                <td>{{ material.minStock }}</td>
-                <td>{{ material.unit }}</td>
+                <td>{{ stock.minStock }}</td>
+                <td>{{ stock.unit }}</td>
                 <td>
                   <p-tag 
-                    [value]="material.isActive ? 'Hoạt động' : 'Ngừng'" 
-                    [severity]="material.isActive ? 'success' : 'danger'">
+                    [value]="stock.currentStock > 0 ? 'Có hàng' : 'Hết hàng'" 
+                    [severity]="stock.currentStock > 0 ? 'success' : 'danger'">
                   </p-tag>
                 </td>
                 <td>
                   <button pButton type="button" icon="pi pi-eye" 
                           class="p-button-rounded p-button-text"
-                          (click)="viewMaterialStock(material)"
+                          (click)="viewStockDetail(stock)"
                           pTooltip="Xem chi tiết tồn kho"></button>
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="8" class="text-center py-8">
+                  <i class="pi pi-inbox text-6xl mb-3 block text-gray-300"></i>
+                  <p class="text-lg font-medium text-gray-500">Chưa có tồn kho</p>
+                  <p class="text-sm text-gray-400">Nhập kho nguyên vật liệu để bắt đầu</p>
                 </td>
               </tr>
             </ng-template>

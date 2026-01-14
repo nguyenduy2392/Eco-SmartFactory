@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import { WarehouseService } from '../../../services/warehouse.service';
 import { MaterialService } from '../../../services/material.service';
 import { CustomerService } from '../../../services/customer.service';
@@ -31,9 +32,15 @@ export class WarehouseComponent implements OnInit {
   // Tab management
   activeTabIndex = 0;
 
+  // Prefill data from query params
+  prefillCustomerId?: string;
+  prefillPOId?: string;
+  prefillPONumber?: string;
+
   // Common data
   warehouses: Warehouse[] = [];
   materials: Material[] = [];
+  materialStocks: MaterialStock[] = []; // Stock records grouped by (material + customer)
   customers: Customer[] = [];
   selectedCustomerId: string | null = null;
 
@@ -115,6 +122,7 @@ export class WarehouseComponent implements OnInit {
   ];
 
   constructor(
+    private route: ActivatedRoute,
     private warehouseService: WarehouseService,
     private materialService: MaterialService,
     private customerService: CustomerService,
@@ -125,6 +133,20 @@ export class WarehouseComponent implements OnInit {
     this.loadWarehouses();
     this.loadCustomers();
     this.loadMaterials();
+    this.loadStocks();
+    
+    // Check for query params to auto-switch tab and pre-fill
+    this.route.queryParams.subscribe(params => {
+      if (params['tab'] === 'stock-in') {
+        // Switch to stock-in tab (index 0)
+        this.activeTabIndex = 0;
+        
+        // Store prefill data to pass to stock-in component
+        this.prefillCustomerId = params['customerId'];
+        this.prefillPOId = params['poId'];
+        this.prefillPONumber = params['poNumber'];
+      }
+    });
   }
 
   loadWarehouses(): void {
@@ -164,7 +186,8 @@ export class WarehouseComponent implements OnInit {
   }
 
   loadMaterials(): void {
-    this.materialService.getAll(true, this.selectedCustomerId || undefined).subscribe({
+    // Load all materials without customer filter (materials are shared across customers)
+    this.materialService.getAll(true, undefined).subscribe({
       next: (materials) => {
         this.materials = materials;
         this.loading = false;
@@ -176,8 +199,31 @@ export class WarehouseComponent implements OnInit {
     });
   }
 
+  loadStocks(): void {
+    console.log('Loading stocks with customerId:', this.selectedCustomerId);
+    
+    this.loading = true;
+    this.warehouseService.getAllStocks(this.selectedCustomerId || undefined).subscribe({
+      next: (stocks) => {
+        console.log('Loaded stocks:', stocks);
+        this.materialStocks = stocks;
+        console.log('Material stocks:', this.materialStocks);
+        this.loading = false;
+      },
+      error: (error) => {
+        console.error('Error loading stocks:', error);
+        this.loading = false;
+        this.messageService.add({
+          severity: 'error',
+          summary: 'Lỗi',
+          detail: 'Không thể tải dữ liệu tồn kho'
+        });
+      }
+    });
+  }
+
   onCustomerFilterChange(): void {
-    this.loadMaterials();
+    this.loadStocks(); // Reload stocks when customer filter changes
     this.historyFilters.customerId = this.selectedCustomerId;
     if (this.activeTabIndex === 3) {
       this.loadHistory();
@@ -186,12 +232,17 @@ export class WarehouseComponent implements OnInit {
 
   // Event handler khi nhập kho thành công từ StockInComponent
   onStockInSuccess(): void {
-    this.loadMaterials(); // Refresh danh sách NVL và tồn kho
+    console.log('Stock in success - refreshing data');
+    this.loadStocks(); // Refresh tồn kho
     this.loadReceipts(); // Refresh danh sách phiếu nhập (nếu cần hiển thị)
+    
+    // Switch to stock tab to see results if desired
+    // this.activeTabIndex = 4; // Uncomment to auto-switch to "Tồn kho" tab
+    
     this.messageService.add({
-      severity: 'info',
-      summary: 'Cập nhật',
-      detail: 'Dữ liệu kho đã được cập nhật'
+      severity: 'success',
+      summary: 'Thành công',
+      detail: 'Nhập kho thành công! Dữ liệu đã được cập nhật.'
     });
   }
 
@@ -392,15 +443,21 @@ export class WarehouseComponent implements OnInit {
         this.loading = false;
       },
       error: (error) => {
-        console.error('Error loading stock:', error);
-        this.loading = false;
+        console.error('Error loading material stock:', error);
         this.messageService.add({
           severity: 'error',
           summary: 'Lỗi',
           detail: 'Không thể tải thông tin tồn kho'
         });
+        this.loading = false;
       }
     });
+  }
+
+  viewStockDetail(stock: MaterialStock): void {
+    // Stock already has all the info, just show dialog
+    this.materialStock = stock;
+    this.showStockDialog = true;
   }
 
   getTransactionTypeLabel(type: string): string {

@@ -102,6 +102,22 @@ export class PODetailComponent implements OnInit {
     private confirmationService: ConfirmationService
   ) { }
 
+  /**
+   * Navigate to warehouse page with pre-filled customer and PO
+   */
+  navigateToStockIn(): void {
+    if (!this.purchaseOrder) return;
+    
+    this.router.navigate(['/warehouse'], {
+      queryParams: {
+        customerId: this.purchaseOrder.customerId,
+        poId: this.purchaseOrder.id,
+        poNumber: this.purchaseOrder.poNumber,
+        tab: 'stock-in'
+      }
+    });
+  }
+
   ngOnInit(): void {
     this.route.params.subscribe(params => {
       this.poId = params['id'];

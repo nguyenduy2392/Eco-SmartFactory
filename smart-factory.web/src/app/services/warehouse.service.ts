@@ -113,6 +113,20 @@ export class WarehouseService {
   }
 
   /**
+   * Lấy danh sách tồn kho của tất cả nguyên vật liệu (grouped by material + customer)
+   */
+  getAllStocks(customerId?: string, warehouseId?: string): Observable<MaterialStock[]> {
+    let params = new HttpParams();
+    if (customerId) {
+      params = params.set('customerId', customerId);
+    }
+    if (warehouseId) {
+      params = params.set('warehouseId', warehouseId);
+    }
+    return this.http.get<MaterialStock[]>(`${this.apiUrl}/stocks`, { params });
+  }
+
+  /**
    * Import nhập kho từ Excel
    */
   importMaterialReceipts(file: File, customerId: string): Observable<any> {

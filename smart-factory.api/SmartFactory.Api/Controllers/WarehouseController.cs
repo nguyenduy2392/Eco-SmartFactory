@@ -157,6 +157,28 @@ public class WarehouseController : BaseApiController
     }
 
     /// <summary>
+    /// Lấy danh sách tồn kho của tất cả nguyên vật liệu
+    /// </summary>
+    [HttpGet("stocks")]
+    public async Task<IActionResult> GetAllMaterialStocks([FromQuery] Guid? customerId, [FromQuery] Guid? warehouseId)
+    {
+        try
+        {
+            var query = new GetAllMaterialStocksQuery
+            {
+                CustomerId = customerId,
+                WarehouseId = warehouseId
+            };
+            var result = await Mediator.Send(query);
+            return Ok(result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = ex.Message });
+        }
+    }
+
+    /// <summary>
     /// Import nhập kho từ Excel
     /// </summary>
     [HttpPost("import-receipts")]
