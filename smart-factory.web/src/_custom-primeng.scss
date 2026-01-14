@@ -67,10 +67,20 @@
     font-size: 1rem;
     font-weight: 500;
     transition: background-color 0.2s, color 0.2s, border-color 0.2s, box-shadow 0.2s;
-    border-radius: 5px;
+    border-radius: 3px;
     border: 1px solid;
     cursor: pointer;
     font-family: inherit;
+}
+
+:root .p-dialog .p-dialog-header{
+    border-top-right-radius: 3px !important;
+    border-top-left-radius: 3px !important;
+}
+
+:root .p-dialog .p-dialog-content:last-of-type {
+    border-bottom-right-radius: 3px !important;
+    border-bottom-left-radius: 3px !important;
 }
 
 // Primary Button - Xanh đậm (#3f4e6f)
@@ -580,8 +590,8 @@
 // Base input text styles
 :root .p-inputtext {
     background: #ffffff;
-    border: 1px solid #dee2e6;
-    border-radius: 6px;
+    // border: 1px solid #dee2e6;
+    border-radius: 3px;
     padding: 0.75rem 1rem;
     font-size: 1rem;
     color: #212529;
@@ -709,7 +719,7 @@
 :root .p-inputtextarea {
     background: #ffffff;
     border: 1px solid #dee2e6;
-    border-radius: 6px;
+    border-radius: 3px;
     padding: 0.75rem 1rem;
     font-size: 1rem;
     color: #212529;

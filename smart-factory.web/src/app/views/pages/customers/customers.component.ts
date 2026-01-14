@@ -36,7 +36,6 @@ export class CustomersComponent implements OnInit {
   sortField = '';
   sortOrder: 'asc' | 'desc' = 'asc';
   
-  filterMenuItems: any[] = [];
   actionMenuItems: any[] = [];
   currentActionCustomer: Customer | null = null;
 
@@ -71,30 +70,6 @@ export class CustomersComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadCustomers();
-    this.initFilterMenu();
-  }
-
-  /**
-   * Initialize filter menu items
-   */
-  initFilterMenu(): void {
-    this.filterMenuItems = [
-      {
-        label: 'Tất cả',
-        icon: 'pi pi-filter',
-        command: () => this.applyStatusFilter('all')
-      },
-      {
-        label: 'Hoạt động',
-        icon: 'pi pi-check-circle',
-        command: () => this.applyStatusFilter('active')
-      },
-      {
-        label: 'Ngừng hoạt động',
-        icon: 'pi pi-times-circle',
-        command: () => this.applyStatusFilter('inactive')
-      }
-    ];
   }
 
   /**
@@ -226,12 +201,8 @@ export class CustomersComponent implements OnInit {
         isEdit: this.isEdit,
         onSave: () => this.saveCustomer()
       },
-      size: '60vw',
-      showFooter: true,
-      primaryButtonText: 'Lưu',
-      secondaryButtonText: 'Hủy',
-      onPrimaryAction: () => this.saveCustomer(),
-      onSecondaryAction: () => this.uiModalService.closeModal()
+      size: '50vw',
+      showFooter: false
     });
   }
 
@@ -261,12 +232,8 @@ export class CustomersComponent implements OnInit {
         isEdit: this.isEdit,
         onSave: () => this.saveCustomer()
       },
-      size: '60vw',
-      showFooter: true,
-      primaryButtonText: 'Lưu',
-      secondaryButtonText: 'Hủy',
-      onPrimaryAction: () => this.saveCustomer(),
-      onSecondaryAction: () => this.uiModalService.closeModal()
+      size: '50vw',
+      showFooter: false
     });
   }
 
@@ -474,16 +441,6 @@ export class CustomersComponent implements OnInit {
    */
   getActionMenuItems(customer: Customer): any[] {
     return [
-      {
-        label: 'Gọi điện',
-        icon: 'pi pi-phone',
-        command: () => this.callCustomer(customer)
-      },
-      {
-        label: 'Nhắn tin',
-        icon: 'pi pi-comment',
-        command: () => this.messageCustomer(customer)
-      },
       {
         label: 'Xem chi tiết',
         icon: 'pi pi-eye',

@@ -10,10 +10,6 @@
           <input type="text" pInputText [(ngModel)]="searchText" name="searchText" (input)="onSearch()"
             placeholder="Nhập từ khóa tìm kiếm" class="w-full search-input">
         </div>
-        <button pButton label="Lọc dữ liệu" icon="pi pi-filter" class="p-button-secondary w-full md:w-auto"
-          (click)="filterMenu.toggle($event)">
-        </button>
-        <p-menu #filterMenu [model]="filterMenuItems" [popup]="true"></p-menu>
       </div>
       <!-- Chức năng -->
       <div class="flex gap-2 justify-content-end" style="width: 40rem;">

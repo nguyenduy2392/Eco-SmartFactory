@@ -6,6 +6,9 @@ import { InputTextareaModule } from 'primeng/inputtextarea';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PrimengModule } from '../../../../primeng.module';
 import { SharedModule } from '../../../../shared.module';
+import { UiModalService } from '../../../../services/shared/ui-modal.service';
+import { CKEditorModule } from '@ckeditor/ckeditor5-angular';
+import ClassicEditor from '@ckeditor/ckeditor5-build-classic';
 
 @Component({
   selector: 'app-customer-form',
@@ -17,7 +20,8 @@ import { SharedModule } from '../../../../shared.module';
     InputTextareaModule,
     CheckboxModule,
     PrimengModule,
-    SharedModule
+    SharedModule,
+    CKEditorModule
   ],
   templateUrl: './customer-form.component.html',
   styleUrl: './customer-form.component.scss'
@@ -37,4 +41,18 @@ export class CustomerFormComponent {
 
   @Input() isEdit: boolean = false;
   @Input() onSave?: () => void;
+
+  public Editor = ClassicEditor;
+
+  constructor(private uiModalService: UiModalService) {}
+
+  handleSave(): void {
+    if (this.onSave) {
+      this.onSave();
+    }
+  }
+
+  handleClose(): void {
+    this.uiModalService.closeModal();
+  }
 }
