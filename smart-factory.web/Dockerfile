@@ -6,7 +6,7 @@ WORKDIR /app
 RUN apk add --no-cache python3 make g++
 # Chỉ copy file quản lý thư viện trước để tối ưu cache của Docker
 COPY package.json package-lock.json ./
-RUN npm ci --verbose
+RUN npm ci --legacy-peer-deps
 
 # Copy toàn bộ mã nguồn và build
 COPY . .
