@@ -4,6 +4,7 @@ import { LayoutService } from "./service/app.layout.service";
 import { PrimengModule } from '../primeng.module';
 import { SharedModule } from '../shared.module';
 import { GetUser } from '../shared/common';
+import { Router } from '@angular/router';
 
 @Component({
     standalone: true,
@@ -27,7 +28,11 @@ export class AppTopBarComponent implements OnInit {
 
     @ViewChild('topbarmenu') menu!: ElementRef;
 
-    constructor(public layoutService: LayoutService) { }
+    constructor(
+        public layoutService: LayoutService,
+        private router: Router
+    ) { }
+
     ngOnInit(): void {
         this.user = GetUser();
         console.log(this.user);
@@ -53,10 +58,19 @@ export class AppTopBarComponent implements OnInit {
                         label: 'Đăng xuất',
                         icon: 'pi pi-sign-out',
                         command: () => {
+                            this.logout()
                         }
                     }
                 ]
             }
         ];
+    }
+    
+    logout() {
+        // Xóa tất cả dữ liệu trong localStorage
+        localStorage.clear();
+
+        // Di chuyển về trang đăng nhập
+        this.router.navigate(['/login']);
     }
 }

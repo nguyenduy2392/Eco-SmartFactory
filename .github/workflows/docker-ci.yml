@@ -1,0 +1,62 @@
+name: Build and Push Multi-Service
+
+on:
+  push:
+    branches: [ "main" ] # Hoặc branch bạn đang sử dụng
+
+jobs:
+  # JOB 1: Xử lý Backend (API)
+  build-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Backend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./smart-factory.api # Trỏ vào thư mục API
+          file: ./smart-factory.api/Dockerfile # Đường dẫn file Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/smart-factory-service-dev:latest
+
+  # JOB 2: Xử lý Frontend (Web)
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Frontend
+        uses: docker/build-push-action@v5
+        with:
+          context: ./smart-factory.web # Trỏ vào thư mục Web
+          file: ./smart-factory.web/Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/smart-factory-ui-dev:latest
+  deploy:
+    needs: [build-backend, build-frontend] # Chạy sau khi build xong cả 2
+    runs-on: ubuntu-latest
+    steps:
+      - name: Executing remote ssh commands using password
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/eco
+            docker-compose -f docker-compose.prod.yml pull  # Tải image mới nhất về
+            docker-compose -f docker-compose.prod.yml up -d # Khởi động lại các container có thay đổi
