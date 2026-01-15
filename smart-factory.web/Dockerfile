@@ -2,6 +2,8 @@
 FROM node:20-alpine AS build-step
 WORKDIR /app
 
+# Thêm các gói hỗ trợ build
+RUN apk add --no-cache python3 make g++
 # Chỉ copy file quản lý thư viện trước để tối ưu cache của Docker
 COPY package.json package-lock.json ./
 RUN npm ci --verbose
