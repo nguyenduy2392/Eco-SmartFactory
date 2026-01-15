@@ -1,14 +1,14 @@
 # Stage 1: Build ứng dụng Angular
-FROM node:18-alpine AS build-step
+FROM node:20-alpine AS build-step
 WORKDIR /app
 
 # Chỉ copy file quản lý thư viện trước để tối ưu cache của Docker
-COPY package.json yarn.lock ./
-RUN yarn install
+COPY package.json package-lock.json ./
+RUN npm ci --verbose
 
 # Copy toàn bộ mã nguồn và build
 COPY . .
-RUN yarn build --configuration production
+RUN npm run build -- --configuration=production
 
 # Stage 2: Chạy ứng dụng bằng Nginx
 FROM nginx:alpine
